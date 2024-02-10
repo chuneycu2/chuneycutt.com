@@ -1,0 +1,25 @@
+# This is a basic pipeline configuration 
+# Use a skeleton to build, test and deploy using manual and parallel steps
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+image: atlassian/default-image:2
+
+pipelines:
+  default:
+    - step:
+        name: Lint
+        image: php:8.0
+        script:
+          - bash lint.bash
+    - step:
+        name: 'Deployment to staging remote'
+        deployment: staging
+        trigger: manual
+        script:
+          - git push -v $STAGING_REMOTE HEAD
+    - step:
+        name: 'Deployment to production remote'
+        deployment: production
+        trigger: manual
+        script:
+          - git push -v $PRODUCTION_REMOTE HEAD
