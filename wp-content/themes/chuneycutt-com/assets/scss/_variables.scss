@@ -1,0 +1,37 @@
+/*********************
+ Grid and breakpoints
+ *********************/
+
+$grid-breakpoints: (
+    xs  : 0,
+    sm  : 576px,
+    md  : 768px,
+    lg  : 992px,
+    xl  : 1200px,
+    xxl : 1700px
+);
+
+// Sizing classes
+$sizes: () !default;
+$sizes: map-merge(
+    (
+            25   : 25%,
+            50   : 50%,
+            75   : 75%,
+            100  : 100%,
+            auto : auto
+    ),
+    $sizes
+);
+
+// Colors
+
+// Fonts
+
+// Font weights
+$light    : 300;
+$regular  : 400;
+$medium   : 500;
+$semibold : 600;
+$bold     : 700;
+

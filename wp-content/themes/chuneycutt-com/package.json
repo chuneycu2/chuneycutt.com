@@ -1,0 +1,50 @@
+{
+  "name": "chuneycutt",
+  "version": "1.1.0",
+  "description": "my personal portfolio",
+  "main": "index.js",
+  "author": "Cyrus Huneycutt",
+  "license": "ISC",
+  "scripts": {
+    "dev": "npm run development",
+    "development": "mix",
+    "watch": "mix watch",
+    "watch-poll": "mix watch -- --watch-options-poll=1000",
+    "hot": "mix watch --hot",
+    "prod": "npm run production",
+    "production": "mix --production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cyrushuneycutt/instaclustr.com"
+  },
+  "homepage": "https://github.com/cyrushuneycutt/instaclustr.com#readme",
+  "dependencies": {
+    "aos": "^2.3.4",
+    "container-query-polyfill": "^1.0.2",
+    "gsap": "^3.11.4",
+    "img-comparison-slider": "^8.0.1",
+    "jquery": "^3.6.3",
+    "jquery-match-height": "^0.7.2",
+    "laravel-mix": "^6.0.49",
+    "lity": "^2.4.1",
+    "matchheight": "^0.1.2",
+    "slick-carousel": "^1.8.1",
+    "webfontloader": "^1.6.28",
+    "webpack": "^5.79.0"
+  },
+  "devDependencies": {
+    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+    "@husldigital/prettier-config": "^1.0.5",
+    "@wordpress/stylelint-config": "^21.7.0",
+    "browser-sync": "^2.27.11",
+    "browser-sync-webpack-plugin": "^2.3.0",
+    "sass": "^1.57.1",
+    "sass-loader": "^13.2.0",
+    "stylelint": "^14.16.1",
+    "stylelint-config-standard": "^29.0.0",
+    "stylelint-prettier": "^2.0.0",
+    "vlitejs": "^6.0.3",
+    "webpack-cli": "^5.1.4"
+  }
+}
