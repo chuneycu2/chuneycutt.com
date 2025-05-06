@@ -24,9 +24,7 @@ class Current_Page_Helper {
 	 *
 	 * @param WP_Query_Wrapper $wp_query_wrapper The wrapper for WP_Query.
 	 */
-	public function __construct(
-		WP_Query_Wrapper $wp_query_wrapper
-	) {
+	public function __construct( WP_Query_Wrapper $wp_query_wrapper ) {
 		$this->wp_query_wrapper = $wp_query_wrapper;
 	}
 
@@ -129,13 +127,7 @@ class Current_Page_Helper {
 	public function get_term_id() {
 		$wp_query = $this->wp_query_wrapper->get_main_query();
 
-		if ( $wp_query->is_category() ) {
-			return $wp_query->get( 'cat' );
-		}
-		if ( $wp_query->is_tag() ) {
-			return $wp_query->get( 'tag_id' );
-		}
-		if ( $wp_query->is_tax() ) {
+		if ( $wp_query->is_tax() || $wp_query->is_tag() || $wp_query->is_category() ) {
 			$queried_object = $wp_query->get_queried_object();
 			if ( $queried_object && ! \is_wp_error( $queried_object ) ) {
 				return $queried_object->term_id;
@@ -486,7 +478,7 @@ class Current_Page_Helper {
 		$term     = $wp_query->get_queried_object();
 
 		$queried_terms = $wp_query->tax_query->queried_terms;
-		if ( \is_null( $term ) || empty( $queried_terms[ $term->taxonomy ]['terms'] ) ) {
+		if ( $term === null || empty( $queried_terms[ $term->taxonomy ]['terms'] ) ) {
 			return 0;
 		}
 
