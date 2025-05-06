@@ -9,6 +9,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class autoptimizeCriticalCSSCron {
+    /**
+     * Critical CSS object.
+     *
+     * @var object
+     */
+    protected $criticalcss;
+
     public function __construct() {
         $this->criticalcss = autoptimize()->criticalcss();
 
@@ -154,7 +161,7 @@ class autoptimizeCriticalCSSCron {
                             $jprops['jvstat'] = 'NONE';
                             $jprops['jftime'] = microtime( true );
                             $this->criticalcss->log( 'API key validation error when processing job id <' . $jprops['ljid'] . '>, job status is now <' . $jprops['jqstat'] . '>', 3 );
-                        } elseif ( array_key_exists( 'job', $apireq ) && array_key_exists( 'status', $apireq['job'] ) && 'JOB_QUEUED' == $apireq['job']['status'] || 'JOB_ONGOING' == $apireq['job']['status'] ) {
+                        } elseif ( array_key_exists( 'job', $apireq ) && array_key_exists( 'status', $apireq['job'] ) && ( 'JOB_QUEUED' == $apireq['job']['status'] || 'JOB_ONGOING' == $apireq['job']['status'] ) ) {
                             // SUCCESS: request has a valid result.
                             // Update job properties.
                             $jprops['jid']    = $apireq['job']['id'];
@@ -838,29 +845,31 @@ class autoptimizeCriticalCSSCron {
         // Queue cleaning.
         $queue = $this->criticalcss->get_option( 'queue' );
 
-        $queue_purge_threshold = 100;
-        $queue_purge_age       = 24 * 60 * 60;
-        $queue_length          = count( $queue );
-        $timestamp_yesterday   = microtime( true ) - $queue_purge_age;
-        $remove_old_new        = false;
-        $queue_altered         = false;
+        if ( isset( $queue ) && is_array( $queue ) ) {
+            $queue_purge_threshold = 100;
+            $queue_purge_age       = 24 * 60 * 60;
+            $queue_length          = count( $queue );
+            $timestamp_yesterday   = microtime( true ) - $queue_purge_age;
+            $remove_old_new        = false;
+            $queue_altered         = false;
 
-        if ( $queue_length > $queue_purge_threshold ) {
-            $remove_old_new = true;
-        }
-
-        foreach ( $queue as $path => $job ) {
-            if ( ( $remove_old_new && 'NEW' == $job['jqstat'] && $job['jctime'] < $timestamp_yesterday ) || in_array( $job['jqstat'], array( 'JOB_FAILED', 'STATUS_JOB_BAD', 'NO_CSS', 'NO_RESPONSE' ) ) ) {
-                unset( $queue[ $path ] );
-                $queue_altered = true;
+            if ( $queue_length > $queue_purge_threshold ) {
+                $remove_old_new = true;
             }
-        }
 
-        // save queue to options!
-        if ( $queue_altered ) {
-            $queue_raw = json_encode( $queue );
-            update_option( 'autoptimize_ccss_queue', $queue_raw, false );
-            $this->criticalcss->log( 'Queue cleaning done.', 3 );
+            foreach ( $queue as $path => $job ) {
+                if ( ( $remove_old_new && 'NEW' == $job['jqstat'] && $job['jctime'] < $timestamp_yesterday ) || in_array( $job['jqstat'], array( 'JOB_FAILED', 'STATUS_JOB_BAD', 'NO_CSS', 'NO_RESPONSE' ) ) ) {
+                    unset( $queue[ $path ] );
+                    $queue_altered = true;
+                }
+            }
+
+            // save queue to options!
+            if ( $queue_altered ) {
+                $queue_raw = json_encode( $queue );
+                update_option( 'autoptimize_ccss_queue', $queue_raw, false );
+                $this->criticalcss->log( 'Queue cleaning done.', 3 );
+            }
         }
 
         // re-check key if invalid.
