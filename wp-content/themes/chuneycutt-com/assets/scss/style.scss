@@ -1,8 +1,11 @@
-// Define variables, import functions and mixins
-@import '_variables.scss';
-
 // Import reboot styles
 @import 'base/_reboot.scss';
 
+// Define variables, import functions and mixins
+@import '_variables.scss';
+
 // Import Bootstrap core styles
 @import 'base/_bootstrap.scss';
+
+// Home styles, bro
+@import 'base/_home.scss';

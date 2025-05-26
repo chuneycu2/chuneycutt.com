@@ -29,7 +29,7 @@ mix
     )
     .js(`${ASSETS_DIR}/js/main.js`, "main.js");
 
-// Make jquery module avaiable.
+// Make jquery module available
 mix.autoload({
     jquery: ["$", "window.jQuery"],
 });
@@ -62,7 +62,6 @@ mix.browserSync({
 });
 
 // Minify assets in production
-if (mix.inProduction()) {
-    console.log(BUILD_MESSAGE);
-    mix.minify([`${BUILD_DIR}/style.css`, `${BUILD_DIR}/main.js`]).version([]);
-}
+console.log(BUILD_MESSAGE);
+mix.minify([`${BUILD_DIR}/style.css`, `${BUILD_DIR}/main.js`]).version([]);
+
