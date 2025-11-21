@@ -1,0 +1,93 @@
+header {
+  transition: .4s;
+  .hamburger {
+    background-color: transparent;
+    border: 0;
+    cursor: pointer;
+    display: inline-block;
+    font: inherit;
+    margin: 0;
+    overflow: visible;
+    padding: 0;
+    text-transform: none;
+    transition-timing-function: linear;
+    transition-duration: .15s;
+    transition-property: opacity, filter;
+    z-index: 100;
+    @include media-breakpoint-up(md) {
+      display: none;
+    }
+    &.is-active {
+      .hamburger-inner,
+      .hamburger-inner:after,
+      .hamburger-inner:before {
+        background: $black;
+        transition-duration: .15s;
+      }
+    }
+  }
+  .hamburger:hover {
+    opacity: 1;
+  }
+  .hamburger-box {
+    display: inline-block;
+    height: 20px;
+    position: relative;
+    top: 2px;
+    width: 35px;
+  }
+  .hamburger-inner {
+    display: block;
+    margin-top: -2px;
+    top: 50%;
+  }
+  .hamburger-inner,
+  .hamburger-inner:after,
+  .hamburger-inner:before {
+    background: $white;
+    border-radius: 2px;
+    position: absolute;
+    width: 35px;
+    height: 3px;
+    transition-timing-function: ease;
+    transition-duration: .15s;
+    transition-property: transform;
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#0076e8', endColorstr='#00bce8#0076e8', GradientType=1 );
+  }
+  .hamburger-inner:after,
+  .hamburger-inner:before {
+    display: block;
+    content: "";
+  }
+  .hamburger-inner:before {
+    top: -10px;
+  }
+  .hamburger-inner:after {
+    bottom: -10px;
+  }
+  .hamburger--squeeze .hamburger-inner {
+    transition-timing-function: cubic-bezier(.55, .055, .675, .19);
+    transition-duration: 75ms;
+  }
+  .hamburger--squeeze .hamburger-inner:before {
+    transition: top 75ms ease .12s, opacity 75ms ease;
+  }
+  .hamburger--squeeze .hamburger-inner:after {
+    transition: bottom 75ms ease .12s, transform 75ms cubic-bezier(.55, .055, .675, .19);
+  }
+  .hamburger--squeeze.is-active .hamburger-inner {
+    transition-delay: .12s;
+    transition-timing-function: cubic-bezier(.215, .61, .355, 1);
+    transform: rotate(45deg);
+  }
+  .hamburger--squeeze.is-active .hamburger-inner:before {
+    top: 0;
+    transition: top 75ms ease, opacity 75ms ease .12s;
+    opacity: 0;
+  }
+  .hamburger--squeeze.is-active .hamburger-inner:after {
+    bottom: 0;
+    transition: bottom 75ms ease, transform 75ms cubic-bezier(.215, .61, .355, 1) .12s;
+    transform: rotate(-90deg);
+  }
+}

@@ -11,6 +11,12 @@ $grid-breakpoints: (
     xxl : 1700px
 );
 
+$sm  : 576px;
+$md  : 768px;
+$lg  : 992px;
+$xl  : 1200px;
+$xxl : 1700px;
+
 // Sizing classes
 $sizes: () !default;
 $sizes: map-merge(
@@ -25,6 +31,11 @@ $sizes: map-merge(
 );
 
 // Colors
+$white : #ffffff;
+$black : #000000;
+$gray  : #eeeeee;
+$lightblue  : #269af9;
+$darkblue   : #081c5d;
 
 // Fonts
 

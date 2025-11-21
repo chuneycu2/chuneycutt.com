@@ -1,0 +1,80 @@
+header {
+  background-image: url('../../assets/img/header-texture.png');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+
+  // Helper classes
+  .nav-active {
+    opacity: 1 !important;
+    transition: .3s;
+    visibility: visible !important;
+  }
+  .nav-disabled {
+    opacity: 0 !important;
+    transition: .3s;
+    visibility: hidden !important;
+  }
+  .shown {
+    display: block;
+  }
+  .hidden {
+    opacity: 0;
+    transition: .2s;
+    visibility: hidden;
+  }
+
+  .nav-container {
+    max-width: $xl;
+    nav {
+
+      ul {
+        margin: 0;
+        padding: 0;
+        li {
+          list-style: none;
+          margin: 0 1rem;
+          &:last-child {
+            margin: 0 0 0 1rem;
+          }
+        }
+      }
+
+      // mobile nav
+      &.mobile-menu {
+        background-color: $white;
+        height: 100vh;
+        left: 0;
+        opacity: 1;
+        padding: 0;
+        position: absolute;
+        top: 0;
+        transition: .4s;
+        visibility: visible;
+        width: 100%;
+        .menu-main-menu-container {
+          padding-top: 115px; // header height
+          ul {
+            text-align: center;
+            li {
+              width: 100%;
+            }
+          }
+        }
+      }
+
+      //desktop nav
+      @include media-breakpoint-up(md) {
+        .desktop-menu {
+          ul {
+            li {
+              &:last-child {
+                margin: 0 0 0 1rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

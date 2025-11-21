@@ -4,8 +4,17 @@
 // Define variables, import functions and mixins
 @import '_variables.scss';
 
-// Import Bootstrap core styles
+// Import Bootstrap and mixins
 @import 'base/_bootstrap.scss';
+@import 'base/_mixins.scss';
 
 // Home styles, bro
 @import 'base/_home.scss';
+
+// Sections
+@import 'sections/main';
+@import 'sections/navigation';
+
+// Components
+@import 'components/site-logo';
+@import 'components/hamburger-nav';

@@ -1,3 +1,5 @@
+import camelCase from "./utils/camelCase";
+
 // Check for component chunks
 document.addEventListener("DOMContentLoaded", () => {
 

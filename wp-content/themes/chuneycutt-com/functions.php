@@ -1,8 +1,18 @@
 <?php
-	 function chuneycutt_com_enqueue_styles() {
- 		  wp_enqueue_style( 'main-style', get_template_directory_uri() . '/assets/build/style.min.css' );
-     }
-    add_action( 'wp_enqueue_scripts', 'chuneycutt_com_enqueue_styles' );
+
+$my_functions = [
+    'functions/build-assets.php', // Styles and scripts
+    'functions/init.php', // Theme setup
+    'functions/nav.php', // Nav walker
+];
+
+// Load each function partial
+foreach ($my_functions as $file) :
+    if (!$filepath = locate_template($file)) :
+        trigger_error(sprintf(__('Error locating % for inclusion', 'chuneycutt-com'), $file), E_USER_ERROR);
+    endif;
+    require_once $filepath;
+endforeach;
 
 function portfolio_register() {
     $labels = array(
@@ -65,15 +75,20 @@ add_action( 'init', 'portfolio_taxonomies', 0 );
 // Add home options page
 if( function_exists('acf_add_options_page') ) {
     acf_add_options_page([
-        "page_title" => "Home Options",
-        "menu_title" => "Home Options",
-        "menu_slug" => "options_home",
-        "post_id" => "options_home",
+        "page_title" => "Global options",
+        "menu_title" => "Global options",
+        "menu_slug" => "global_options",
+        "post_id" => "global_options",
         "capability" => "edit_posts",
         "parent" => "edit.php",
         "position" => false,
         "parent_slug" => "edit.php",
         "redirect" => false
+    ]);
+    // Global options subpage
+    acf_add_options_sub_page([
+        "page_title" => "All global options",
+        "menu_title" => "All global options"
     ]);
 }
 

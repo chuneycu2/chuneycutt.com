@@ -1,0 +1,33 @@
+.site-logo {
+  padding: 1.5rem 0;
+  position: relative;
+  z-index: 100;
+  svg {
+    max-height: 80px;
+    width: 75px;
+    .left-bracket,
+    .right-bracket,
+    .letter-c,
+    .letter-h{
+      fill: $white;
+    }
+    &:hover {
+      .letter-c,
+      .letter-h {
+        fill: $lightblue;
+      }
+    }
+  }
+}
+header {
+  &.open {
+    .left-bracket,
+    .right-bracket {
+      fill: $black;
+    }
+    .letter-c,
+    .letter-h {
+      fill: $lightblue;
+    }
+  }
+}
