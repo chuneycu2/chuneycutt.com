@@ -1,0 +1,60 @@
+.component.component-cards {
+  .card-deck {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+
+    .card {
+      flex: 0 1 100%;
+      .card-image {
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
+        min-height: 200px;
+        @include media-breakpoint-up(sm) {
+          min-height: 250px;
+        }
+        @include media-breakpoint-up(md){
+          min-height: 300px;
+        }
+      }
+    }
+
+    // Per row classes
+    &.one-per-row {
+      .card {
+        @include media-breakpoint-up(lg) {
+          flex: 0 1 80%;
+        }
+      }
+    }
+    &.two-per-row {
+      .card {
+        @include media-breakpoint-up(lg) {
+          flex: 0 1 49%;
+        }
+      }
+    }
+    &.three-per-row {
+      .card {
+        @include media-breakpoint-up(lg) {
+          flex: 0 1 32%;
+        }
+      }
+    }
+    &.four-per-row {
+      .card {
+        flex: 0 1 100%;
+        @include media-breakpoint-up(lg) {
+          flex: 0 1 49%;
+        }
+      }
+    }
+    &.five-per-row {
+      .card {
+        flex: 0 1 17%;
+      }
+    }
+  }
+}

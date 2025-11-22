@@ -1,5 +1,5 @@
-<div class="nav-container m-auto">
-    <div class="container-fluid d-flex align-items-center justify-content-between">
+<div class="component component-header m-auto">
+    <div class="container-fluid d-flex align-items-center justify-content-between p-0">
         <div class="site-logo">
             <a href="<?php echo get_home_url(); ?>" class="logo-link">
                 <?php include locate_template('./assets/img/ch-site-logo.php'); ?>
@@ -31,7 +31,7 @@
                 ));
             endif; ?>
         </nav>
-        <div class="component component-hamburger hamburger hamburger--squeeze js-hamburger">
+        <div class="hamburger hamburger--squeeze js-hamburger">
             <div class="hamburger-box">
                 <div class="hamburger-inner"></div>
             </div>

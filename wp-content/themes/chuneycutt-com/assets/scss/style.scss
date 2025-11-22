@@ -1,20 +1,25 @@
 // Import reboot styles
-@import 'base/_reboot.scss';
+@import 'base/reboot';
 
 // Define variables, import functions and mixins
-@import '_variables.scss';
+@import 'variables';
 
 // Import Bootstrap and mixins
-@import 'base/_bootstrap.scss';
-@import 'base/_mixins.scss';
+@import 'base/bootstrap';
+@import 'base/mixins';
 
 // Home styles, bro
-@import 'base/_home.scss';
+@import 'base/home';
 
 // Sections
 @import 'sections/main';
 @import 'sections/navigation';
 
 // Components
+@import 'components/components';
 @import 'components/site-logo';
 @import 'components/hamburger-nav';
+
+// Page builder
+@import 'components/page-builder/cards';
+@import 'components/page-builder/wysiwyg';
