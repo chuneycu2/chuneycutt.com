@@ -89,7 +89,7 @@
             "choices": {
                 "fade": "Fade",
                 "flip": "Flip",
-                "slide: Slide": "slide: Slide",
+                "slide": "Slide",
                 "zoom": "Zoom"
             },
             "default_value": "fade",
@@ -115,9 +115,7 @@
                         "field": "field_692101b5fab46",
                         "operator": "==",
                         "value": "fade"
-                    }
-                ],
-                [
+                    },
                     {
                         "field": "field_6920e7f7118e5",
                         "operator": "==",
@@ -164,9 +162,7 @@
                         "field": "field_692101b5fab46",
                         "operator": "==",
                         "value": "flip"
-                    }
-                ],
-                [
+                    },
                     {
                         "field": "field_6920e7f7118e5",
                         "operator": "==",
@@ -209,9 +205,7 @@
                         "field": "field_692101b5fab46",
                         "operator": "==",
                         "value": "slide"
-                    }
-                ],
-                [
+                    },
                     {
                         "field": "field_6920e7f7118e5",
                         "operator": "==",
@@ -254,9 +248,7 @@
                         "field": "field_692101b5fab46",
                         "operator": "==",
                         "value": "zoom"
-                    }
-                ],
-                [
+                    },
                     {
                         "field": "field_6920e7f7118e5",
                         "operator": "==",
@@ -740,5 +732,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1763771845
+    "modified": 1763838372
 }

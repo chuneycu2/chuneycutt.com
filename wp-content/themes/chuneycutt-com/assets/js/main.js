@@ -1,7 +1,30 @@
 import camelCase from "./utils/camelCase";
+import AOS from "aos";
+import lozad from "lozad";
 
 // Check for component chunks
 document.addEventListener("DOMContentLoaded", () => {
+
+    // Lazy loads elements with default selector '.lozad'
+    // Affects most page-builder components and templated images
+    const images = document.querySelectorAll('.lozad');
+    const observer = lozad(images);
+    observer.observe();
+
+    // AOS animations
+    // init AOS
+    let aosOffset = -150,
+        aosDuration = 400;
+
+    AOS.init({
+        duration: aosDuration,
+        easing: "ease-out-cubic",
+        startEvent: "load",
+        offset: aosOffset,
+        once: true
+    });
+
+    AOS.refresh();
 
     const checkForElement = (element) => {
         if (typeof element != "undefined") {

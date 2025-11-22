@@ -32,11 +32,19 @@ $padding_classes = array();
 
 // Animation attribute
 $animation_style = '';
-if ($animation_type === 'fade')  : $animation_style = 'fade-'  . $fade_type;  endif;
-if ($animation_type === 'flip')  : $animation_style = 'flip-'  . $flip_type;  endif;
-if ($animation_type === 'slide') : $animation_style = 'slide-' . $slide_type; endif;
-if ($animation_type === 'zoom') : $animation_style  = 'zoom-'  . $zoom_type;  endif;
-$animation_attributes = ($animate == 'yes') ? 'data-aos="'.$animation_style.'" data-aos-delay="'.$animation_delay.'" data-aos-duration="'.$animation_duration.'" data-aos-anchor-placement="top-center"' : '';
+if ($animation_type === 'fade')  :
+    if ($fade_type === 'fade') : $animation_style = 'fade'; else : $animation_style = 'fade-' . $fade_type; endif;
+endif;
+if ($animation_type === 'flip')  :
+    if ($fade_type === 'flip') : $animation_style = 'flip'; else : $animation_style = 'flip-' . $flip_type; endif;
+endif;
+if ($animation_type === 'slide')  :
+    if ($fade_type === 'slide') : $animation_style = 'slide'; else : $animation_style = 'slide-' . $slide_type; endif;
+endif;
+if ($animation_type === 'zoom')  :
+    if ($fade_type === 'zoom') : $animation_style = 'zoom'; else : $animation_style = 'zoom-' . $zoom_type; endif;
+endif;
+$animation_attributes = ($animate == 'yes') ? 'data-aos="'.$animation_style.'" data-aos-delay="'.$animation_delay.'" data-aos-duration="'.$animation_duration.'"' : '';
 
 // Background color/image classes
 $bg_color_class = 'background-color-' . $background_color;

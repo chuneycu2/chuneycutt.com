@@ -4,9 +4,13 @@
 // Define variables, import functions and mixins
 @import 'variables';
 
+// Import AOS (animations)
+@import '../../node_modules/aos/src/sass/aos.scss';
+
 // Import Bootstrap and mixins
 @import 'base/bootstrap';
 @import 'base/mixins';
+@import 'base/typography';
 
 // Home styles, bro
 @import 'base/home';
@@ -23,3 +27,4 @@
 // Page builder
 @import 'components/page-builder/cards';
 @import 'components/page-builder/wysiwyg';
+@import 'components/page-builder/images';
