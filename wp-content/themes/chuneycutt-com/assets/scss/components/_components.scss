@@ -12,6 +12,10 @@
 
     .card {
       flex: 0 1 100%;
+      margin-bottom: 1rem;
+      @include media-breakpoint-up(md){
+        margin-bottom: 1.5rem;
+      }
       .card-image {
         background-repeat: no-repeat;
         background-size: cover;

@@ -1,7 +1,50 @@
-p, a, ul, li, figcaption {
-  font-family: "Source Sans Pro", sans-serif;
+html,
+body {
+  font-family: $body_font;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: "Oxygen", sans-serif;
+// Headers
+h1, .h1,
+h2, .h2,
+h3, .h3,
+h4, .h4,
+h5, .h5 {
+  font-family: $head_font;
+  font-weight: $regular;
+  line-height: 1;
+  text-rendering: optimizeLegibility;
+}
+
+h1, .h1 {
+  font-size: 2rem;
+  @include media-breakpoint-up(md) {
+    font-size: 2.25rem;
+  }
+  @include media-breakpoint-up(lg){
+    font-size: 2.5rem;
+  }
+}
+
+h2, .h2 {
+  font-size: 1.75rem;
+  @include media-breakpoint-up(md) {
+    font-size: 2rem;
+  }
+  @include media-breakpoint-up(lg){
+    font-size: 2.25rem;
+  }
+}
+
+// Paragraphs
+p, .p {
+  color: $black;
+  font-family: $body_font;
+  font-size: 1.25rem; // 20px
+  line-height: 1.5;
+  margin: 0;
+}
+
+.caption p {
+  font-size: 1rem;
+  margin: 1rem 0;
 }

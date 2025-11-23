@@ -1,0 +1,26 @@
+{
+    "key": "ui_options_page_692258fc2fc20",
+    "title": "Global options",
+    "active": true,
+    "menu_order": 0,
+    "page_title": "Global options",
+    "menu_slug": "global-options",
+    "parent_slug": "none",
+    "advanced_configuration": 1,
+    "icon_url": "",
+    "menu_title": "",
+    "position": "",
+    "redirect": 0,
+    "description": "",
+    "menu_icon": {
+        "type": "dashicons",
+        "value": "dashicons-admin-site-alt3"
+    },
+    "update_button": "Update",
+    "updated_message": "Options Updated",
+    "capability": "edit_posts",
+    "data_storage": "options",
+    "post_id": "",
+    "autoload": 0,
+    "modified": 1763859331
+}

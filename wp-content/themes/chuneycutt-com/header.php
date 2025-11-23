@@ -8,7 +8,10 @@
         <title><?php wp_title(); ?></title>
 
         <?php // Fonts ?>
-        <link href="https://fonts.googleapis.com/css?family=Oxygen|Source+Sans+Pro&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&family=Source+Sans+Pro:wght@400;700&display=swap" rel="stylesheet">
+
 
         <?php // Google tag (gtag.js) ?>
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-4CHJ8VZ28C"></script>

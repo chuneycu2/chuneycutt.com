@@ -30,7 +30,7 @@ $padding_bottom_xl                  = $options['padding_bottom_xl'];
 $classes         = array();
 $padding_classes = array();
 
-// Animation attribute
+// AOS animation attributes setup
 $animation_style = '';
 if ($animation_type === 'fade')  :
     if ($fade_type === 'fade') : $animation_style = 'fade'; else : $animation_style = 'fade-' . $fade_type; endif;
@@ -46,12 +46,13 @@ if ($animation_type === 'zoom')  :
 endif;
 $animation_attributes = ($animate == 'yes') ? 'data-aos="'.$animation_style.'" data-aos-delay="'.$animation_delay.'" data-aos-duration="'.$animation_duration.'"' : '';
 
-// Background color/image classes
+// Background color class
 $bg_color_class = 'background-color-' . $background_color;
 array_push($classes, $bg_color_class);
 
-// Text contrast class
-$text_class = 'text-color-'.$text_color;
+// Text color/alignment class (added to component children)
+$text_color_class      = 'text-color-' . $text_color;
+$text_alignment_class  = 'text-' . $text_alignment;
 
 // Set padding classes, if padding is set in component (at end of array for legibility)
 $pt_class         = '';

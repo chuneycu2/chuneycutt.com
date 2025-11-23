@@ -9,12 +9,13 @@ $name         = strtr($component['acf_fc_layout'], '_', '-');
 $per_row      = $component['per_row'];
 $row_width    = $component['row_width'];
 $images       = $component['images'];
+$caption      = $component['caption'];
 
 // Options
 include locate_template('./components/partials/component-options.php'); ?>
 
 <section id="<?= $section_ID ?>" class="component component-<?= $name; ?> <?= implode(' ', $classes); ?>">
-    <div class="container-fluid p-0">
+    <div class="container-fluid p-0 <?= $text_color_class;?>">
         <?php if ($images) : ?>
             <div class="card-deck <?= $per_row; ?>-per-row w-<?= $row_width; ?> m-auto">
                 <?php
@@ -39,6 +40,11 @@ include locate_template('./components/partials/component-options.php'); ?>
                     </div>
                 <?php endforeach; ?>
             </div>
+            <?php if ($caption) : ?>
+                <div class="caption w-<?= $row_width; ?> m-auto text-center">
+                    <p><?= $caption ?></p>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
 </section>

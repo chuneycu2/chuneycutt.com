@@ -1,3 +1,47 @@
 .component.component-cards {
-
+  .card-deck {
+    .card {
+      border-radius: 15px;
+      box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.15);
+      position: relative;
+      transition: .4s;
+      // Card link slide appears on hover
+      a.card-link {
+        background-image: url('../../assets/img/header-texture.png');
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+        border-radius: 15px;
+        height: 100%;
+        opacity: 0;
+        position: absolute;
+        text-decoration: none;
+        top: 0;
+        transition: opacity 0.3s ease-in-out, visibility 0s 0.3s;
+        width: 100%;
+        visibility: hidden;
+        .card-content {
+          .card-title {
+            color: $white;
+            font-size: 1.15rem;
+            font-weight: $bold;
+          }
+          .card-subtitle {
+            color: $white;
+            font-weight: $regular;
+          }
+        }
+      }
+      .card-image {
+        border-radius: 15px;
+      }
+      &:hover {
+        .card-link {
+          opacity: 1;
+          transition: opacity 0.3s ease-in-out, visibility 0s;
+          visibility: visible;
+        }
+      }
+    }
+  }
 }

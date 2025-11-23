@@ -6,5 +6,8 @@ export class Component extends chuneycuttComponent {
     }
     init() {
         console.log(this.name);
+
+        let $cards = $('.component.component-cards .card');
+
     }
 }

@@ -1,0 +1,169 @@
+// Custom padding override classes
+// Used in page builder component global onmt-mobileions
+
+.m-auto {
+  margin: 0 auto !important;
+}
+
+// padding
+.pb-0 { padding-bottom: 0 !important; }
+.pt-0 { padding-top: 0 !important; }
+.pb-25 { padding-bottom: 25px !important; }
+.pt-25 { padding-top: 25px !important; }
+.pb-50 { padding-bottom: 50px !important; }
+.pt-50 { padding-top: 50px !important; }
+.pb-75 { padding-bottom: 75px !important; }
+.pt-75 { padding-top: 75px !important; }
+.pb-100 { padding-bottom: 100px !important; }
+.pt-100 { padding-top: 100px !important; }
+.pb-125 { padding-bottom: 125px !important; }
+.pt-125 { padding-top: 125px !important; }
+.pb-150 { padding-bottom: 150px !important; }
+.pt-150 { padding-top: 150px !important; }
+.pb-175 { padding-bottom: 175px !important; }
+.pt-175 { padding-top: 175px !important; }
+.pb-200 { padding-bottom: 200px !important; }
+.pt-200 { padding-top: 200px !important; }
+.pb-225 { padding-bottom: 225px !important; }
+.pt-225 { padding-top: 225px !important; }
+.pb-250 { padding-bottom: 250px !important; }
+.pt-250 { padding-top: 250px !important; }
+
+.pb-xs-0 { @include media-breakpoint-up(xs) { padding-bottom: 0 !important; } }
+.pt-xs-0 { @include media-breakpoint-up(xs) { padding-top: 0 !important; } }
+.pb-xs-25 { @include media-breakpoint-up(xs) { padding-bottom: 25px !important; } }
+.pt-xs-25 { @include media-breakpoint-up(xs) { padding-top: 25px !important; } }
+.pb-xs-50 { @include media-breakpoint-up(xs) { padding-bottom: 50px !important; } }
+.pt-xs-50 { @include media-breakpoint-up(xs) { padding-top: 50px !important; } }
+.pb-xs-75 { @include media-breakpoint-up(xs) { padding-bottom: 75px !important; } }
+.pt-xs-75 { @include media-breakpoint-up(xs) { padding-top: 75px !important; } }
+.pb-xs-100 { @include media-breakpoint-up(xs) { padding-bottom: 100px !important; } }
+.pt-xs-100 { @include media-breakpoint-up(xs) { padding-top: 100px !important; } }
+.pb-xs-125 { @include media-breakpoint-up(xs) { padding-bottom: 125px !important; } }
+.pt-xs-125 { @include media-breakpoint-up(xs) { padding-top: 125px !important; } }
+.pb-xs-150 { @include media-breakpoint-up(xs) { padding-bottom: 150px !important; } }
+.pt-xs-150 { @include media-breakpoint-up(xs) { padding-top: 150px !important; } }
+.pb-xs-175 { @include media-breakpoint-up(xs) { padding-bottom: 175px !important; } }
+.pt-xs-175 { @include media-breakpoint-up(xs) { padding-top: 175px !important; } }
+.pb-xs-200 { @include media-breakpoint-up(xs) { padding-bottom: 200px !important; } }
+.pt-xs-200 { @include media-breakpoint-up(xs) { padding-top: 200px !important; } }
+.pb-xs-225 { @include media-breakpoint-up(xs) { padding-bottom: 225px !important; } }
+.pt-xs-225 { @include media-breakpoint-up(xs) { padding-top: 225px !important; } }
+.pb-xs-250 { @include media-breakpoint-up(xs) { padding-bottom: 250px !important; } }
+.pt-xs-250 { @include media-breakpoint-up(xs) { padding-top: 250px !important; } }
+
+.pb-sm-0 { @include media-breakpoint-up(sm) { padding-bottom: 0 !important; } }
+.pt-sm-0 { @include media-breakpoint-up(sm) { padding-top: 0 !important; } }
+.pb-sm-25 { @include media-breakpoint-up(sm) { padding-bottom: 25px !important; } }
+.pt-sm-25 { @include media-breakpoint-up(sm) { padding-top: 25px !important; } }
+.pb-sm-50 { @include media-breakpoint-up(sm) { padding-bottom: 50px !important; } }
+.pt-sm-50 { @include media-breakpoint-up(sm) { padding-top: 50px !important; } }
+.pb-sm-75 { @include media-breakpoint-up(sm) { padding-bottom: 75px !important; } }
+.pt-sm-75 { @include media-breakpoint-up(sm) { padding-top: 75px !important; } }
+.pb-sm-100 { @include media-breakpoint-up(sm) { padding-bottom: 100px !important; } }
+.pt-sm-100 { @include media-breakpoint-up(sm) { padding-top: 100px !important; } }
+.pb-sm-125 { @include media-breakpoint-up(sm) { padding-bottom: 125px !important; } }
+.pt-sm-125 { @include media-breakpoint-up(sm) { padding-top: 125px !important; } }
+.pb-sm-150 { @include media-breakpoint-up(sm) { padding-bottom: 150px !important; } }
+.pt-sm-150 { @include media-breakpoint-up(sm) { padding-top: 150px !important; } }
+.pb-sm-175 { @include media-breakpoint-up(sm) { padding-bottom: 175px !important; } }
+.pt-sm-175 { @include media-breakpoint-up(sm) { padding-top: 175px !important; } }
+.pb-sm-200 { @include media-breakpoint-up(sm) { padding-bottom: 200px !important; } }
+.pt-sm-200 { @include media-breakpoint-up(sm) { padding-top: 200px !important; } }
+.pb-sm-225 { @include media-breakpoint-up(sm) { padding-bottom: 225px !important; } }
+.pt-sm-225 { @include media-breakpoint-up(sm) { padding-top: 225px !important; } }
+.pb-sm-250 { @include media-breakpoint-up(sm) { padding-bottom: 250px !important; } }
+.pt-sm-250 { @include media-breakpoint-up(sm) { padding-top: 250px !important; } }
+
+.pb-md-0 { @include media-breakpoint-up(md) { padding-bottom: 0 !important; } }
+.pt-md-0 { @include media-breakpoint-up(md) { padding-top: 0 !important; } }
+.pb-md-25 { @include media-breakpoint-up(md) { padding-bottom: 25px !important; } }
+.pt-md-25 { @include media-breakpoint-up(md) { padding-top: 25px !important; } }
+.pb-md-50 { @include media-breakpoint-up(md) { padding-bottom: 50px !important; } }
+.pt-md-50 { @include media-breakpoint-up(md) { padding-top: 50px !important; } }
+.pb-md-75 { @include media-breakpoint-up(md) { padding-bottom: 75px !important; } }
+.pt-md-75 { @include media-breakpoint-up(md) { padding-top: 75px !important; } }
+.pb-md-100 { @include media-breakpoint-up(md) { padding-bottom: 100px !important; } }
+.pt-md-100 { @include media-breakpoint-up(md) { padding-top: 100px !important; } }
+.pb-md-125 { @include media-breakpoint-up(md) { padding-bottom: 125px !important; } }
+.pt-md-125 { @include media-breakpoint-up(md) { padding-top: 125px !important; } }
+.pb-md-150 { @include media-breakpoint-up(md) { padding-bottom: 150px !important; } }
+.pt-md-150 { @include media-breakpoint-up(md) { padding-top: 150px !important; } }
+.pb-md-175 { @include media-breakpoint-up(md) { padding-bottom: 175px !important; } }
+.pt-md-175 { @include media-breakpoint-up(md) { padding-top: 175px !important; } }
+.pb-md-200 { @include media-breakpoint-up(md) { padding-bottom: 200px !important; } }
+.pt-md-200 { @include media-breakpoint-up(md) { padding-top: 200px !important; } }
+.pb-md-225 { @include media-breakpoint-up(md) { padding-bottom: 225px !important; } }
+.pt-md-225 { @include media-breakpoint-up(md) { padding-top: 225px !important; } }
+.pb-md-250 { @include media-breakpoint-up(md) { padding-bottom: 250px !important; } }
+.pt-md-250 { @include media-breakpoint-up(md) { padding-top: 250px !important; } }
+
+.pb-lg-0 { @include media-breakpoint-up(lg) { padding-bottom: 0 !important; } }
+.pt-lg-0 { @include media-breakpoint-up(lg) { padding-top: 0 !important; } }
+.pb-lg-25 { @include media-breakpoint-up(lg) { padding-bottom: 25px !important; } }
+.pt-lg-25 { @include media-breakpoint-up(lg) { padding-top: 25px !important; } }
+.pb-lg-50 { @include media-breakpoint-up(lg) { padding-bottom: 50px !important; } }
+.pt-lg-50 { @include media-breakpoint-up(lg) { padding-top: 50px !important; } }
+.pb-lg-75 { @include media-breakpoint-up(lg) { padding-bottom: 75px !important; } }
+.pt-lg-75 { @include media-breakpoint-up(lg) { padding-top: 75px !important; } }
+.pb-lg-100 { @include media-breakpoint-up(lg) { padding-bottom: 100px !important; } }
+.pt-lg-100 { @include media-breakpoint-up(lg) { padding-top: 100px !important; } }
+.pb-lg-125 { @include media-breakpoint-up(lg) { padding-bottom: 125px !important; } }
+.pt-lg-125 { @include media-breakpoint-up(lg) { padding-top: 125px !important; } }
+.pb-lg-150 { @include media-breakpoint-up(lg) { padding-bottom: 150px !important; } }
+.pt-lg-150 { @include media-breakpoint-up(lg) { padding-top: 150px !important; } }
+.pb-lg-175 { @include media-breakpoint-up(lg) { padding-bottom: 175px !important; } }
+.pt-lg-175 { @include media-breakpoint-up(lg) { padding-top: 175px !important; } }
+.pb-lg-200 { @include media-breakpoint-up(lg) { padding-bottom: 200px !important; } }
+.pt-lg-200 { @include media-breakpoint-up(lg) { padding-top: 200px !important; } }
+.pb-lg-225 { @include media-breakpoint-up(lg) { padding-bottom: 225px !important; } }
+.pt-lg-225 { @include media-breakpoint-up(lg) { padding-top: 225px !important; } }
+.pb-lg-250 { @include media-breakpoint-up(lg) { padding-bottom: 250px !important; } }
+.pt-lg-250 { @include media-breakpoint-up(lg) { padding-top: 250px !important; } }
+
+.pb-xl-0 { @include media-breakpoint-up(xl) { padding-bottom: 0 !important; } }
+.pt-xl-0 { @include media-breakpoint-up(xl) { padding-top: 0 !important; } }
+.pb-xl-25 { @include media-breakpoint-up(xl) { padding-bottom: 25px !important; } }
+.pt-xl-25 { @include media-breakpoint-up(xl) { padding-top: 25px !important; } }
+.pb-xl-50 { @include media-breakpoint-up(xl) { padding-bottom: 50px !important; } }
+.pt-xl-50 { @include media-breakpoint-up(xl) { padding-top: 50px !important; } }
+.pb-xl-75 { @include media-breakpoint-up(xl) { padding-bottom: 75px !important; } }
+.pt-xl-75 { @include media-breakpoint-up(xl) { padding-top: 75px !important; } }
+.pb-xl-100 { @include media-breakpoint-up(xl) { padding-bottom: 100px !important; } }
+.pt-xl-100 { @include media-breakpoint-up(xl) { padding-top: 100px !important; } }
+.pb-xl-125 { @include media-breakpoint-up(xl) { padding-bottom: 125px !important; } }
+.pt-xl-125 { @include media-breakpoint-up(xl) { padding-top: 125px !important; } }
+.pb-xl-150 { @include media-breakpoint-up(xl) { padding-bottom: 150px !important; } }
+.pt-xl-150 { @include media-breakpoint-up(xl) { padding-top: 150px !important; } }
+.pb-xl-175 { @include media-breakpoint-up(xl) { padding-bottom: 175px !important; } }
+.pt-xl-175 { @include media-breakpoint-up(xl) { padding-top: 175px !important; } }
+.pb-xl-200 { @include media-breakpoint-up(xl) { padding-bottom: 200px !important; } }
+.pt-xl-200 { @include media-breakpoint-up(xl) { padding-top: 200px !important; } }
+.pb-xl-225 { @include media-breakpoint-up(xl) { padding-bottom: 225px !important; } }
+.pt-xl-225 { @include media-breakpoint-up(xl) { padding-top: 225px !important; } }
+.pb-xl-250 { @include media-breakpoint-up(xl) { padding-bottom: 250px !important; } }
+.pt-xl-250 { @include media-breakpoint-up(xl) { padding-top: 250px !important; } }
+
+// margins
+.mb-0 { margin-bottom: 0 !important; }
+.mt-0 { margin-top: 0 !important; }
+.mb-25 { margin-bottom: 25px !important; }
+.mt-25 { margin-top: 25px !important; }
+.mb-50 { margin-bottom: 50px !important; }
+.mt-50 { margin-top: 50px !important; }
+.mb-75 { margin-bottom: 75px !important; }
+.mt-75 { margin-top: 75px !important; }
+.mb-100 { margin-bottom: 100px !important; }
+.mt-100 { margin-top: 100px !important; }
+.mb-125 { margin-bottom: 125px !important; }
+.mt-125 { margin-top: 125px !important; }
+.mb-150 { margin-bottom: 150px !important; }
+.mt-150 { margin-top: 150px !important; }
+.mb-175 { margin-bottom: 175px !important; }
+.mt-175 { margin-top: 175px !important; }
+.mb-200 { margin-bottom: 200px !important; }
+.mt-200 { margin-top: 200px !important; }
+.mb-225 { margin-bottom: 225px !important; }
+.mt-225 { margin-top: 225px !important; }
+.mb-250 { margin-bottom: 250px !important; }
+.mt-250 { margin-top: 250px !important; }

@@ -72,24 +72,4 @@ function portfolio_taxonomies() {
 }
 add_action( 'init', 'portfolio_taxonomies', 0 );
 
-// Add home options page
-if( function_exists('acf_add_options_page') ) {
-    acf_add_options_page([
-        "page_title" => "Global options",
-        "menu_title" => "Global options",
-        "menu_slug" => "global_options",
-        "post_id" => "global_options",
-        "capability" => "edit_posts",
-        "parent" => "edit.php",
-        "position" => false,
-        "parent_slug" => "edit.php",
-        "redirect" => false
-    ]);
-    // Global options subpage
-    acf_add_options_sub_page([
-        "page_title" => "All global options",
-        "menu_title" => "All global options"
-    ]);
-}
-
 

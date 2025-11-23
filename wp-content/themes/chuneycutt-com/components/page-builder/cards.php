@@ -39,39 +39,37 @@ include locate_template('./components/partials/component-options.php'); ?>
 
                     // Begin card layout ?>
                     <div class="card" <?= $animation_attributes; ?>>
-                        <?php if ($card_link) : ?>
-                            <a class="card-link" href="<?= $card_link; ?>">
-                                <?php if ($card_bg) : ?>
-                                    <div class="card-image lozad" <?= $bg_image_style; ?>></div>
-                                <?php endif; ?>
-                                <?php if ($card_title || $card_subtitle) : ?>
-                                    <div class="card-content">
+
+                        <?php if ($card_bg) : ?>
+                            <div class="card-image lozad" <?= $bg_image_style; ?>></div>
+                        <?php endif;
+
+                        // Card detail overlay (appears on hover)
+                        if ($card_title || $card_subtitle) : ?>
+                            <?php if ($card_link) : ?>
+                                <a class="card-link d-flex w-100" href="<?= $card_link; ?>">
+                                    <div class="card-content d-flex flex-column justify-content-center w-100 <?= $text_alignment_class; ?> p-3">
                                         <?php if ($card_title) : ?>
-                                            <div class="card-title"?><?= $card_title; ?></div>
+                                            <div class="card-title"><?= $card_title; ?></div>
                                         <?php endif; ?>
                                         <?php if ($card_subtitle) : ?>
-                                            <div class="card-subtitle"?><?= $card_subtitle; ?></div>
+                                            <div class="card-subtitle"><?= $card_subtitle; ?></div>
                                         <?php endif; ?>
                                     </div>
-                                <?php endif; ?>
-                            </a>
-                        <?php else : ?>
-                            <div class="card-nolink">
-                                <?php if ($card_bg) : ?>
-                                    <div class="card-image" <?= $bg_image_style; ?>></div>
-                                <?php endif; ?>
-                                <?php if ($card_title || $card_subtitle) : ?>
-                                    <div class="card-content">
+                                </a>
+                            <?php else : ?>
+                                <div class="card-nolink">
+                                    <div class="card-content d-flex flex-column justify-content-center w-100 <?= $text_alignment_class; ?> p-3">
                                         <?php if ($card_title) : ?>
-                                            <div class="card-title"?><?= $card_title; ?></div>
+                                            <div class="card-title"><?= $card_title; ?></div>
                                         <?php endif; ?>
                                         <?php if ($card_subtitle) : ?>
-                                            <div class="card-subtitle"?><?= $card_subtitle; ?></div>
+                                            <div class="card-subtitle"><?= $card_subtitle; ?></div>
                                         <?php endif; ?>
                                     </div>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
+                                </div>
+                            <?php endif;
+                        endif; ?>
                     </div>
 
                 <?php endforeach; ?>

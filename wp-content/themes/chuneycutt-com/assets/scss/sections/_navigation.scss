@@ -82,3 +82,45 @@ header {
     }
   }
 }
+
+footer {
+  background-image: url('../../assets/img/header-texture.png');
+  background-position: center;
+  background-size: initial;
+  background-repeat: no-repeat;
+  max-width: 100%;
+  width: 100%;
+  .footer-cta {
+    background-color: $lightblue;
+    color: $white;
+    transition: .3s;
+    a {
+      color: $white;
+      text-decoration: none;
+    }
+    &:hover {
+      background-color: lighten($lightblue, 10%);
+      cursor: pointer;
+      transition: .3s;
+    }
+  }
+  .socials {
+    .social-icons {
+      padding-top: 6rem;
+      img {
+        width: 40px;
+        margin: 0 1rem;
+      }
+    }
+  }
+  .copyright {
+    margin: 0 auto;
+    max-width: 600px;
+    p {
+      color: $gray;
+      line-height: 1.2;
+      font-size: .85rem;
+      font-style: italic;
+    }
+  }
+}
