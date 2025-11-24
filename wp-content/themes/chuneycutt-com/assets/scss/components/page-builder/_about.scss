@@ -1,0 +1,128 @@
+.component.component-about {
+  h1, h2, h3 {
+    margin: 0;
+    padding: 1rem 0;
+  }
+  p {
+    padding: 1rem 0;
+  }
+  .sidebar {
+    display: flex;
+    height: 100%;
+    @media all and (max-width: 360px) {
+      display: block;
+    }
+    @include media-breakpoint-up(sm) {
+      display: block;
+      height: 100%;
+      position: sticky;
+      top: 190px;
+    }
+    .sidebar-image {
+      @media all and (max-width: 360px) {
+        flex: 0 1 100%;
+      }
+      align-self: flex-start;
+      border-radius: 15px;
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center;
+      flex: 0 1 30%;
+      margin-bottom: 1.5rem;
+      img {
+        border-radius: 15px;
+        opacity: 1;
+        transition: opacity 0s ease-in-out, visibility 0s 0s;
+        visibility: visible;
+      }
+      &:hover {
+        img {
+          opacity: 0;
+          transition: opacity 0s ease-in-out, visibility 0s;
+          visibility: hidden;
+        }
+      }
+    }
+    .sidebar-content {
+      @media all and (max-width: 360px) {
+        padding-left: 0;
+      }
+      padding-left: 1.5rem;
+      @include media-breakpoint-up(sm) {
+        padding-left: 0;
+      }
+      .sidebar-menu {
+        a {
+          color: $black;
+          font-size: 1rem;
+          text-decoration: none;
+          transition: .3s;
+          &.active {
+            color: $lightblue;
+            font-weight: $bold;
+            text-decoration: none;
+            transition: .3s;
+          }
+          &:hover {
+            color: $lightblue;
+            transition: .3s;
+          }
+        }
+      }
+      .sidebar-links {
+        p {
+          padding: 0 0 1rem 0;
+        }
+      }
+    }
+  }
+
+  .about-content {
+    .icon-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      padding: 1.5rem 0 0 0;
+      @include media-breakpoint-up(md) {
+        //width: 80%;
+      }
+      .icon {
+        img {
+          width: 40px;
+        }
+        p.caption {
+          display: none;
+          font-size: .85rem;
+        }
+        @media all and (min-width: 450px) {
+          img {
+            width: 60px;
+          }
+        }
+        @include media-breakpoint-up(sm) {
+          img {
+            width: 50px;
+          }
+          p.caption {
+            display: block;
+            padding: .75rem 0 0 0;
+          }
+        }
+        @include media-breakpoint-up(md) {
+          img {
+            width: 70px;
+          }
+        }
+        @include media-breakpoint-up(lg) {
+          img {
+            width: 80px;
+          }
+          p.caption {
+            display: block;
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+  }
+}

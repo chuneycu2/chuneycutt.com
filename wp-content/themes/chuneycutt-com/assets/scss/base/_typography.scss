@@ -35,16 +35,48 @@ h2, .h2 {
   }
 }
 
+h3, .h3 {
+  font-size: 1.5rem;
+  @include media-breakpoint-up(md) {
+    font-size: 1.75rem;
+  }
+}
+
 // Paragraphs
 p, .p {
   color: $black;
   font-family: $body_font;
   font-size: 1.25rem; // 20px
-  line-height: 1.5;
+  line-height: 1.35;
   margin: 0;
+}
+
+// Lists
+ul, ol {
+  color: $black;
+  font-family: $body_font;
+  font-size: 1.25rem; // 20px
+  line-height: 1.35;
+  list-style: none;
+  padding: 1rem 0 1rem 1.5rem;
+  margin: 0;
+  li {
+    color: $black;
+    font-family: $body_font;
+    position: relative;
+    &:before {
+      background: $lightblue;
+      content: '';
+      height: 7px;
+      left: -20px;
+      position: absolute;
+      top: 11px;
+      width: 7px;
+    }
+  }
 }
 
 .caption p {
   font-size: 1rem;
-  margin: 1rem 0;
+  margin: 0;
 }

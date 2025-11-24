@@ -17,7 +17,7 @@ include locate_template('./components/partials/component-options.php'); ?>
 <section id="<?= $section_ID ?>" class="component component-<?= $name; ?> <?= implode(' ', $classes); ?>">
     <div class="container-fluid p-0 <?= $text_color_class;?>">
         <?php if ($images) : ?>
-            <div class="card-deck <?= $per_row; ?>-per-row w-<?= $row_width; ?> m-auto">
+            <div class="card-deck <?= $per_row; ?>-per-row w-md-<?= $row_width; ?> m-auto">
                 <?php
                 $count = 0;
                 foreach ($images as $image) :
@@ -41,7 +41,7 @@ include locate_template('./components/partials/component-options.php'); ?>
                 <?php endforeach; ?>
             </div>
             <?php if ($caption) : ?>
-                <div class="caption w-<?= $row_width; ?> m-auto text-center">
+                <div class="caption w-md-<?= $row_width; ?> m-auto text-center">
                     <p><?= $caption ?></p>
                 </div>
             <?php endif; ?>

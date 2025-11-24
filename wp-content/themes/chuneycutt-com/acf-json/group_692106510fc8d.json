@@ -17,6 +17,38 @@
                 "id": ""
             },
             "layouts": {
+                "layout_692331488e482": {
+                    "key": "layout_692331488e482",
+                    "name": "about",
+                    "label": "About",
+                    "display": "block",
+                    "sub_fields": [
+                        {
+                            "key": "field_6923314d8e485",
+                            "label": "About",
+                            "name": "about",
+                            "aria-label": "",
+                            "type": "clone",
+                            "instructions": "",
+                            "required": 0,
+                            "conditional_logic": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "clone": [
+                                "group_692330ac801dc"
+                            ],
+                            "display": "seamless",
+                            "layout": "block",
+                            "prefix_label": 0,
+                            "prefix_name": 0
+                        }
+                    ],
+                    "min": "",
+                    "max": ""
+                },
                 "layout_6921f87066ce0": {
                     "key": "layout_6921f87066ce0",
                     "name": "cards",
@@ -146,5 +178,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1763842367
+    "modified": 1763914078
 }

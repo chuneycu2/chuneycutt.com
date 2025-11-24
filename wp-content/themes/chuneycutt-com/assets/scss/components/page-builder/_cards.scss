@@ -1,39 +1,74 @@
 .component.component-cards {
   .card-deck {
     .card {
-      border-radius: 15px;
+      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 15px;
       box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.15);
       position: relative;
       transition: .4s;
-      // Card link slide appears on hover
+
+      // Card link slide appears on hover (sm+)
       a.card-link {
-        background-image: url('../../assets/img/header-texture.png');
-        background-position: center;
-        background-size: cover;
-        background-repeat: no-repeat;
-        border-radius: 15px;
-        height: 100%;
-        opacity: 0;
-        position: absolute;
-        text-decoration: none;
-        top: 0;
-        transition: opacity 0.3s ease-in-out, visibility 0s 0.3s;
-        width: 100%;
-        visibility: hidden;
+        color: $black;
+        transition: .3s;
         .card-content {
+          transition: .4s;
           .card-title {
-            color: $white;
+            color: $black;
             font-size: 1.15rem;
             font-weight: $bold;
+            transition: .3s;
           }
           .card-subtitle {
-            color: $white;
+            color: $black;
             font-weight: $regular;
+            transition: .3s;
+          }
+        }
+        &:hover {
+          text-decoration: none;
+          .card-title {
+            color: $lightblue;
+            transition: .3s;
+          }
+          .card-subtitle {
+            color: $lightblue;
+            transition: .3s;
+          }
+        }
+        @include media-breakpoint-up(sm) {
+          background-image: url('../../assets/img/header-texture.png');
+          background-position: center;
+          background-size: cover;
+          background-repeat: no-repeat;
+          border-radius: 15px;
+          height: 100%;
+          opacity: 0;
+          position: absolute;
+          text-decoration: none;
+          top: 0;
+          transition: opacity 0.3s ease-in-out, visibility 0s 0.3s;
+          width: 100%;
+          visibility: hidden;
+          .card-content {
+            .card-title {
+              color: $white;
+              font-size: 1.15rem;
+              font-weight: $bold;
+            }
+            .card-subtitle {
+              color: $white;
+              font-weight: $regular;
+            }
           }
         }
       }
       .card-image {
-        border-radius: 15px;
+        border-top-right-radius: 15px;
+        border-top-left-radius: 15px;
+        @include media-breakpoint-up(sm) {
+          border-radius: 15px;
+        }
       }
       &:hover {
         .card-link {

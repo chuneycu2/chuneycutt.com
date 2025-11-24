@@ -37,8 +37,8 @@ include locate_template('./components/partials/component-options.php'); ?>
                         $animation_attributes = 'data-aos="'.$animation_style.'" data-aos-delay="' . ($count * 3) . '00" data-aos-duration="'.$animation_duration.'"';
                     endif;
 
-                    // Begin card layout ?>
-                    <div class="card" <?= $animation_attributes; ?>>
+                    // Begin card layout (desktop) ?>
+                    <div class="card d-none d-sm-block" <?= $animation_attributes; ?>>
 
                         <?php if ($card_bg) : ?>
                             <div class="card-image lozad" <?= $bg_image_style; ?>></div>
@@ -46,30 +46,38 @@ include locate_template('./components/partials/component-options.php'); ?>
 
                         // Card detail overlay (appears on hover)
                         if ($card_title || $card_subtitle) : ?>
-                            <?php if ($card_link) : ?>
-                                <a class="card-link d-flex w-100" href="<?= $card_link; ?>">
-                                    <div class="card-content d-flex flex-column justify-content-center w-100 <?= $text_alignment_class; ?> p-3">
-                                        <?php if ($card_title) : ?>
-                                            <div class="card-title"><?= $card_title; ?></div>
-                                        <?php endif; ?>
-                                        <?php if ($card_subtitle) : ?>
-                                            <div class="card-subtitle"><?= $card_subtitle; ?></div>
-                                        <?php endif; ?>
-                                    </div>
-                                </a>
-                            <?php else : ?>
-                                <div class="card-nolink">
-                                    <div class="card-content d-flex flex-column justify-content-center w-100 <?= $text_alignment_class; ?> p-3">
-                                        <?php if ($card_title) : ?>
-                                            <div class="card-title"><?= $card_title; ?></div>
-                                        <?php endif; ?>
-                                        <?php if ($card_subtitle) : ?>
-                                            <div class="card-subtitle"><?= $card_subtitle; ?></div>
-                                        <?php endif; ?>
-                                    </div>
+                            <a class="card-link d-flex w-100" href="<?= $card_link; ?>">
+                                <div class="card-content d-flex flex-column justify-content-center w-100 <?= $text_alignment_class; ?> p-3">
+                                    <?php if ($card_title) : ?>
+                                        <div class="card-title"><?= $card_title; ?></div>
+                                    <?php endif; ?>
+                                    <?php if ($card_subtitle) : ?>
+                                        <div class="card-subtitle"><?= $card_subtitle; ?></div>
+                                    <?php endif; ?>
                                 </div>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+
+                    <?php // Begin card layout (mobile) ?>
+                    <div class="card d-block d-sm-none" <?= $animation_attributes; ?>>
+                        <a class="card-link" href="<?= $card_link; ?>">
+                            <?php if ($card_bg) : ?>
+                                <div class="card-image lozad" <?= $bg_image_style; ?>></div>
                             <?php endif;
-                        endif; ?>
+
+                            // Card detail overlay (appears beneath image on mobile)
+                            if ($card_title || $card_subtitle) : ?>
+                                <div class="card-content d-flex flex-column justify-content-center w-100 <?= $text_alignment_class; ?> px-3 pb-3 pt-2">
+                                    <?php if ($card_title) : ?>
+                                        <div class="card-title"><?= $card_title; ?></div>
+                                    <?php endif; ?>
+                                    <?php if ($card_subtitle) : ?>
+                                        <div class="card-subtitle"><?= $card_subtitle; ?></div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </a>
                     </div>
 
                 <?php endforeach; ?>

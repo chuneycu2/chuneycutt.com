@@ -21,13 +21,21 @@
 }
 header {
   &.open {
-    .left-bracket,
-    .right-bracket {
-      fill: $black;
-    }
-    .letter-c,
-    .letter-h {
-      fill: $lightblue;
+    svg {
+      .left-bracket,
+      .right-bracket {
+        fill: $black;
+      }
+      .letter-c,
+      .letter-h {
+        fill: $lightblue;
+      }
+      &:hover {
+        .left-bracket,
+        .right-bracket {
+          fill: $lightblue;
+        }
+      }
     }
   }
 }

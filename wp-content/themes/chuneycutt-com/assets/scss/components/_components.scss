@@ -45,6 +45,9 @@
         }
         .card-image {
           min-height: 200px;
+          @include media-breakpoint-up(sm) {
+            min-height: 230px;
+          }
           @include media-breakpoint-up(lg){
             min-height: 250px;
           }

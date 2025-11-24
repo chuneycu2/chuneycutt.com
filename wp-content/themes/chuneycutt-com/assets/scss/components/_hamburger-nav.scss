@@ -9,7 +9,9 @@ header {
     margin: 0;
     overflow: visible;
     padding: 0;
+    position: relative;
     text-transform: none;
+    top: 4px;
     transition-timing-function: linear;
     transition-duration: .15s;
     transition-property: opacity, filter;
