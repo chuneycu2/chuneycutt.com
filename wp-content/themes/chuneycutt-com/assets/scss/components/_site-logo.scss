@@ -1,39 +1,72 @@
 .site-logo {
-  padding: 1.5rem 0;
   position: relative;
   z-index: 100;
-  svg {
-    max-height: 80px;
-    width: 75px;
-    .left-bracket,
-    .right-bracket,
-    .letter-c,
-    .letter-h{
-      fill: $white;
+  .logo-link {
+    color: $white;
+    font-family: $head_font;
+    font-size: .9rem;
+    position: relative;
+    transition: .3s;
+    svg {
+      max-height: 80px;
+      transition: fill 0.5s ease-in-out;
+      width: 75px;
+      .left-bracket,
+      .right-bracket,
+      .letter-c,
+      .letter-h{
+        fill: $white;
+        transition: fill 0.3s ease-in-out;
+      }
     }
     &:hover {
-      .letter-c,
-      .letter-h {
-        fill: $lightblue;
+      color: $lightblue;
+      transition: .3s;
+      text-decoration: none;
+      svg {
+        .letter-c,
+        .letter-h {
+          fill: $lightblue;
+          transition: fill 0.3s ease-in-out;
+        }
+      }
+    }
+    .site-title {
+      position: relative;
+      top: 6px;
+      .title {
+        text-transform: uppercase;
       }
     }
   }
 }
 header {
   &.open {
-    svg {
-      .left-bracket,
-      .right-bracket {
-        fill: $black;
-      }
-      .letter-c,
-      .letter-h {
-        fill: $lightblue;
-      }
-      &:hover {
-        .left-bracket,
-        .right-bracket {
-          fill: $lightblue;
+    .site-logo {
+      .logo-link {
+        color: $black;
+        svg {
+          .left-bracket,
+          .right-bracket {
+            fill: $black;
+            transition: fill 0.3s ease-in-out;
+          }
+          .letter-c,
+          .letter-h {
+            fill: $black;
+            transition: fill 0.3s ease-in-out;
+          }
+        }
+        &:hover {
+          color: $lightblue;
+          transition: .3s;
+          svg {
+            .letter-c,
+            .letter-h {
+              fill: $lightblue;
+              transition: fill 0.3s ease-in-out;
+            }
+          }
         }
       }
     }

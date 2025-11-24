@@ -1,8 +1,24 @@
+<?php
+$header_options = get_field('header_options', 'option');
+$title          = $header_options['site_name'];
+$tagline        = $header_options['site_tagline'];
+?>
+
 <div class="component component-header m-auto">
-    <div class="container-fluid d-flex align-items-center justify-content-between p-0">
+    <div class="container-fluid d-flex align-items-center justify-content-between px-0 py-4">
         <div class="site-logo">
-            <a href="<?php echo get_home_url(); ?>" class="logo-link">
+            <a href="<?php echo get_home_url(); ?>" class="logo-link d-flex align-items-center">
                 <?php include locate_template('./assets/img/ch-site-logo.php'); ?>
+                <?php if ($tagline) : ?>
+                    <div class="site-title">
+                        <?php if ($title) : ?>
+                            <div class="title m-0 p-0"><?= $title ?></div>
+                        <?php endif; ?>
+                        <?php if ($tagline) : ?>
+                            <div class="tagline"><?= $tagline ?></div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </a>
         </div>
         <?php // desktop nav ?>

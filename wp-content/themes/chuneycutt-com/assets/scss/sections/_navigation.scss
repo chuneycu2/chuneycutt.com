@@ -41,8 +41,10 @@ header {
         padding: 0;
         li {
           list-style: none;
-          font-size: 1.25rem;
+          font-family: $head_font;
+          font-size: 1rem;
           margin: 0 1rem;
+          text-transform: uppercase;
           &:last-child {
             margin: 0 0 0 1rem;
           }
@@ -86,6 +88,7 @@ header {
           z-index: 10;
           ul {
             list-style: none;
+            padding-top: 2rem;
             text-align: center;
             li {
               font-family: $head_font;
