@@ -9,7 +9,7 @@
     transition: .3s;
     svg {
       max-height: 80px;
-      transition: fill 0.5s ease-in-out;
+      transition: fill .3s ease-in-out;
       width: 75px;
       .left-bracket,
       .right-bracket,
@@ -36,6 +36,9 @@
       top: 6px;
       .title {
         text-transform: uppercase;
+      }
+      @media all and (max-width: 350px) {
+        display: none;
       }
     }
   }

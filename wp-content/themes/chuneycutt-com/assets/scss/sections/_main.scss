@@ -8,5 +8,15 @@ html {
       padding-top: 115px;
       width: 100%;
     }
+    // logged in
+    &.customize-support {
+      position: relative;
+      @media all and (min-width: 600px) {
+        top: 46px;
+      }
+      @media all and (min-width: 782px) {
+        top: 32px;
+      }
+    }
   }
 }

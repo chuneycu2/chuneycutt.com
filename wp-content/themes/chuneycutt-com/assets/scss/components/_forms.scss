@@ -1,0 +1,110 @@
+// WPForms override styles
+.wpforms-container {
+  form {
+    .wpforms-field-container {
+      .wpforms-field {
+        display: flex;
+        flex-direction: column;
+        padding: 0 0 1.5rem 0;
+        .wpforms-field-row-block {
+          flex: 0 1 100%;
+          padding: 0;
+          width: 100%;
+          @include media-breakpoint-up(sm) {
+            flex: 0 1 50%;
+            width: 50%;
+            &:last-child {
+              padding-left: 1rem;
+            }
+          }
+        }
+        legend {
+          font-family: $body_font;
+          font-size: 1.25rem;
+          font-weight: $regular;
+          margin-bottom: 1rem;
+          .wpforms-required-label {
+            color: red;
+          }
+        }
+        label {
+          font-size: 1.25rem;
+          font-weight: $regular;
+          margin-bottom: 1rem;
+        }
+        input {
+          margin: 0 0 .75rem;
+          @include media-breakpoint-up(sm) {
+            margin: 0;
+          }
+        }
+
+        // First and last name
+        &.wpforms-field-name {
+          .wpforms-field-row {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 100%;
+            @include media-breakpoint-up(sm) {
+              flex-direction: row;
+            }
+            label {
+              display: none;
+            }
+          }
+        }
+
+        // Email
+        &.wpforms-field-email {
+
+        }
+
+        // Checkboxes
+        &.wpforms-field-checkbox {
+          label {
+            display: block;
+          }
+          input {
+            margin: 0;
+          }
+          ul {
+            list-style: none;
+            padding-bottom: 1rem;
+            li {
+              align-items: center;
+              display: flex;
+              label {
+                font-size: 1rem;
+                font-weight: $regular;
+              }
+              &:before {
+                content: none;
+              }
+            }
+          }
+        }
+
+        // Message
+        &.wpforms-field-textarea {
+
+        }
+
+      }
+    }
+    div.wpforms-submit-container {
+      button[type="submit"] {
+        background-color: $lightblue !important;
+        border: none;
+        font-family: $head_font;
+        font-size: 1.25rem;
+        transition: .3s;
+        &:hover {
+          background-color: lighten($lightblue, 10%);
+          cursor: pointer;
+          transition: .3s;
+        }
+      }
+    }
+  }
+}

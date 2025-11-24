@@ -135,6 +135,38 @@
                             "placeholder": "",
                             "prepend": "",
                             "append": ""
+                        },
+                        {
+                            "key": "field_6924940ef7b31",
+                            "label": "Turn off on these pages",
+                            "name": "turn_off_pages",
+                            "aria-label": "",
+                            "type": "relationship",
+                            "instructions": "",
+                            "required": 0,
+                            "conditional_logic": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "post_type": [
+                                "page"
+                            ],
+                            "post_status": "",
+                            "taxonomy": "",
+                            "filters": [
+                                "search",
+                                "post_type",
+                                "taxonomy"
+                            ],
+                            "return_format": "id",
+                            "min": "",
+                            "max": "",
+                            "allow_in_bindings": 0,
+                            "elements": "",
+                            "bidirectional": 0,
+                            "bidirectional_target": []
                         }
                     ]
                 },
@@ -260,5 +292,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1763996120
+    "modified": 1764004911
 }

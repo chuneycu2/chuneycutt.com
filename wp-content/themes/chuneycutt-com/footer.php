@@ -10,12 +10,25 @@
         <?php if ($cta_bar) :
             $cta_text = $cta_bar['cta_text'];
             $cta_link = $cta_bar['cta_link'];
-            ?>
-            <section class="footer-cta p-4 text-center">
-                <a href="<?= $cta_link; ?>">
-                    <h2 class="mb-0"><?= $cta_text; ?></h2>
-                </a>
-            </section>
+            $turn_off = $cta_bar['turn_off_pages'];
+            if ($turn_off) :
+                foreach ($turn_off as $id) :
+                    if (get_the_id() !== $id) : ?>
+                        <section class="footer-cta p-4 text-center">
+                            <a href="<?= $cta_link; ?>">
+                                <h2 class="mb-0"><?= $cta_text; ?></h2>
+                            </a>
+                        </section>
+                    <?php endif;
+                endforeach;
+            else : ?>
+                <section class="footer-cta p-4 text-center">
+                    <a href="<?= $cta_link; ?>">
+                        <h2 class="mb-0"><?= $cta_text; ?></h2>
+                    </a>
+                </section>
+            <?php endif; ?>
+
         <?php endif; ?>
         <?php if ($socials || $copyright) : ?>
             <section class="socials">
@@ -36,5 +49,6 @@
             </section>
         <?php endif; ?>
     </footer>
+    <?php wp_footer(); ?>
 </body>
 </html>
