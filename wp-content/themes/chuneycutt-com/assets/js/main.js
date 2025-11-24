@@ -12,18 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     observer.observe();
 
     // AOS animations
-    // init AOS
-    let aosOffset = -150,
-        aosDuration = 400;
-
-    AOS.init({
-        duration: aosDuration,
-        easing: "ease-out-cubic",
-        startEvent: "load",
-        offset: aosOffset,
-        once: true
-    });
-
+    AOS.init();
     AOS.refresh();
 
     const checkForElement = (element) => {
