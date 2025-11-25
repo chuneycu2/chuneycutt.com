@@ -14,12 +14,12 @@ $page_content  = $component['about_content'];
 // Options
 include locate_template('./components/partials/component-options.php'); ?>
 
-<section id="<?= $section_ID ?>" class="component component-<?= $name; ?> <?= implode(' ', $classes); ?>">
+<section id="<?= $section_ID ?>" class="component component-<?= $name; ?> <?= implode(' ', $classes); ?>" >
     <div class="container-fluid p-0 <?= $text_color_class;?> <?= $text_alignment_class; ?> w-md-<?= $content_width; ?> m-auto" <?= $animation_attributes; ?>>
         <article class="row p-0 m-0">
 
             <?php if ($sidebar) : ?>
-                <aside class="sidebar col-12 col-sm-4 col-md-3 pr-0 pr-sm-3 prd-md-5 pl-0">
+                <aside class="sidebar col-12 col-sm-4 col-md-3 pr-0 pr-sm-3 prd-md-5 pl-0" <?php if ($animate) : ?>data-aos="fade-right" data-aos-duration="500"<?php endif; ?>>
                     <?php
                     //d($sidebar);
                     $image   = $sidebar['image'];

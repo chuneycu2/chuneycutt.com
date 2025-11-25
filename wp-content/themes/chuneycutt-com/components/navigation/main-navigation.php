@@ -47,7 +47,7 @@ $tagline        = $header_options['site_tagline'];
                 ));
             endif; ?>
         </nav>
-        <div class="hamburger hamburger--squeeze js-hamburger">
+        <div class="hamburger hamburger--squeeze js-hamburger" data-aos="fade" data-aos-duration="500">
             <div class="hamburger-box">
                 <div class="hamburger-inner"></div>
             </div>
