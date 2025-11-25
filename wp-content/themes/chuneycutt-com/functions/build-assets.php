@@ -4,7 +4,7 @@
 function chuneycutt_com_enqueue_assets() {
 
     // Adjust version number with each release
-    $ver = '1.0.3';
+    $ver = '1.0.4';
 
     wp_enqueue_style( 'main-styles', get_template_directory_uri() . '/assets/build/style.min.css', [], $ver);
     wp_enqueue_script('main-scripts', get_template_directory_uri() . '/assets/build/main.js', ['jquery'], $ver);
