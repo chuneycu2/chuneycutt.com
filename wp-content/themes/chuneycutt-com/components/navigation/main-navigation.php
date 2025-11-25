@@ -6,7 +6,7 @@ $tagline        = $header_options['site_tagline'];
 
 <div class="component component-header m-auto">
     <div class="container-fluid d-flex align-items-center justify-content-between px-0 py-4">
-        <div class="site-logo">
+        <div class="site-logo" data-aos="fade" data-aos-duration="500">
             <a href="<?php echo get_home_url(); ?>" class="logo-link d-flex align-items-center">
                 <?php include locate_template('./assets/img/ch-site-logo.php'); ?>
                 <?php if ($tagline) : ?>
@@ -22,7 +22,7 @@ $tagline        = $header_options['site_tagline'];
             </a>
         </div>
         <?php // desktop nav ?>
-        <nav class="desktop-menu d-none d-md-flex">
+        <nav class="desktop-menu d-none d-md-flex" data-aos="fade" data-aos-duration="500">
             <?php if (has_nav_menu('main-nav')) :
                 wp_nav_menu( array(
                     'theme_location' => 'main-nav',
