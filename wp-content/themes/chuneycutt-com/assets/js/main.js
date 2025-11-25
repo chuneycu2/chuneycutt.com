@@ -12,7 +12,9 @@ document.addEventListener("DOMContentLoaded", () => {
     observer.observe();
 
     // AOS animations
-    AOS.init();
+    AOS.init({
+        once: true
+    });
     AOS.refresh();
 
     const checkForElement = (element) => {
