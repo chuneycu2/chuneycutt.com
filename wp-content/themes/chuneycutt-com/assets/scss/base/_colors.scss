@@ -1,0 +1,7 @@
+// Background colors
+@each $name, $color in $colors {
+  .background-color-#{$name} {
+    background: $color;
+    background-blend-mode: lighten;
+  }
+}

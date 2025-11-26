@@ -14,13 +14,13 @@ export class Component extends chuneycuttComponent {
                 let id = $(this).attr('href');
                 let section = $(id);
                 $('html, body').stop().animate({
-                    scrollTop: section.offset().top - 175
+                    scrollTop: section.offset().top - 160
                 });
             })
         });
 
         // Set 'scrollspy' behavior (highlight sections as they are scrolled into view)
-        let headOffset = 220;
+        let headOffset = 200;
         function scrollSpy() {
             let $scrollTop = $(window).scrollTop(); // current distance from top of window
             $menuItems.each(function() {
@@ -30,7 +30,6 @@ export class Component extends chuneycuttComponent {
                 let $secHeight = $section.height();
                 //let $bottom    = $section.siblings('.bottom-anchor');
                 //let $bottomOffset = $bottom.offset().top;
-                console.log($secHeight);
                 let $secOffset = $section.offset().top;
 
                 if ($secOffset - $scrollTop < headOffset && $secOffset - $scrollTop > headOffset - $secHeight) {

@@ -30,11 +30,12 @@ header {
   }
 
   .component.component-header {
-    padding-bottom: 0;
-    padding-top: 0;
+    padding: 0 2rem;
     max-width: $xl;
+    @include media-breakpoint-up(xl) {
+      padding: 0;
+    }
     nav {
-
       ul {
         list-style: none;
         margin: 0;

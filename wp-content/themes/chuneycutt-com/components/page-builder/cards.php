@@ -32,11 +32,6 @@ include locate_template('./components/partials/component-options.php'); ?>
                         $bg_image_style = 'data-background-image="'. $card_bg['url'] . '"';
                     endif;
 
-                    // Set sequential card animations
-                    if ($animate == 'yes') :
-                        $animation_attributes = 'data-aos="'.$animation_style.'" data-aos-delay="' . ($count * 3) . '00" data-aos-duration="'.$animation_duration.'"';
-                    endif;
-
                     // Begin card layout (desktop) ?>
                     <div class="card d-none d-sm-block" <?= $animation_attributes; ?>>
 
@@ -47,7 +42,7 @@ include locate_template('./components/partials/component-options.php'); ?>
                         // Card detail overlay (appears on hover)
                         if ($card_title || $card_subtitle) : ?>
                             <a class="card-link d-flex w-100" href="<?= $card_link; ?>">
-                                <div class="card-content d-flex flex-column justify-content-center w-100 <?= $text_alignment_class; ?> p-3">
+                                <div class="card-content d-flex flex-column justify-content-center w-100 <?= $text_alignment_class; ?>">
                                     <?php if ($card_title) : ?>
                                         <div class="card-title"><?= $card_title; ?></div>
                                     <?php endif; ?>
@@ -68,7 +63,7 @@ include locate_template('./components/partials/component-options.php'); ?>
 
                             // Card detail overlay (appears beneath image on mobile)
                             if ($card_title || $card_subtitle) : ?>
-                                <div class="card-content d-flex flex-column justify-content-center w-100 <?= $text_alignment_class; ?> px-3 pb-3 pt-2">
+                                <div class="card-content d-flex flex-column justify-content-center w-100 <?= $text_alignment_class; ?>">
                                     <?php if ($card_title) : ?>
                                         <div class="card-title"><?= $card_title; ?></div>
                                     <?php endif; ?>

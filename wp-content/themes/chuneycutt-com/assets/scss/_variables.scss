@@ -31,11 +31,12 @@ $sizes: map-merge(
 );
 
 // Colors
-$white : #ffffff;
-$black : #000000;
-$gray  : #eeeeee;
-$lightblue  : #269af9;
-$darkblue   : #081c5d;
+$transparent : transparent;
+$white       : #ffffff;
+$black       : #000000;
+$gray        : #eeeeee;
+$lightblue   : #269af9;
+$darkblue    : #081c5d;
 
 // Fonts
 $body_font : "Source Sans Pro", sans-serif;
@@ -47,4 +48,13 @@ $regular  : 400;
 $medium   : 500;
 $semibold : 600;
 $bold     : 700;
+
+// Color map
+$colors: (
+    "white"     : $white,
+    "black"     : $black,
+    "lightblue" : $lightblue,
+    "darkblue"  : $darkblue,
+    "gray"      : $gray,
+);
 

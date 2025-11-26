@@ -10,7 +10,7 @@
         <?php // Fonts ?>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&family=Source+Sans+Pro:wght@400;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@300;700&family=Source+Sans+Pro:wght@400;700&display=swap" rel="stylesheet">
 
 
         <?php // Google tag (gtag.js) ?>
@@ -43,5 +43,5 @@
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T9ZMVSR5"
         height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <!-- End Google Tag Manager (noscript) -->
-        <main>
+        <main class="lozad" data-background-image="<?php echo get_template_directory_uri() . '/assets/img/header-texture-2025.webp'; ?>">
 
