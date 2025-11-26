@@ -66,6 +66,14 @@
       gap: 2rem;
       .card {
         margin-bottom: 0;
+        .card-image {
+          @include media-breakpoint-up(sm) {
+            min-height: 200px;
+          }
+          @include media-breakpoint-up(md) {
+            min-height: 340px;
+          }
+        }
       }
     }
   }
