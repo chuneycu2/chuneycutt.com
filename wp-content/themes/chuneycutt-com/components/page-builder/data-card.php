@@ -10,8 +10,9 @@ $content_width  = $component['row_width'];
 $card_title     = $component['card_title'];
 $logo           = $component['company_logo'];
 $years          = $component['years_served'];
-$about          = $component['about'];
 $role_info      = $component['role_info'];
+$about          = $component['about'];
+$highlights     = $component['highlights'];
 $projects_title = $component['cards_title'];
 $projects       = $component['cards'];
 $sidebar        = '';
@@ -33,7 +34,7 @@ include locate_template('./components/partials/component-options.php'); ?>
                             </div>
                         <?php endif; ?>
                         <?php if ($card_title || $years) : ?>
-                            <div class="credentials pb-3">
+                            <div class="credentials pb-4">
                                 <?php if ($card_title) : ?>
                                     <div class="title icon">
                                         <?= $card_title; ?>
@@ -49,16 +50,39 @@ include locate_template('./components/partials/component-options.php'); ?>
                         <?php if ($about || $role_info) : ?>
                             <div class="details">
                                 <?php if ($role_info) : ?>
-                                    <div class="role-info pb-3">
+                                    <div class="role-info pb-4">
                                         <?= $role_info; ?>
                                     </div>
                                 <?php endif; ?>
-                                <?php if ($about) : ?>
-                                    <div class="about">
-                                        <?= $about; ?>
+                                <?php if ($highlights) : ?>
+                                    <div class="highlights pb-4">
+                                        <?php if ($highlights['title']) : ?>
+                                            <h4><?= $highlights['title']; ?></h4>
+                                        <?php endif; ?>
+                                        <?php if ($highlights['bullets']) :
+                                            $count = 0; ?>
+                                            <ul>
+                                                <?php foreach ($highlights['bullets'] as $bullet) :
+                                                    $duration = '';
+                                                    $count++;
+                                                    $duration = ($count * 200);
+                                                    ?>
+                                                    <li class="pb-2">
+                                                        <div class="arrow" data-aos="fade" data-aos-duration="500" data-aos-delay="<?= $duration; ?>"></div>
+                                                        <?= $bullet['bullet']; ?>
+                                                    </li>
+                                                <?php
+                                                endforeach; ?>
+                                            </ul>
+                                        <?php endif; ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
+                            <?php if ($about) : ?>
+                                <div class="about">
+                                    <div><?= $about; ?></div>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 </div>

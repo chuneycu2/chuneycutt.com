@@ -47,15 +47,38 @@
     }
     .details {
       display: flex;
-      flex: 1 1 auto;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: flex-start;
       .role-info {
 
       }
-      .about {
-        font-style: italic;
+      .highlights {
+        ul {
+          font-size: 1rem;
+          li {
+            position: relative;
+            .arrow {
+              border-top: 2px solid $lightblue;
+              border-right: 2px solid $lightblue;
+              height: 10px;
+              left: -22px;
+              position: absolute;
+              top: 6px;
+              transform: rotate(45deg);
+              width: 10px;
+            }
+            &:before {
+              content: none;
+            }
+          }
+        }
       }
+    }
+    .about {
+      display: flex;
+      flex: 1 1 auto;
+      font-style: italic;
+      align-items: flex-end;
     }
   }
   .component-cards {
