@@ -1,4 +1,4 @@
-.component.component-cards {
+.component-cards {
   .card-deck {
     .card {
       border-bottom-left-radius: .5rem;
@@ -13,6 +13,8 @@
         color: $black;
         transition: .3s;
         .card-content {
+          padding-top: .75rem;
+          padding-bottom: 1rem;
           transition: .4s;
           .card-title {
             color: $black;

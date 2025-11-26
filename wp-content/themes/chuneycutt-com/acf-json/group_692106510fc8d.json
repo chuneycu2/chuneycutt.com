@@ -81,6 +81,38 @@
                     "min": "",
                     "max": ""
                 },
+                "layout_69271402fa0ee": {
+                    "key": "layout_69271402fa0ee",
+                    "name": "data_card",
+                    "label": "Data card",
+                    "display": "block",
+                    "sub_fields": [
+                        {
+                            "key": "field_69271408fa0f1",
+                            "label": "Data card",
+                            "name": "data_card",
+                            "aria-label": "",
+                            "type": "clone",
+                            "instructions": "",
+                            "required": 0,
+                            "conditional_logic": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "clone": [
+                                "group_69271250090ed"
+                            ],
+                            "display": "seamless",
+                            "layout": "block",
+                            "prefix_label": 0,
+                            "prefix_name": 0
+                        }
+                    ],
+                    "min": "",
+                    "max": ""
+                },
                 "layout_69221917cbcf8": {
                     "key": "layout_69221917cbcf8",
                     "name": "images",
@@ -210,5 +242,5 @@
     "active": true,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1764103411
+    "modified": 1764168751
 }

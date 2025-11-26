@@ -21,7 +21,7 @@ $quotes        = $component['testimonial_cells'];
 include locate_template('./components/partials/component-options.php'); ?>
 
 <section id="<?= $section_ID ?>" class="component component-<?= $name; ?> <?= implode(' ', $classes); ?>">
-    <div class="container-fluid p-0 <?= $text_color_class;?> <?= $text_alignment_class; ?> w-md-<?= $content_width; ?> m-auto" <?= $animation_attributes; ?>>
+    <div class="container-fluid p-0 <?= $text_color_class;?> <?= $text_alignment_class; ?> m-auto" <?= $animation_attributes; ?>>
         <?php if ($quotes) : ?>
             <div class="carousel owl-carousel row px-0 mx-0">
                 <?php foreach ($quotes as $quote) :
@@ -37,7 +37,7 @@ include locate_template('./components/partials/component-options.php'); ?>
                             </blockquote>
                         <?php endif ; ?>
                         <?php if ($attribution) : ?>
-                            <div class="attribution d-flex align-items-center pt-3 pt-sm-4">
+                            <div class="attribution d-flex align-items-center pt-3 pt-sm-2">
                                 <?php if ($image) : ?>
                                     <div class="attribution-image pr-3">
                                         <img class="lozad" data-src="<?= $image['url']; ?>" alt="<?= $image['alt']; ?>" />

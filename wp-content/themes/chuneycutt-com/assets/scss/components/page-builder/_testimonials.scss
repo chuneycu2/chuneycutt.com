@@ -9,7 +9,7 @@
     blockquote {
       border-left: 2px solid $lightblue;
       font-size: 1.15rem;
-      margin: 0 0 0 1rem;
+      //margin: 0 0 0 1rem;
       padding-left: 1rem;
       position: relative;
       @include media-breakpoint-up(sm) {
@@ -17,7 +17,7 @@
       }
     }
     .attribution {
-      margin: 0 1rem;
+      //margin: 0 1rem;
       @include media-breakpoint-up(sm) {
 
       }
@@ -36,13 +36,27 @@
 
   // Owl carousel overrides
   .owl-carousel {
-    .owl-item {
-      border-radius: .5rem;
-      //box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.15);
-      padding: 2rem 2rem 2rem 1rem;
-      img {
-        border-radius: 50%;
-        width: 60px;
+    .owl-stage {
+      display: flex;
+      justify-content: center;
+      .owl-item {
+        border-radius: .5rem;
+        display: flex;
+        //box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.15);
+        justify-content: center;
+        margin: 0 1rem !important;
+        padding-bottom: 1rem;
+        img {
+          border-radius: 50%;
+          width: 60px;
+        }
+        .quote-cell {
+          width: 100%;
+          @include media-breakpoint-up(sm) {
+            width: 75%;
+            margin: 0 auto;
+          }
+        }
       }
     }
     .owl-dots {
