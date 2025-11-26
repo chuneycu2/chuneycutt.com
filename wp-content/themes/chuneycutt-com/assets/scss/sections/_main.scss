@@ -4,7 +4,12 @@ html {
   body {
     height: 100%;
     main {
-      background-color: $gray;
+      background-image: url('../../assets/img/header-texture.png');
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-color: rgba(238,238,238,.5);
+      background-blend-mode: lighten;
       padding-top: 115px;
       width: 100%;
     }

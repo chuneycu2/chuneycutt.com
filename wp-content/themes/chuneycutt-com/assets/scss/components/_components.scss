@@ -1,7 +1,9 @@
 .component {
   padding: 2rem;
-  margin: 0 auto;
-  max-width: $xl;
+  .container-fluid {
+    max-width: $xl;
+    margin: 0 auto;
+  }
 
   // Global 'card deck' (cards, images, rows of things)
   .card-deck {

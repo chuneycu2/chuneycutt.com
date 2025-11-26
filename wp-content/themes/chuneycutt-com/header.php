@@ -43,5 +43,5 @@
         <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T9ZMVSR5"
         height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <!-- End Google Tag Manager (noscript) -->
-        <main>
+        <main class="lozad" data-background-image="<?php echo get_template_directory_uri() . '/assets/img/header-texture-2025.webp'; ?>">
 
