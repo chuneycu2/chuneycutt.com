@@ -1,0 +1,53 @@
+.component-highlights {
+  .highlights {
+    background-color: rgba(34, 139, 34, .125);
+    border-radius: 8px;
+    //box-shadow: 0px 0px 25px rgba(0, 0, 0, 0.15);
+    ul {
+      padding: 0 0 0 1.5rem;
+      li {
+        padding-bottom: 1.5rem;
+        position: relative;
+        .arrow {
+          border-top: 2px solid forestgreen;
+          border-right: 2px solid forestgreen;
+          height: 10px;
+          left: -22px;
+          position: absolute;
+          top: 8px;
+          transform: rotate(45deg);
+          width: 10px;
+        }
+        &:before {
+          content: none;
+        }
+        &:last-child {
+          padding-bottom: 0;
+        }
+      }
+    }
+  }
+  .stats { // uses .card-deck for flex spacing
+    .card-deck {
+      justify-content: center;
+      .card {
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        .stat-icon {
+          display: flex;
+          justify-content: center;
+          img {
+            width: 60px;
+          }
+        }
+        .stat-line {
+          color: forestgreen;
+          font-family: $head_font;
+          font-size: 3rem;
+          font-weight: $semibold;
+        }
+      }
+    }
+  }
+}
