@@ -35,7 +35,7 @@ include locate_template('./components/partials/component-options.php'); ?>
                     <?php if ($menu || $content) : ?>
                         <div class="sidebar-content">
                             <?php if ($menu) : ?>
-                                <div class="sidebar-menu d-flex flex-column pb-3 text-center text-sm-left">
+                                <div class="sidebar-menu d-flex flex-column pb-3 text-left">
                                     <?php foreach ($menu as $item) : ?>
                                         <a href="<?= $item['link_hash']; ?>"><?= $item['link_text']; ?></a>
                                     <?php endforeach; ?>

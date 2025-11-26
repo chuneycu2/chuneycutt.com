@@ -55,25 +55,27 @@ include locate_template('./components/partials/component-options.php'); ?>
                                     </div>
                                 <?php endif; ?>
                                 <?php if ($highlights) : ?>
-                                    <div class="highlights pb-4">
+                                    <div class="component-highlights pb-4">
                                         <?php if ($highlights['title']) : ?>
-                                            <h4><?= $highlights['title']; ?></h4>
+                                            <h4 class="mb-0 pb-3"><?= $highlights['title']; ?></h4>
                                         <?php endif; ?>
                                         <?php if ($highlights['bullets']) :
                                             $count = 0; ?>
-                                            <ul>
-                                                <?php foreach ($highlights['bullets'] as $bullet) :
-                                                    $duration = '';
-                                                    $count++;
-                                                    $duration = ($count * 200);
-                                                    ?>
-                                                    <li class="pb-2">
-                                                        <div class="arrow" data-aos="fade" data-aos-duration="500" data-aos-delay="<?= $duration; ?>"></div>
-                                                        <?= $bullet['bullet']; ?>
-                                                    </li>
-                                                <?php
-                                                endforeach; ?>
-                                            </ul>
+                                            <div class="highlights">
+                                                <ul>
+                                                    <?php foreach ($highlights['bullets'] as $bullet) :
+                                                        $duration = '';
+                                                        $count++;
+                                                        $duration = ($count * 200);
+                                                        ?>
+                                                        <li class="pb-2">
+                                                            <div class="arrow" data-aos="fade" data-aos-duration="500" data-aos-delay="<?= $duration; ?>"></div>
+                                                            <?= $bullet['bullet']; ?>
+                                                        </li>
+                                                    <?php
+                                                    endforeach; ?>
+                                                </ul>
+                                            </div>
                                         <?php endif; ?>
                                     </div>
                                 <?php endif; ?>
