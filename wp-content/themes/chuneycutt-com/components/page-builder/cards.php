@@ -32,6 +32,10 @@ include locate_template('./components/partials/component-options.php'); ?>
                         $bg_image_style = 'data-background-image="'. $card_bg['url'] . '"';
                     endif;
 
+                    if ($animate) :
+                        $animation_attributes = 'data-aos="'.$animation_style.'" data-aos-duration="'.$animation_duration.'" data-aos-delay="'.$animation_delay + ($count * 150) .'" data-aos-offset="-'. ($count * 350) .'"';
+                    endif;
+
                     // Begin card layout (desktop) ?>
                     <div class="card d-none d-sm-block" <?= $animation_attributes; ?>>
 

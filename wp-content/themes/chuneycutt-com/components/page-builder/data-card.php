@@ -14,6 +14,7 @@ $role_info      = $component['role_info'];
 $about          = $component['about'];
 $highlights     = $component['highlights'];
 $projects_title = $component['cards_title'];
+$per_row        = $component['cards_per_row'];
 $projects       = $component['cards'];
 $sidebar        = '';
 
@@ -54,7 +55,7 @@ include locate_template('./components/partials/component-options.php'); ?>
                                         <?= $role_info; ?>
                                     </div>
                                 <?php endif; ?>
-                                <?php if ($highlights) : ?>
+                                <?php if ($highlights['bullets']) : ?>
                                     <div class="component-highlights pb-4">
                                         <?php if ($highlights['title']) : ?>
                                             <h4 class="mb-0 pb-3"><?= $highlights['title']; ?></h4>
@@ -90,13 +91,13 @@ include locate_template('./components/partials/component-options.php'); ?>
                 </div>
             <?php endif; ?>
             <?php if ($projects) : ?>
-                <div class="component-cards col-12 col-sm-6 col-md-8 p-0 order-first order-sm-last" <?= $animation_attributes; ?>>
+                <div class="component-cards col-12 col-sm-6 col-md-8 p-0 order-first order-sm-last" <?= $animation_attributes; ?> >
                     <?php if ($projects_title) : ?>
                         <div class="cards-title text-center text-lg-left">
                             <h1 class="mb-0 h3"><?= $projects_title; ?></h1>
                         </div>
                     <?php endif; ?>
-                    <div class="card-deck one-per-row">
+                    <div class="card-deck <?= $per_row; ?>-per-row">
                         <?php
                         $count = 0;
                         foreach ($projects as $project) :
@@ -112,6 +113,10 @@ include locate_template('./components/partials/component-options.php'); ?>
                             if ($card_bg) :
                                 $bg_image_style = 'data-background-image="'. $card_bg['url'] . '"';
                             endif;
+
+                            if ($animate) :
+                                $animation_attributes = 'data-aos="'.$animation_style.'" data-aos-duration="'.$animation_duration.'" data-aos-delay="'.$animation_delay + ($count * 150) .'" data-aos-offset="-'. ($count * 350) .'"';
+                            endif; 
 
                             // Begin card layout (desktop) ?>
                             <div class="card d-none d-sm-block" <?= $animation_attributes; ?>>
