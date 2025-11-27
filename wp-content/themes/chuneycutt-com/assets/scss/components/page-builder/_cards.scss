@@ -1,5 +1,26 @@
 .component-cards {
   .card-deck {
+
+    &.graphic {
+      &.four-per-row {
+        .card {
+          flex: 0 1 48%;
+          @include media-breakpoint-up(lg) {
+            flex: 0 1 23%;
+          }
+          .card-image {
+            min-height: 200px;
+            @include media-breakpoint-up(lg){
+              min-height: 150px;
+            }
+          }
+          .card-graphic {
+            min-height: 200px;
+          }
+        }
+      }
+    }
+
     .card {
       border-bottom-left-radius: .5rem;
       border-bottom-right-radius: .5rem;
@@ -7,6 +28,10 @@
       box-shadow: 8px 8px 20px rgba(0, 0, 0, 0.1);
       position: relative;
       transition: .4s;
+
+      &.graphic {
+        box-shadow: none;
+      }
 
       // Card link slide appears on hover (sm+)
       a.card-link {
@@ -71,6 +96,11 @@
         border-top-left-radius: .5rem;
         @include media-breakpoint-up(sm) {
           border-radius: .5rem;
+        }
+      }
+      .card-graphic {
+        img {
+          width: 100%;
         }
       }
       &:hover {

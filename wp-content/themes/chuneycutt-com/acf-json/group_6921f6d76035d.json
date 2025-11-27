@@ -21,6 +21,36 @@
             "selected": 0
         },
         {
+            "key": "field_692867906cf91",
+            "label": "Content width",
+            "name": "content_width",
+            "aria-label": "",
+            "type": "select",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "choices": {
+                "100": "Full",
+                "75": "75%",
+                "50": "50%"
+            },
+            "default_value": 75,
+            "return_format": "value",
+            "multiple": 0,
+            "allow_null": 0,
+            "allow_in_bindings": 0,
+            "ui": 0,
+            "ajax": 0,
+            "placeholder": "",
+            "create_options": 0,
+            "save_options": 0
+        },
+        {
             "key": "field_6921f81bf1c41",
             "label": "Cards per row",
             "name": "cards_per_row",
@@ -47,7 +77,38 @@
             "allow_in_bindings": 0,
             "ui": 0,
             "ajax": 0,
-            "placeholder": ""
+            "placeholder": "",
+            "create_options": 0,
+            "save_options": 0
+        },
+        {
+            "key": "field_69286d2cd54ea",
+            "label": "Image type",
+            "name": "image_type",
+            "aria-label": "",
+            "type": "select",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "choices": {
+                "bg": "Background",
+                "graphic": "Graphic"
+            },
+            "default_value": "bg",
+            "return_format": "value",
+            "multiple": 0,
+            "allow_null": 0,
+            "allow_in_bindings": 0,
+            "ui": 0,
+            "ajax": 0,
+            "placeholder": "",
+            "create_options": 0,
+            "save_options": 0
         },
         {
             "key": "field_6921f6e8f1c3f",
@@ -75,6 +136,33 @@
                     "key": "field_6921f6f9f1c40",
                     "label": "Background image",
                     "name": "card_background_image",
+                    "aria-label": "",
+                    "type": "image",
+                    "instructions": "",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "return_format": "array",
+                    "library": "all",
+                    "min_width": "",
+                    "min_height": "",
+                    "min_size": "",
+                    "max_width": "",
+                    "max_height": "",
+                    "max_size": "",
+                    "mime_types": "",
+                    "allow_in_bindings": 0,
+                    "preview_size": "medium",
+                    "parent_repeater": "field_6921f6e8f1c3f"
+                },
+                {
+                    "key": "field_692865fe03464",
+                    "label": "Card image",
+                    "name": "card_image",
                     "aria-label": "",
                     "type": "image",
                     "instructions": "",
@@ -225,5 +313,6 @@
     "active": false,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1763842494
+    "display_title": "",
+    "modified": 1764257090
 }

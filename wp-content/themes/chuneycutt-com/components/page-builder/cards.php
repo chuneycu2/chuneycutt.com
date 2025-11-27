@@ -5,9 +5,11 @@
  */
 
 // Content
-$name         = strtr($component['acf_fc_layout'], '_', '-');
-$per_row      = $component['cards_per_row'];
-$cards        = $component['cards'];
+$name          = strtr($component['acf_fc_layout'], '_', '-');
+$content_width = $component['content_width'];
+$per_row       = $component['cards_per_row'];
+$image_type    = $component['image_type'];
+$cards         = $component['cards'];
 
 // Options
 include locate_template('./components/partials/component-options.php'); ?>
@@ -15,13 +17,14 @@ include locate_template('./components/partials/component-options.php'); ?>
 <section id="<?= $section_ID ?>" class="component component-<?= $name; ?> <?= implode(' ', $classes); ?>">
     <div class="container-fluid p-0">
         <?php if ($cards) : ?>
-            <div class="card-deck <?= $per_row; ?>-per-row">
+            <div class="card-deck <?= $per_row; ?>-per-row w-md-<?= $content_width; ?> m-auto<?php if ($image_type === 'graphic'): ?> graphic<?php endif; ?>">
                 <?php
                 $count = 0;
                 foreach ($cards as $card) :
 
                     // Define card values at component level
                     $card_bg        = $card['card_background_image'];
+                    $card_image     = $card['card_image'];
                     $card_title     = $card['card_title'];
                     $card_subtitle  = $card['card_subtitle'];
                     $card_link      = $card['card_link'];
@@ -37,10 +40,16 @@ include locate_template('./components/partials/component-options.php'); ?>
                     endif;
 
                     // Begin card layout (desktop) ?>
-                    <div class="card d-none d-sm-block" <?= $animation_attributes; ?>>
+                    <div class="card d-none d-sm-block<?php if ($image_type === 'graphic'): ?> graphic<?php endif; ?>" <?= $animation_attributes; ?>>
 
                         <?php if ($card_bg) : ?>
                             <div class="card-image lozad" <?= $bg_image_style; ?>></div>
+                        <?php endif;
+
+                        if ($card_image) : ?>
+                            <div class="card-graphic">
+                                <img class="lozad" data-src="<?= $card_image['url']; ?>" alt="<?= $card_image['alt']; ?>" />
+                            </div>
                         <?php endif;
 
                         // Card detail overlay (appears on hover)
@@ -59,10 +68,16 @@ include locate_template('./components/partials/component-options.php'); ?>
                     </div>
 
                     <?php // Begin card layout (mobile) ?>
-                    <div class="card d-block d-sm-none" <?= $animation_attributes; ?>>
+                    <div class="card d-flex flex-column d-sm-none<?php if ($image_type === 'graphic'): ?> graphic<?php endif; ?>" <?= $animation_attributes; ?>>
                         <a class="card-link" href="<?= $card_link; ?>">
                             <?php if ($card_bg) : ?>
                                 <div class="card-image lozad" <?= $bg_image_style; ?>></div>
+                            <?php endif; ?>
+
+                            <?php if ($card_image) : ?>
+                                <div class="card-graphic">
+                                    <img class="lozad" data-src="<?= $card_image['url']; ?>" alt="<?= $card_image['alt']; ?>" />
+                                </div>
                             <?php endif;
 
                             // Card detail overlay (appears beneath image on mobile)
