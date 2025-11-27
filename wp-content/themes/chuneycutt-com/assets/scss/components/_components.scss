@@ -93,4 +93,19 @@
       }
     }
   }
+
+  // PDF embed (resume(
+  embed {
+    height: 100%;
+    min-height: 700px;
+    @include media-breakpoint-up(sm) {
+      height: 850px;
+    }
+    @include media-breakpoint-up(md) {
+      height: 950px;
+    }
+    @include media-breakpoint-up(lg) {
+      height: 1150px;
+    }
+  }
 }

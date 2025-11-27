@@ -13,7 +13,9 @@ $content       = $component['content'];
 include locate_template('./components/partials/component-options.php'); ?>
 
 <section id="<?= $section_ID ?>" class="component component-<?= $name; ?> <?= implode(' ', $classes); ?>">
-    <div class="container-fluid p-0 <?= $text_color_class;?> <?= $text_alignment_class; ?> w-md-<?= $content_width; ?> m-auto" <?= $animation_attributes; ?>>
-        <?php echo $content; ?>
+    <div class="container-fluid p-0 <?= $text_color_class;?> <?= $text_alignment_class; ?>" <?= $animation_attributes; ?>>
+        <div class="free-content w-md-<?= $content_width; ?> m-auto">
+            <?php echo $content; ?>
+        </div>
     </div>
 </section>

@@ -71,10 +71,12 @@
       }
     }
     .about {
+      align-items: flex-start;
+      border-top: 1px solid $lightblue;
       display: flex;
-      flex: 1 1 auto;
+      //flex: 1 1 auto;
       font-style: italic;
-      align-items: flex-end;
+      padding-top: 1.5rem;
     }
   }
   .component-cards {
