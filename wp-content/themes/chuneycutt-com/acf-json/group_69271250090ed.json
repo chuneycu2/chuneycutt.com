@@ -46,7 +46,9 @@
             "allow_in_bindings": 0,
             "ui": 0,
             "ajax": 0,
-            "placeholder": ""
+            "placeholder": "",
+            "create_options": 0,
+            "save_options": 0
         },
         {
             "key": "field_692712d7cefd6",
@@ -265,6 +267,35 @@
             "append": ""
         },
         {
+            "key": "field_6928614ef5939",
+            "label": "Cards per row",
+            "name": "cards_per_row",
+            "aria-label": "",
+            "type": "select",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "choices": {
+                "one": "One",
+                "two": "Two"
+            },
+            "default_value": "one",
+            "return_format": "value",
+            "multiple": 0,
+            "allow_null": 0,
+            "allow_in_bindings": 0,
+            "ui": 0,
+            "ajax": 0,
+            "placeholder": "",
+            "create_options": 0,
+            "save_options": 0
+        },
+        {
             "key": "field_692714eacd4f7",
             "label": "Cards",
             "name": "cards",
@@ -440,5 +471,6 @@
     "active": false,
     "description": "",
     "show_in_rest": 0,
-    "modified": 1764174713
+    "display_title": "",
+    "modified": 1764254313
 }

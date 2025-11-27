@@ -2,7 +2,6 @@ import camelCase from "./utils/camelCase";
 import AOS from "aos";
 import lozad from "lozad";
 
-// Check for component chunks
 document.addEventListener("DOMContentLoaded", () => {
 
     // Lazy loads elements with default selector '.lozad'
