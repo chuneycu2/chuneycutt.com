@@ -14,32 +14,58 @@ $page_content  = $component['about_content'];
 // Options
 include locate_template('./components/partials/component-options.php'); ?>
 
+<?php
+// Mobile sticky sidebar
+if ($sidebar) : ?>
+    <aside class="sidebar-mobile d-flex d-sm-none col-12 col-sm-4 col-md-3 mb-3" <?php if ($animate) : ?>data-aos="fade-right" data-aos-duration="500"<?php endif; ?>>
+        <?php
+        $image   = $sidebar['image'];
+        $menu    = $sidebar['content_menu'];
+        ?>
+        <?php if ($image) : ?>
+            <div class="sidebar-image">
+                <img class="lozad w-100" data-src="<?= $image['url']; ?>" />
+            </div>
+        <?php endif; ?>
+        <?php if ($menu || $content) : ?>
+            <div class="sidebar-content">
+                <?php if ($menu) : ?>
+                    <select class="d-block d-sm-none p-2">
+                        <?php foreach ($menu as $item) : ?>
+                            <option value="<?= $item['link_hash']; ?>"><?= $item['link_text']; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    </aside>
+<?php endif; ?>
+
 <section id="<?= $section_ID ?>" class="component component-<?= $name; ?> <?= implode(' ', $classes); ?>" >
     <div class="container-fluid p-0 <?= $text_color_class;?> <?= $text_alignment_class; ?> w-md-<?= $content_width; ?> m-auto" <?= $animation_attributes; ?>>
         <article class="row p-0 m-0">
 
             <?php if ($sidebar) : ?>
-                <aside class="sidebar col-12 col-sm-4 col-md-3 pr-0 pr-sm-3 prd-md-5 pl-0" <?php if ($animate) : ?>data-aos="fade-right" data-aos-duration="500"<?php endif; ?>>
+                <aside class="sidebar d-none d-sm-flex flex-column col-12 col-sm-4 col-md-3 mb-3" <?php if ($animate) : ?>data-aos="fade-right" data-aos-duration="500"<?php endif; ?>>
                     <?php
-                    //d($sidebar);
                     $image   = $sidebar['image'];
                     $hover   = $sidebar['hover_image'];
                     $menu    = $sidebar['content_menu'];
                     $content = $sidebar['sidebar_content'];
                     ?>
                     <?php if ($image) : ?>
-                        <div class="sidebar-image w-sm-75" <?php if ($hover) : ?>style="background-image: url('<?= $hover['url'] ?>');"<?php endif; ?>>
+                        <div class="sidebar-image d-none d-sm-block w-100" <?php if ($hover) : ?>style="background-image: url('<?= $hover['url'] ?>');"<?php endif; ?>>
                             <img class="lozad w-100" data-src="<?= $image['url']; ?>" />
                         </div>
                     <?php endif; ?>
                     <?php if ($menu || $content) : ?>
                         <div class="sidebar-content">
                             <?php if ($menu) : ?>
-                                <div class="sidebar-menu d-flex flex-column pb-3 text-left">
+                                <nav class="sidebar-menu d-none d-sm-flex flex-column p-3 text-left">
                                     <?php foreach ($menu as $item) : ?>
                                         <a href="<?= $item['link_hash']; ?>"><?= $item['link_text']; ?></a>
                                     <?php endforeach; ?>
-                                </div>
+                                </nav>
                             <?php endif; ?>
                             <?php if ($content) : ?>
                                 <div class="sidebar-links">

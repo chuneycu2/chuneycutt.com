@@ -4,6 +4,7 @@ header {
   background-size: cover;
   background-repeat: no-repeat;
   height: 115px;
+  padding: 0 2rem;
   position: fixed;
   max-width: 100%;
   width: 100%;
@@ -30,11 +31,8 @@ header {
   }
 
   .component.component-header {
-    padding: 0 2rem;
+    padding: 0;
     max-width: $xl;
-    @include media-breakpoint-up(xl) {
-      padding: 0;
-    }
     nav {
       ul {
         list-style: none;
