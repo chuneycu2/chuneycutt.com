@@ -46,7 +46,7 @@ if ($sidebar) : ?>
         <article class="row p-0 m-0">
 
             <?php if ($sidebar) : ?>
-                <aside class="sidebar d-none d-sm-flex flex-column col-12 col-sm-4 col-md-3 mb-3" <?php if ($animate) : ?>data-aos="fade-right" data-aos-duration="500"<?php endif; ?>>
+                <aside class="sidebar d-none d-sm-flex flex-column col-12 col-sm-4 col-md-3 mb-3 p-3" <?php if ($animate) : ?>data-aos="fade-right" data-aos-duration="500"<?php endif; ?>>
                     <?php
                     $image   = $sidebar['image'];
                     $hover   = $sidebar['hover_image'];
@@ -54,14 +54,20 @@ if ($sidebar) : ?>
                     $content = $sidebar['sidebar_content'];
                     ?>
                     <?php if ($image) : ?>
-                        <div class="sidebar-image d-none d-sm-block w-100" <?php if ($hover) : ?>style="background-image: url('<?= $hover['url'] ?>');"<?php endif; ?>>
-                            <img class="lozad w-100" data-src="<?= $image['url']; ?>" />
+                        <div class="sidebar-image-container d-flex align-items-center">
+                            <div class="sidebar-image d-none d-sm-flex" <?php if ($hover) : ?>style="background-image: url('<?= $hover['url'] ?>');"<?php endif; ?>>
+                                <img class="lozad" data-src="<?= $image['url']; ?>" />
+                            </div>
+                            <div class="pl-2">
+                                <p class="mb-1 p-0"><strong>Cyrus Huneycutt</strong></p>
+                                <p>Durham, NC</p>
+                            </div>
                         </div>
                     <?php endif; ?>
                     <?php if ($menu || $content) : ?>
                         <div class="sidebar-content">
                             <?php if ($menu) : ?>
-                                <nav class="sidebar-menu d-none d-sm-flex flex-column p-3 text-left">
+                                <nav class="sidebar-menu d-none d-sm-flex flex-column text-left">
                                     <?php foreach ($menu as $item) : ?>
                                         <a href="<?= $item['link_hash']; ?>"><?= $item['link_text']; ?></a>
                                     <?php endforeach; ?>
@@ -79,7 +85,7 @@ if ($sidebar) : ?>
 
 
             <?php if ($page_content) : ?>
-                <div class="about-content col-12<?php if ($sidebar): ?> col-sm-8 col-md-9 px-0<?php endif;?>">
+                <div class="about-content col-12<?php if ($sidebar): ?> col-sm-8 col-md-9 pr-0<?php endif;?>">
                     <?php foreach ($page_content as $key => $content) : ?>
                         <section id="<?= $key; ?>">
                             <?php // TODO: flexible content inside repeater so that sections can have anchors ?>
