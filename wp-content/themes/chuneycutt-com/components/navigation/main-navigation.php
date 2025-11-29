@@ -4,7 +4,7 @@ $title          = $header_options['site_name'];
 $tagline        = $header_options['site_tagline'];
 ?>
 
-<div class="component component-header d-flex">
+<div class="component component-header d-flex m-auto">
     <div class="container-fluid d-flex align-items-center justify-content-between px-0 py-4">
         <div class="site-logo" data-aos="fade" data-aos-duration="500">
             <a href="<?php echo get_home_url(); ?>" class="logo-link d-flex align-items-center">
