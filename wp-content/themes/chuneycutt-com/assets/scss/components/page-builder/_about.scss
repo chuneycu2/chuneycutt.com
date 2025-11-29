@@ -1,4 +1,58 @@
+// Sticky mobile sidebar
+.sidebar-mobile {
+  align-items: center;
+  background-color: rgba(238,238,238,1);
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  height: auto;
+  padding: 1rem 1.5rem;
+  position: fixed;
+  z-index: 1;
+  .sidebar-image {
+    align-self: flex-start;
+    border-radius: 50%;
+    display: inline-block;
+    height: 60px;
+    overflow: hidden;
+    position: relative;
+    width: 60px;
+  }
+  .sidebar-content {
+    display: flex;
+    flex: 1 1 auto;
+    padding-left: 1.5rem;
+    position: relative;
+    select {
+      -webkit-appearance: none; /* For Chrome, Safari, etc. */
+      -moz-appearance: none;    /* For Firefox */
+      appearance: none;         /* Standard */
+      background-color: rgba(238,238,238,.15);
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
+      width: 100%;
+    }
+    &:after {
+      content: '';
+      display: block;
+      border-right: 1px solid black;
+      border-bottom: 1px solid black;
+      bottom: 18px;
+      height: 10px;
+      transform: rotate(45deg);
+      position: absolute;
+      right: 14px;
+      width: 10px;
+      z-index: -2;
+    }
+  }
+}
+
+// Component main styles
 .component.component-about {
+  position: relative;
+  top: 108px;
+  @include media-breakpoint-up(sm) {
+    top: unset;
+  }
   h1, h2, h3 {
     margin: 0;
     padding: 1rem 0;
@@ -7,65 +61,80 @@
     padding: 1rem 0;
   }
   .sidebar {
-    display: flex;
+    background-color: rgba(238,238,238,.5);
+    border-radius: 8px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
+    display: block;
     height: 100%;
-    @media all and (max-width: 360px) {
-      display: block;
-    }
-    @include media-breakpoint-up(sm) {
-      display: block;
-      height: 100%;
-      position: sticky;
-      top: 190px;
-    }
-    .sidebar-image {
-      @media all and (max-width: 360px) {
-        flex: 0 1 100%;
+    position: sticky;
+    top: 190px;
+    .sidebar-image-container {
+      margin-bottom: 1.25rem;
+      p {
+        font-size: 1rem;
+        line-height: 1.1;
+        padding: 0;
+        @include media-breakpoint-up(lg) {
+          font-size: 1.25rem;
+        }
       }
-      align-self: flex-start;
-      border-radius: 15px;
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-position: center;
-      flex: 0 1 30%;
-      margin-bottom: 1.5rem;
-      img {
-        border-radius: 15px;
-        opacity: 1;
-        transition: opacity 0s ease-in-out, visibility 0s 0s;
-        visibility: visible;
-      }
-      &:hover {
+      .sidebar-image {
+        align-items: baseline;
+        background-size: cover;
+        background-repeat: no-repeat;
+        border-radius: 50%;
+        display: inline-block;
+        overflow: hidden;
+        position: relative;
+        height: 60px;
+        width: 60px;
+        @include media-breakpoint-up(lg) {
+          height: 75px;
+          width: 75px;
+        }
         img {
-          opacity: 0;
-          transition: opacity 0s ease-in-out, visibility 0s;
-          visibility: hidden;
+          opacity: 1;
+          transition: opacity 0s ease-in-out, visibility 0s 0s;
+          visibility: visible;
+          width: 100%;
+        }
+        &:hover {
+          img {
+            opacity: 0;
+            transition: opacity 0s ease-in-out, visibility 0s;
+            visibility: hidden;
+          }
         }
       }
     }
     .sidebar-content {
-      @media all and (max-width: 360px) {
-        padding-left: 0;
-      }
-      padding-left: 1.5rem;
-      @include media-breakpoint-up(sm) {
-        padding-left: 0;
-      }
+      border-top: 1px solid $lightblue;
+      flex: 1 1 100%;
+      padding-top: 1.25rem;
+      padding-left: 0;
       .sidebar-menu {
+        width: 100%;
         a {
           color: $black;
           font-size: 1rem;
+          line-height: 1.1;
+          padding-bottom: .5rem;
           text-decoration: none;
           transition: .3s;
+          @include media-breakpoint-up(lg) {
+            font-size: 1.25rem;
+          }
           &.active {
             color: $lightblue;
-            font-weight: $bold;
             text-decoration: none;
             transition: .3s;
           }
           &:hover {
             color: $lightblue;
             transition: .3s;
+          }
+          &:last-child {
+            padding-bottom: 0;
           }
         }
       }
@@ -75,9 +144,17 @@
         }
       }
     }
+    select {
+      display: flex;
+      width: 100%;
+    }
   }
 
   .about-content {
+    padding: 0;
+    @include media-breakpoint-up(sm) {
+      padding-left: 2rem;
+    }
     .icon-grid {
       display: flex;
       flex-wrap: wrap;
