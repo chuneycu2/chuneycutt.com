@@ -4,6 +4,7 @@ $my_functions = [
     'functions/build-assets.php', // Styles and scripts
     'functions/init.php', // Theme setup
     'functions/nav.php', // Nav walker
+    'functions/security.php' // Security functions
 ];
 
 // Load each function partial
@@ -71,6 +72,5 @@ function portfolio_taxonomies() {
     register_taxonomy( 'portfolio_categories', array( 'portfolio' ), $args );
 }
 add_action( 'init', 'portfolio_taxonomies', 0 );
-
 
 
