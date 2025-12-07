@@ -1,27 +1,9 @@
 {
-    "key": "group_692218bc9bb6f",
-    "title": "Component: Images",
+    "key": "group_69334751c8690",
+    "title": "Component: Images (React)",
     "fields": [
         {
-            "key": "field_692218bca20a0",
-            "label": "Content",
-            "name": "",
-            "aria-label": "",
-            "type": "tab",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "",
-                "class": "",
-                "id": ""
-            },
-            "placement": "left",
-            "endpoint": 0,
-            "selected": 0
-        },
-        {
-            "key": "field_692219c34c8b4",
+            "key": "field_693347d4ad8df",
             "label": "Per row",
             "name": "per_row",
             "aria-label": "",
@@ -37,7 +19,6 @@
             "choices": {
                 "one": "One",
                 "two": "Two",
-                "three": "Three",
                 "four": "Four"
             },
             "default_value": "one",
@@ -52,37 +33,7 @@
             "save_options": 0
         },
         {
-            "key": "field_69221c4c834ed",
-            "label": "Row width",
-            "name": "row_width",
-            "aria-label": "",
-            "type": "select",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "",
-                "class": "",
-                "id": ""
-            },
-            "choices": {
-                "100": "Full",
-                "75": "75%",
-                "50": "50%"
-            },
-            "default_value": 75,
-            "return_format": "value",
-            "multiple": 0,
-            "allow_null": 0,
-            "allow_in_bindings": 0,
-            "ui": 0,
-            "ajax": 0,
-            "placeholder": "",
-            "create_options": 0,
-            "save_options": 0
-        },
-        {
-            "key": "field_692218bca20ad",
+            "key": "field_69334752e6857",
             "label": "Images",
             "name": "images",
             "aria-label": "",
@@ -104,7 +55,7 @@
             "rows_per_page": 20,
             "sub_fields": [
                 {
-                    "key": "field_692218db29daf",
+                    "key": "field_69334774e6858",
                     "label": "Image",
                     "name": "image",
                     "aria-label": "",
@@ -128,12 +79,12 @@
                     "mime_types": "",
                     "allow_in_bindings": 0,
                     "preview_size": "medium",
-                    "parent_repeater": "field_692218bca20ad"
+                    "parent_repeater": "field_69334752e6857"
                 }
             ]
         },
         {
-            "key": "field_692218f429db0",
+            "key": "field_693347a9e685b",
             "label": "Caption",
             "name": "caption",
             "aria-label": "",
@@ -152,46 +103,6 @@
             "placeholder": "",
             "prepend": "",
             "append": ""
-        },
-        {
-            "key": "field_692218bca20b7",
-            "label": "Options",
-            "name": "",
-            "aria-label": "",
-            "type": "tab",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "",
-                "class": "",
-                "id": ""
-            },
-            "placement": "left",
-            "endpoint": 0,
-            "selected": 0
-        },
-        {
-            "key": "field_692218bca20bf",
-            "label": "Options",
-            "name": "options",
-            "aria-label": "",
-            "type": "clone",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "",
-                "class": "",
-                "id": ""
-            },
-            "clone": [
-                "group_6796d3ef332f4"
-            ],
-            "display": "group",
-            "layout": "block",
-            "prefix_label": 0,
-            "prefix_name": 0
         }
     ],
     "location": [
@@ -200,13 +111,6 @@
                 "param": "post_type",
                 "operator": "==",
                 "value": "post"
-            }
-        ],
-        [
-            {
-                "param": "post_type",
-                "operator": "==",
-                "value": "page"
             }
         ]
     ],
@@ -220,5 +124,5 @@
     "description": "",
     "show_in_rest": 1,
     "display_title": "",
-    "modified": 1764779907
+    "modified": 1764968428
 }

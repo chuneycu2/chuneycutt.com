@@ -1,11 +1,11 @@
 {
-    "key": "group_692106510fc8d",
-    "title": "Components",
+    "key": "group_6931db65113f1",
+    "title": "Components (React)",
     "fields": [
         {
-            "key": "field_692106513efe1",
+            "key": "field_6931db651330d",
             "label": "Components",
-            "name": "components",
+            "name": "components_react",
             "aria-label": "",
             "type": "flexible_content",
             "instructions": "",
@@ -17,14 +17,110 @@
                 "id": ""
             },
             "layouts": {
-                "layout_692331488e482": {
-                    "key": "layout_692331488e482",
+                "layout_6933349c38162": {
+                    "key": "layout_6933349c38162",
+                    "name": "experience",
+                    "label": "Experience",
+                    "display": "block",
+                    "sub_fields": [
+                        {
+                            "key": "field_693334a038164",
+                            "label": "Experience",
+                            "name": "experience",
+                            "aria-label": "",
+                            "type": "clone",
+                            "instructions": "",
+                            "required": 0,
+                            "conditional_logic": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "clone": [
+                                "group_693333915709c"
+                            ],
+                            "display": "seamless",
+                            "layout": "block",
+                            "prefix_label": 0,
+                            "prefix_name": 0
+                        }
+                    ],
+                    "min": "",
+                    "max": ""
+                },
+                "layout_6933398761e57": {
+                    "key": "layout_6933398761e57",
+                    "name": "skills_and_tools",
+                    "label": "Skills and Tools",
+                    "display": "block",
+                    "sub_fields": [
+                        {
+                            "key": "field_6933398d61e5a",
+                            "label": "Skills and Tools",
+                            "name": "skills_and_tools",
+                            "aria-label": "",
+                            "type": "clone",
+                            "instructions": "",
+                            "required": 0,
+                            "conditional_logic": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "clone": [
+                                "group_693338ccf2492"
+                            ],
+                            "display": "seamless",
+                            "layout": "block",
+                            "prefix_label": 0,
+                            "prefix_name": 0
+                        }
+                    ],
+                    "min": "",
+                    "max": ""
+                },
+                "layout_693342e2a3262": {
+                    "key": "layout_693342e2a3262",
+                    "name": "projects",
+                    "label": "Projects",
+                    "display": "block",
+                    "sub_fields": [
+                        {
+                            "key": "field_693342e6a3265",
+                            "label": "Projects",
+                            "name": "projects",
+                            "aria-label": "",
+                            "type": "clone",
+                            "instructions": "",
+                            "required": 0,
+                            "conditional_logic": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "clone": [
+                                "group_69334127481bb"
+                            ],
+                            "display": "seamless",
+                            "layout": "block",
+                            "prefix_label": 0,
+                            "prefix_name": 0
+                        }
+                    ],
+                    "min": "",
+                    "max": ""
+                },
+                "layout_693348a16f1df": {
+                    "key": "layout_693348a16f1df",
                     "name": "about",
                     "label": "About",
                     "display": "block",
                     "sub_fields": [
                         {
-                            "key": "field_6923314d8e485",
+                            "key": "field_693348a66f1e2",
                             "label": "About",
                             "name": "about",
                             "aria-label": "",
@@ -38,7 +134,7 @@
                                 "id": ""
                             },
                             "clone": [
-                                "group_692330ac801dc"
+                                "group_693346099862a"
                             ],
                             "display": "seamless",
                             "layout": "block",
@@ -49,16 +145,16 @@
                     "min": "",
                     "max": ""
                 },
-                "layout_6921f87066ce0": {
-                    "key": "layout_6921f87066ce0",
-                    "name": "cards",
-                    "label": "Cards",
+                "layout_6933494f53f7c": {
+                    "key": "layout_6933494f53f7c",
+                    "name": "accolades",
+                    "label": "Accolades",
                     "display": "block",
                     "sub_fields": [
                         {
-                            "key": "field_6921f87466ce3",
-                            "label": "Cards",
-                            "name": "cards",
+                            "key": "field_6933495453f7f",
+                            "label": "Accolades",
+                            "name": "accolades",
                             "aria-label": "",
                             "type": "clone",
                             "instructions": "",
@@ -70,167 +166,7 @@
                                 "id": ""
                             },
                             "clone": [
-                                "group_6921f6d76035d"
-                            ],
-                            "display": "seamless",
-                            "layout": "block",
-                            "prefix_label": 0,
-                            "prefix_name": 0
-                        }
-                    ],
-                    "min": "",
-                    "max": ""
-                },
-                "layout_69271402fa0ee": {
-                    "key": "layout_69271402fa0ee",
-                    "name": "data_card",
-                    "label": "Data card",
-                    "display": "block",
-                    "sub_fields": [
-                        {
-                            "key": "field_69271408fa0f1",
-                            "label": "Data card",
-                            "name": "data_card",
-                            "aria-label": "",
-                            "type": "clone",
-                            "instructions": "",
-                            "required": 0,
-                            "conditional_logic": 0,
-                            "wrapper": {
-                                "width": "",
-                                "class": "",
-                                "id": ""
-                            },
-                            "clone": [
-                                "group_69271250090ed"
-                            ],
-                            "display": "seamless",
-                            "layout": "block",
-                            "prefix_label": 0,
-                            "prefix_name": 0
-                        }
-                    ],
-                    "min": "",
-                    "max": ""
-                },
-                "layout_69275104422ba": {
-                    "key": "layout_69275104422ba",
-                    "name": "highlights",
-                    "label": "Highlights",
-                    "display": "block",
-                    "sub_fields": [
-                        {
-                            "key": "field_6927510a422bd",
-                            "label": "Highlights",
-                            "name": "highlights",
-                            "aria-label": "",
-                            "type": "clone",
-                            "instructions": "",
-                            "required": 0,
-                            "conditional_logic": 0,
-                            "wrapper": {
-                                "width": "",
-                                "class": "",
-                                "id": ""
-                            },
-                            "clone": [
-                                "group_6927502199da6"
-                            ],
-                            "display": "seamless",
-                            "layout": "block",
-                            "prefix_label": 0,
-                            "prefix_name": 0
-                        }
-                    ],
-                    "min": "",
-                    "max": ""
-                },
-                "layout_69221917cbcf8": {
-                    "key": "layout_69221917cbcf8",
-                    "name": "images",
-                    "label": "Images",
-                    "display": "block",
-                    "sub_fields": [
-                        {
-                            "key": "field_6922191ecbcfb",
-                            "label": "Images",
-                            "name": "images",
-                            "aria-label": "",
-                            "type": "clone",
-                            "instructions": "",
-                            "required": 0,
-                            "conditional_logic": 0,
-                            "wrapper": {
-                                "width": "",
-                                "class": "",
-                                "id": ""
-                            },
-                            "clone": [
-                                "group_692218bc9bb6f"
-                            ],
-                            "display": "seamless",
-                            "layout": "block",
-                            "prefix_label": 0,
-                            "prefix_name": 0
-                        }
-                    ],
-                    "min": "",
-                    "max": ""
-                },
-                "layout_692614de1edb8": {
-                    "key": "layout_692614de1edb8",
-                    "name": "testimonials",
-                    "label": "Testimonials",
-                    "display": "block",
-                    "sub_fields": [
-                        {
-                            "key": "field_692614e21edbb",
-                            "label": "Testimonials",
-                            "name": "testimonials",
-                            "aria-label": "",
-                            "type": "clone",
-                            "instructions": "",
-                            "required": 0,
-                            "conditional_logic": 0,
-                            "wrapper": {
-                                "width": "",
-                                "class": "",
-                                "id": ""
-                            },
-                            "clone": [
-                                "group_69261352919bc"
-                            ],
-                            "display": "seamless",
-                            "layout": "block",
-                            "prefix_label": 0,
-                            "prefix_name": 0
-                        }
-                    ],
-                    "min": "",
-                    "max": ""
-                },
-                "layout_6921067427b5d": {
-                    "key": "layout_6921067427b5d",
-                    "name": "wysiwyg",
-                    "label": "WYSIWYG",
-                    "display": "block",
-                    "sub_fields": [
-                        {
-                            "key": "field_692106843efe2",
-                            "label": "WYSIWYG",
-                            "name": "wysiwyg",
-                            "aria-label": "",
-                            "type": "clone",
-                            "instructions": "",
-                            "required": 0,
-                            "conditional_logic": 0,
-                            "wrapper": {
-                                "width": "",
-                                "class": "",
-                                "id": ""
-                            },
-                            "clone": [
-                                "group_692105de908ea"
+                                "group_693348e0b85d2"
                             ],
                             "display": "seamless",
                             "layout": "block",
@@ -252,7 +188,7 @@
             {
                 "param": "post_type",
                 "operator": "==",
-                "value": "page"
+                "value": "post"
             }
         ]
     ],
@@ -268,5 +204,5 @@
     "description": "",
     "show_in_rest": 1,
     "display_title": "",
-    "modified": 1764875102
+    "modified": 1764968798
 }
