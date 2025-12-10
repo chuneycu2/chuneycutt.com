@@ -47,7 +47,7 @@
         {
             "key": "field_69333921315cc",
             "label": "Disciplines",
-            "name": "disciplines",
+            "name": "entries",
             "aria-label": "",
             "type": "repeater",
             "instructions": "",
@@ -233,5 +233,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1764966973
+    "modified": 1765405098
 }

@@ -47,7 +47,7 @@
         {
             "key": "field_6933339166477",
             "label": "Experiences",
-            "name": "experiences",
+            "name": "entries",
             "aria-label": "",
             "type": "repeater",
             "instructions": "",
@@ -283,5 +283,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1765387811
+    "modified": 1765405017
 }

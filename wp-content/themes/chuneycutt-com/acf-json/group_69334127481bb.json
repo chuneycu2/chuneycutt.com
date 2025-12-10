@@ -47,7 +47,7 @@
         {
             "key": "field_6933414b62eaa",
             "label": "Projects",
-            "name": "projects",
+            "name": "entries",
             "aria-label": "",
             "type": "repeater",
             "instructions": "",
@@ -293,5 +293,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1765387819
+    "modified": 1765405087
 }

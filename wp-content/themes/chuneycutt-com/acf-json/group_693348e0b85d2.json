@@ -47,7 +47,7 @@
         {
             "key": "field_693348fa9bc24",
             "label": "Accolades",
-            "name": "accolades",
+            "name": "entries",
             "aria-label": "",
             "type": "repeater",
             "instructions": "",
@@ -181,5 +181,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1765387803
+    "modified": 1765405028
 }
