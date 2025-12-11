@@ -67,6 +67,28 @@
             "rows_per_page": 20,
             "sub_fields": [
                 {
+                    "key": "field_693a229fac5e7",
+                    "label": "ID",
+                    "name": "id",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "allow_in_bindings": 0,
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_693348fa9bc24"
+                },
+                {
                     "key": "field_693349019bc25",
                     "label": "Accolade",
                     "name": "accolade",
@@ -181,5 +203,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1765405028
+    "modified": 1765417645
 }

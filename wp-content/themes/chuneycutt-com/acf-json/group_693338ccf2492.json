@@ -67,6 +67,28 @@
             "rows_per_page": 20,
             "sub_fields": [
                 {
+                    "key": "field_693a230d3dc19",
+                    "label": "ID",
+                    "name": "id",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "allow_in_bindings": 0,
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_69333921315cc"
+                },
+                {
                     "key": "field_6933392d315cd",
                     "label": "Discipline",
                     "name": "discipline",
@@ -233,5 +255,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1765405098
+    "modified": 1765417774
 }

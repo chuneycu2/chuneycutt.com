@@ -67,6 +67,28 @@
             "rows_per_page": 20,
             "sub_fields": [
                 {
+                    "key": "field_693a22f2e04e0",
+                    "label": "ID",
+                    "name": "id",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "allow_in_bindings": 0,
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_6933414b62eaa"
+                },
+                {
                     "key": "field_6933415b62eab",
                     "label": "Project title",
                     "name": "project_title",
@@ -293,5 +315,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1765405087
+    "modified": 1765417728
 }
