@@ -134,7 +134,7 @@
         {
             "key": "field_69334876f450a",
             "label": "Editor content",
-            "name": "editor_content",
+            "name": "entries",
             "aria-label": "",
             "type": "clone",
             "instructions": "",
@@ -173,5 +173,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1765387795
+    "modified": 1765502026
 }
