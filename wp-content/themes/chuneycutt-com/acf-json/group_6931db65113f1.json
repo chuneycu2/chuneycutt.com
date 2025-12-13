@@ -176,6 +176,38 @@
                     ],
                     "min": "",
                     "max": ""
+                },
+                "layout_693dd82731181": {
+                    "key": "layout_693dd82731181",
+                    "name": "overview_section",
+                    "label": "Overview section",
+                    "display": "block",
+                    "sub_fields": [
+                        {
+                            "key": "field_693dd82d31184",
+                            "label": "Project overview",
+                            "name": "project_overview",
+                            "aria-label": "",
+                            "type": "clone",
+                            "instructions": "",
+                            "required": 0,
+                            "conditional_logic": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "clone": [
+                                "group_693dd7ba1ff36"
+                            ],
+                            "display": "seamless",
+                            "layout": "block",
+                            "prefix_label": 0,
+                            "prefix_name": 0
+                        }
+                    ],
+                    "min": "",
+                    "max": ""
                 }
             },
             "min": "",
@@ -204,5 +236,5 @@
     "description": "",
     "show_in_rest": 1,
     "display_title": "",
-    "modified": 1764968798
+    "modified": 1765660836
 }
