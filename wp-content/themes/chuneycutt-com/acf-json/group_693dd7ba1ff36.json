@@ -46,9 +46,9 @@
             "rows_per_page": 20,
             "sub_fields": [
                 {
-                    "key": "field_693e1fcfd1811",
+                    "key": "field_693ec142ac75f",
                     "label": "Content",
-                    "name": "content",
+                    "name": "wysiwyg",
                     "aria-label": "",
                     "type": "wysiwyg",
                     "instructions": "",
@@ -89,5 +89,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1765679104
+    "modified": 1765720407
 }
