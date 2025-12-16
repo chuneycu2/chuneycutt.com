@@ -18,9 +18,9 @@
             },
             "default_value": "",
             "allow_in_bindings": 0,
-            "tabs": "all",
+            "tabs": "text",
+            "media_upload": 0,
             "toolbar": "full",
-            "media_upload": 1,
             "delay": 0
         }
     ],
@@ -43,5 +43,5 @@
     "description": "",
     "show_in_rest": 1,
     "display_title": "",
-    "modified": 1764968271
+    "modified": 1765898161
 }
