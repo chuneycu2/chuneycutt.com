@@ -89,6 +89,28 @@
                     "parent_repeater": "field_6933414b62eaa"
                 },
                 {
+                    "key": "field_694189b821962",
+                    "label": "Project link",
+                    "name": "project_link",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "A relative link to the project detail page",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "allow_in_bindings": 0,
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_6933414b62eaa"
+                },
+                {
                     "key": "field_6933415b62eab",
                     "label": "Project title",
                     "name": "project_title",
@@ -293,5 +315,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1765649349
+    "modified": 1765902799
 }
