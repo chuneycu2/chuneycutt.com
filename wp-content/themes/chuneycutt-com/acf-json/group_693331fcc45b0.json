@@ -85,6 +85,27 @@
             "rows": 3,
             "placeholder": "",
             "new_lines": ""
+        },
+        {
+            "key": "field_69443a5bac93a",
+            "label": "Project link",
+            "name": "project_link",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "",
+            "maxlength": "",
+            "allow_in_bindings": 0,
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
         }
     ],
     "location": [
@@ -106,5 +127,5 @@
     "description": "",
     "show_in_rest": 1,
     "display_title": "",
-    "modified": 1765387887
+    "modified": 1766079076
 }
