@@ -87,11 +87,11 @@
             "new_lines": ""
         },
         {
-            "key": "field_69443a5bac93a",
-            "label": "Project link",
-            "name": "project_link",
+            "key": "field_694b396e17faf",
+            "label": "Sidebar links",
+            "name": "links",
             "aria-label": "",
-            "type": "text",
+            "type": "clone",
             "instructions": "",
             "required": 0,
             "conditional_logic": 0,
@@ -100,12 +100,13 @@
                 "class": "",
                 "id": ""
             },
-            "default_value": "",
-            "maxlength": "",
-            "allow_in_bindings": 0,
-            "placeholder": "",
-            "prepend": "",
-            "append": ""
+            "clone": [
+                "group_693334df72748"
+            ],
+            "display": "seamless",
+            "layout": "block",
+            "prefix_label": 0,
+            "prefix_name": 0
         },
         {
             "key": "field_6945579421601",
@@ -208,5 +209,5 @@
     "description": "",
     "show_in_rest": 1,
     "display_title": "",
-    "modified": 1766152389
+    "modified": 1766537625
 }
