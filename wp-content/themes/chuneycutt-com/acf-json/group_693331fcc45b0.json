@@ -89,7 +89,7 @@
         {
             "key": "field_694b396e17faf",
             "label": "Sidebar links",
-            "name": "links",
+            "name": "sidebar_links",
             "aria-label": "",
             "type": "clone",
             "instructions": "",
@@ -209,5 +209,5 @@
     "description": "",
     "show_in_rest": 1,
     "display_title": "",
-    "modified": 1766537625
+    "modified": 1766538245
 }
