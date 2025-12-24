@@ -25,6 +25,37 @@
             "rows_per_page": 20,
             "sub_fields": [
                 {
+                    "key": "field_694b39dddc688",
+                    "label": "Link icon",
+                    "name": "link_icon",
+                    "aria-label": "",
+                    "type": "select",
+                    "instructions": "",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "choices": {
+                        "forward": "Forward arrow",
+                        "back": "Back arrow",
+                        "new": "New tab"
+                    },
+                    "default_value": "new",
+                    "return_format": "value",
+                    "multiple": 0,
+                    "allow_null": 0,
+                    "allow_in_bindings": 0,
+                    "ui": 0,
+                    "ajax": 0,
+                    "placeholder": "",
+                    "create_options": 0,
+                    "save_options": 0,
+                    "parent_repeater": "field_693334dfe550b"
+                },
+                {
                     "key": "field_693334f2e550c",
                     "label": "Link text",
                     "name": "link_text",
@@ -120,5 +151,5 @@
     "description": "",
     "show_in_rest": 1,
     "display_title": "",
-    "modified": 1764967831
+    "modified": 1766537751
 }
