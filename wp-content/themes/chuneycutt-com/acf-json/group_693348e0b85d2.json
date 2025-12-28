@@ -138,6 +138,28 @@
                     "parent_repeater": "field_693348fa9bc24"
                 },
                 {
+                    "key": "field_69519e9316167",
+                    "label": "Attribution image link",
+                    "name": "attribution_image_link",
+                    "aria-label": "",
+                    "type": "text",
+                    "instructions": "",
+                    "required": 0,
+                    "conditional_logic": 0,
+                    "wrapper": {
+                        "width": "",
+                        "class": "",
+                        "id": ""
+                    },
+                    "default_value": "",
+                    "maxlength": "",
+                    "allow_in_bindings": 0,
+                    "placeholder": "",
+                    "prepend": "",
+                    "append": "",
+                    "parent_repeater": "field_693348fa9bc24"
+                },
+                {
                     "key": "field_693349219bc27",
                     "label": "Attribution name",
                     "name": "attribution_name",
@@ -203,5 +225,5 @@
     "description": "",
     "show_in_rest": 0,
     "display_title": "",
-    "modified": 1765417645
+    "modified": 1766956704
 }
