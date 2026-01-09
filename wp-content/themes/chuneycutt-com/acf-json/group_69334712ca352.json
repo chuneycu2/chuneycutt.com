@@ -48,6 +48,37 @@
                     ],
                     "min": "",
                     "max": ""
+                },
+                "layout_69612cc4e0aea": {
+                    "key": "layout_69612cc4e0aea",
+                    "name": "code_block",
+                    "label": "Code block",
+                    "display": "block",
+                    "sub_fields": [
+                        {
+                            "key": "field_69612cc9e0aed",
+                            "label": "Code block",
+                            "name": "code_block",
+                            "aria-label": "",
+                            "type": "wysiwyg",
+                            "instructions": "",
+                            "required": 0,
+                            "conditional_logic": 0,
+                            "wrapper": {
+                                "width": "",
+                                "class": "",
+                                "id": ""
+                            },
+                            "default_value": "",
+                            "allow_in_bindings": 0,
+                            "tabs": "text",
+                            "media_upload": 0,
+                            "toolbar": "full",
+                            "delay": 0
+                        }
+                    ],
+                    "min": "",
+                    "max": ""
                 }
             },
             "min": "",
@@ -74,5 +105,5 @@
     "description": "",
     "show_in_rest": 1,
     "display_title": "",
-    "modified": 1765898144
+    "modified": 1767976166
 }
