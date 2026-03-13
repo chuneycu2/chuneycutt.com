@@ -34,6 +34,7 @@ wp-content/mu-plugins/slt-force-strong-passwords.php
 wp-content/mu-plugins/stop-long-comments.php
 wp-content/mu-plugins/force-strong-passwords*
 wp-content/mu-plugins/wpengine-common*
+wp-content/plugins/query-monitor
 wp-content/mysql.sql
 wp-content/smush-webp/*
 
