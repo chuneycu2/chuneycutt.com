@@ -361,6 +361,12 @@ class Loader {
 				'hook' => 'admin_init',
 			],
 			[
+				'name'      => 'Admin\LicenseModal',
+				'id'        => 'license_modal',
+				'hook'      => 'init',
+				'condition' => wpforms()->is_pro(),
+			],
+			[
 				'name' => 'Admin\Splash\SplashCache',
 				'id'   => 'splash_cache',
 				'hook' => 'plugins_loaded',
@@ -580,6 +586,12 @@ class Loader {
 		$this->classes[] = [
 			'name'        => 'Forms\Fields\Addons\NetPromoterScore\Field',
 			'addon_class' => 'WPFormsSurveys\Fields\NetPromoterScore\Field',
+			'addon_slug'  => 'surveys-polls',
+		];
+
+		$this->classes[] = [
+			'name'        => 'Forms\Fields\Addons\Ranking\Field',
+			'addon_class' => 'WPFormsSurveys\Fields\Ranking\Field',
 			'addon_slug'  => 'surveys-polls',
 		];
 
@@ -986,8 +998,20 @@ class Loader {
 				'id'   => 'wpconsent_install_tracker',
 			],
 			[
+				'name' => 'Education\SugarCalendar\InstallTracker',
+				'id'   => 'sugar_calendar_install_tracker',
+			],
+			[
 				'name' => 'Admin\\Education\\Builder\\Gdpr',
 				'id'   => 'education_builder_gdpr',
+			],
+			[
+				'name' => 'Admin\\Education\\Promo\\SugarCalendar\\TemplatesGrid',
+				'id'   => 'education_promo_sugar_calendar_templates',
+			],
+			[
+				'name' => 'Admin\\Education\\Promo\\SugarCalendar\\FieldsPanel',
+				'id'   => 'education_promo_sugar_calendar_fields',
 			],
 			[
 				'name' => 'Admin\\Settings\\Gdpr\\WPConsentCallout',
@@ -1007,6 +1031,7 @@ class Loader {
 			'Builder\DidYouKnow',
 			'Builder\Geolocation',
 			'Builder\Quiz',
+			'Builder\Ranking',
 			'Builder\Confirmations',
 			'Builder\Notifications',
 			'Builder\PDF',
