@@ -125,43 +125,51 @@
 		return inputs;
 	}
 	
+	var captchaGenerations = new WeakMap();
 	var wfls_init_captcha = function(actionCallback, log) {
 		if (typeof log === 'undefined')
-			log = getRelevantInputs();
-		if (typeof grecaptcha === 'object') {
-			grecaptcha.ready(function() {
-				grecaptcha.execute(WFLSVars.recaptchasitekey, {action: 'login'}).then(function(token) {
-					var tokenField = $('#wfls-captcha-token');
-					if (tokenField.length) {
-						tokenField.val(token);
-					}
-					else {
-						if (log.length) {
-							tokenField = $('<input type="hidden" name="wfls-captcha-token" id="wfls-captcha-token" />');
-							tokenField.val(token);
-							log.parent().append(tokenField);
-						}
-					}
-
-					typeof actionCallback === 'function' && actionCallback(true);
-				});
-			});
+			log = loginLocator.getInput() || getRelevantInputs();
+		var form = log.first().closest('form');
+		if (!form.length) {
+			typeof actionCallback === 'function' && actionCallback(true);
+			return;
 		}
-		else {
-			var tokenField = $('#wfls-captcha-token');
+		var formElement = form.get(0);
+		var generation = (captchaGenerations.get(formElement) || 0) + 1;
+		captchaGenerations.set(formElement, generation);
+		var completed = false;
+		var timeout = window.setTimeout(function() { finish(null); }, 15000);
+		function finish(token) {
+			if (completed || generation !== captchaGenerations.get(formElement))
+				return;
+			completed = true;
+			window.clearTimeout(timeout);
+			var tokenField = form.find('input[name="wfls-captcha-token"]').first();
+			var value = token || 'grecaptcha-missing';
 			if (tokenField.length) {
-				tokenField.val('grecaptcha-missing');
+				tokenField.val(value);
 			}
 			else {
-				if (log.length) {
-					tokenField = $('<input type="hidden" name="wfls-captcha-token" id="wfls-captcha-token" />');
-					tokenField.val('grecaptcha-missing');
-					log.parent().append(tokenField);
-				}
+				tokenField = $('<input type="hidden" name="wfls-captcha-token" />');
+				tokenField.val(value);
+				form.append(tokenField);
 			}
-
 			typeof actionCallback === 'function' && actionCallback(true);
 		}
+		try {
+			if (typeof grecaptcha === 'object' && grecaptcha && typeof grecaptcha.ready === 'function') {
+				grecaptcha.ready(function() {
+					if (generation !== captchaGenerations.get(formElement))
+						return;
+					try {
+						Promise.resolve(grecaptcha.execute(WFLSVars.recaptchasitekey, {action: 'login'})).then(finish, function() { finish(null); });
+					}
+					catch (e) { finish(null); }
+				});
+			}
+			else { finish(null); }
+		}
+		catch (e) { finish(null); }
 	};
 
 	function wfls_base64url_to_uint8array(base64url) {
@@ -282,8 +290,30 @@
 		window.location.href = redirect || window.location.href;
 	}
 
-	function wfls_begin_passkey_login_request(form, onSuccess, onError) {
+	/**
+	 * Tracks native aborts before jQuery translates them into generic transport errors.
+	 * @returns {Object} A request-local XHR factory and cancellation predicate.
+	 */
+	function wfls_ajax_cancellation() {
+		var nativeAborted = false;
+		var xhrFactory = $.ajaxSettings.xhr;
+		return {
+			xhr: function() {
+				var xhr = xhrFactory.apply(this, arguments);
+				if (xhr && typeof xhr.addEventListener === 'function') { xhr.addEventListener('abort', function() { nativeAborted = true; }); }
+				return xhr;
+			},
+			isCanceled: function(textStatus) {
+				// A jQuery timeout also aborts the XHR, but must still report the timeout.
+				return textStatus === 'abort' || (textStatus === 'error' && nativeAborted);
+			}
+		};
+	}
+
+	function wfls_begin_passkey_login_request(form, onSuccess, onError, onCancel) {
+		var cancellation = wfls_ajax_cancellation();
 		$.ajax({
+			xhr: cancellation.xhr,
 			type: 'POST',
 			url: WFLSVars.ajaxurl,
 			dataType: 'json',
@@ -298,7 +328,11 @@
 				}
 				onSuccess(json);
 			},
-			error: function() {
+			error: function(response, textStatus) {
+				if (cancellation.isCanceled(textStatus)) {
+					typeof onCancel === 'function' && onCancel();
+					return;
+				}
 				onError(__('An error was encountered while trying to start passkey login. Please try again.'), true);
 			}
 		});
@@ -315,7 +349,9 @@
 			}
 		});
 
+		var cancellation = wfls_ajax_cancellation();
 		$.ajax({
+			xhr: cancellation.xhr,
 			type: 'POST',
 			url: WFLSVars.ajaxurl,
 			dataType: 'json',
@@ -334,8 +370,9 @@
 				}
 				wfls_complete_passkey_login(form, json.redirect || '');
 			},
-			error: function() {
+			error: function(response, textStatus) {
 				button.prop('disabled', false).removeClass('disabled');
+				if (cancellation.isCanceled(textStatus)) { return; }
 				showLoginMessage(__('An error was encountered while trying to authenticate with a passkey. Please try again.'), 'error', true);
 			}
 		});
@@ -369,6 +406,8 @@
 		}, function(message, textOnly) {
 			button.prop('disabled', false).removeClass('disabled');
 			showLoginMessage(message, 'error', textOnly);
+		}, function() {
+			button.prop('disabled', false).removeClass('disabled');
 		});
 	}
 
@@ -479,7 +518,9 @@
 					var data = registrationLocator.getForm().serialize();
 					data += '&action=wordfence_ls_register_support';
 
+					var cancellation = wfls_ajax_cancellation();
 					$.ajax({
+						xhr: cancellation.xhr,
 						type: 'POST',
 						url: WFLSVars.ajaxurl,
 						dataType: 'json',
@@ -497,7 +538,8 @@
 								$('#wfls-support-submit, #wfls-message').attr('disabled', true);
 							}
 						},
-						error: function(err) {
+						error: function(err, textStatus) {
+							if (cancellation.isCanceled(textStatus)) { return; }
 							showLoginMessage(__('An error was encountered while trying to send the message. Please try again.'), 'error', true);
 							var dom = $('<div id="login_error"></div>');
 							dom.html(__('<strong>ERROR</strong>: An error was encountered while trying to send the message. Please try again.'));
@@ -584,7 +626,9 @@
 		var data = $(form).serialize();
 		data += '&action=wordfence_ls_authenticate';
 
+		var cancellation = wfls_ajax_cancellation();
 		$.ajax({
+			xhr: cancellation.xhr,
 			type: 'POST',
 			url: WFLSVars.ajaxurl,
 			dataType: 'json',
@@ -657,7 +701,11 @@
 				}
 				blocker.unblock();
 			},
-			error: function(err) {
+			error: function(err, textStatus) {
+				if (cancellation.isCanceled(textStatus)) {
+					blocker.unblock();
+					return;
+				}
 				if (err.status == 503 || err.status == 403) {
 					if ($('.woocommerce').length > 0) {
 						if (err.status == 503) {
