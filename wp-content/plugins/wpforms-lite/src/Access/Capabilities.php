@@ -28,6 +28,14 @@ class Capabilities {
 	}
 
 	/**
+	 * Map form meta caps on demand; Lite access is `manage_options` only.
+	 *
+	 * @since 2.0.5
+	 */
+	public function enable_meta_caps(): void {
+	}
+
+	/**
 	 * Check permissions for currently logged in user.
 	 *
 	 * @since 1.5.8

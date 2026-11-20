@@ -53,5 +53,6 @@ class Migrations extends Base {
 		'Upgrade2_0_1_1',
 		'Upgrade2_0_2_1',
 		'Upgrade2_0_3',
+		'Upgrade2_0_5',
 	];
 }

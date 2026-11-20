@@ -137,6 +137,51 @@ class DefaultThemes implements IntegrationInterface {
 	private function ocean_hooks() { // phpcs:ignore WPForms.PHP.HooksMethod.InvalidPlaceForAddingHooks
 
 		add_action( 'wp_enqueue_scripts', [ $this, 'ocean_button_hover' ], 100 );
+		add_action( 'wp_enqueue_scripts', [ $this, 'ocean_modern_borders' ], 100 );
+	}
+
+	/**
+	 * Restore the field and button borders that the OceanWP style settings override on the modern markup.
+	 *
+	 * OceanWP prints `body div.wpforms-container-full .wpforms-form …` rules carrying its customizer's
+	 * border style and radius for the fields, and border style, width and padding for the buttons. They
+	 * outrank the modern stylesheet, so the theme variables behind the Border controls never paint.
+	 * A repeated class wins on specificity alone, so a form's own Custom CSS, printed under its id,
+	 * still beats this. The field padding stays with OceanWP: it prints one only when the customizer
+	 * sets it, and the modern stylesheet pads the phone, select and textarea fields each in its own way.
+	 *
+	 * @since 2.0.5
+	 */
+	public function ocean_modern_borders(): void {
+
+		// Only full styles of the modern markup read the variables.
+		if ( wpforms_get_render_engine() !== 'modern' || (int) wpforms_setting( 'disable-css', 1 ) !== 1 ) {
+			return;
+		}
+
+		// The range input is left out: the Number Slider draws it without a border.
+		$form   = 'body div.wpforms-container-full.wpforms-container-full .wpforms-form';
+		$fields = 'input[type=date], input[type=datetime], input[type=datetime-local], input[type=email], input[type=month], input[type=number], input[type=password], input[type=search], input[type=tel], input[type=text], input[type=time], input[type=url], input[type=week], select, textarea';
+
+		// `:is()` keeps the list in one place; every browser that reads the custom properties supports it.
+		$styles =
+			/** @lang CSS */
+			"{$form} :is( {$fields} ) {
+				border-radius: var( --wpforms-field-border-radius );
+				border-width: var( --wpforms-field-border-size );
+				border-style: var( --wpforms-field-border-style );
+			}
+			{$form} :is( {$fields} ):focus {
+				border-style: solid;
+			}
+			{$form} :is( input[type=submit], button[type=submit], .wpforms-page-button ) {
+				padding: 0 var( --wpforms-button-size-padding-h );
+				border-radius: var( --wpforms-button-border-radius );
+				border-width: var( --wpforms-button-border-size );
+				border-style: var( --wpforms-button-border-style );
+			}";
+
+		wp_add_inline_style( 'oceanwp-style', $styles );
 	}
 
 	/**

@@ -591,9 +591,10 @@ abstract class FormBuilder implements FormBuilderInterface {
 	/**
 	 * Determine whether the lock field is required.
 	 *
-	 * @WPFormsBackCompat Support Drip v1.7.0 and earlier, support Uncanny Automator.
+	 * @WPFormsBackCompat Support Uncanny Automator.
 	 *
 	 * @since 1.8.9
+	 * @since 2.0.5 Removed the Drip slug.
 	 *
 	 * @param string $provider The provider slug.
 	 *
@@ -601,13 +602,8 @@ abstract class FormBuilder implements FormBuilderInterface {
 	 */
 	protected function is_lock_field_required( string $provider ): bool {
 
-		// Compatibility with the legacy Drip addon versions where the lock field was unnecessary.
 		// Uncanny Automator does not have a lock field.
-		if ( in_array( $provider, [ 'uncanny-automator', 'drip' ], true ) ) {
-			return false;
-		}
-
-		return true;
+		return $provider !== 'uncanny-automator';
 	}
 
 	/**

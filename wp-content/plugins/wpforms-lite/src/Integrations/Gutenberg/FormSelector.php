@@ -2,9 +2,12 @@
 
 namespace WPForms\Integrations\Gutenberg;
 
+use WP_Post;
 use WPForms\Frontend\CSSVars;
+use WPForms\Frontend\EmbedContext;
+use WPForms\Frontend\ThemesEditor;
+use WPForms\Frontend\ThemesEditor\Support;
 use WPForms\Integrations\IntegrationInterface;
-use WPForms\Admin\Education\StringsTrait;
 
 /**
  * Form Selector Gutenberg block with a live preview.
@@ -12,8 +15,6 @@ use WPForms\Admin\Education\StringsTrait;
  * @since 1.4.8
  */
 abstract class FormSelector implements IntegrationInterface {
-
-	use StringsTrait;
 
 	/**
 	 * Default attributes.
@@ -122,13 +123,13 @@ abstract class FormSelector implements IntegrationInterface {
 	private $callbacks = [];
 
 	/**
-	 * Currently displayed form ID.
+	 * Block CSS printer.
 	 *
-	 * @since 1.8.8
+	 * @since 2.0.5
 	 *
-	 * @var string|int
+	 * @var BlockStyles
 	 */
-	private $current_form_id = 0;
+	private $block_styles;
 
 	/**
 	 * Indicate if the current integration is allowed to load.
@@ -152,6 +153,7 @@ abstract class FormSelector implements IntegrationInterface {
 		$this->render_engine       = wpforms_get_render_engine();
 		$this->disable_css_setting = (int) wpforms_setting( 'disable-css', '1' );
 		$this->css_vars_obj        = wpforms()->obj( 'css_vars' );
+		$this->block_styles        = new BlockStyles( $this->themes_data_obj, $this->css_vars_obj, self::DEFAULT_ATTRIBUTES );
 
 		wpforms()->register_instance( 'formselector_themes_data', $this->themes_data_obj );
 
@@ -283,6 +285,8 @@ abstract class FormSelector implements IntegrationInterface {
 		 */
 		$attributes = apply_filters( 'wpforms_gutenberg_form_selector_attributes', $attributes ); // phpcs:ignore WPForms.PHP.ValidateHooks.InvalidHookName
 
+		$this->block_styles->declare_attributes( $attributes );
+
 		register_block_type(
 			'wpforms/form-selector',
 			[
@@ -372,7 +376,7 @@ abstract class FormSelector implements IntegrationInterface {
 			wp_enqueue_script(
 				'wpforms-gutenberg-form-selector',
 				WPFORMS_PLUGIN_URL . "assets/js/integrations/gutenberg/formselector-legacy.es5{$min}.js",
-				[ 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery' ],
+				[ 'wp-blocks', 'wp-i18n', 'wp-element', 'wp-data', 'wp-url', 'jquery' ],
 				WPFORMS_VERSION,
 				true
 			);
@@ -389,20 +393,6 @@ abstract class FormSelector implements IntegrationInterface {
 				true
 			);
 		}
-
-		wp_enqueue_script(
-			'wpforms-admin-education-core',
-			WPFORMS_PLUGIN_URL . "assets/js/admin/education/core{$min}.js",
-			[ 'jquery', 'jquery-confirm' ],
-			WPFORMS_VERSION,
-			true
-		);
-
-		wp_localize_script(
-			'wpforms-admin-education-core',
-			'wpforms_education',
-			$this->get_js_strings()
-		);
 	}
 
 	/**
@@ -425,150 +415,53 @@ abstract class FormSelector implements IntegrationInterface {
 	public function get_localize_data(): array {
 
 		$strings = [
-			'title'                        => esc_html__( 'WPForms', 'wpforms-lite' ),
-			'description'                  => esc_html__( 'Select and display one of your forms.', 'wpforms-lite' ),
-			'form_keywords'                => [
+			'title'                      => esc_html__( 'WPForms', 'wpforms-lite' ),
+			'description'                => esc_html__( 'Select and display one of your forms.', 'wpforms-lite' ),
+			'form_keywords'              => [
 				esc_html__( 'form', 'wpforms-lite' ),
 				esc_html__( 'contact', 'wpforms-lite' ),
 				esc_html__( 'survey', 'wpforms-lite' ),
 			],
-			'form_select'                  => esc_html__( 'Select a Form', 'wpforms-lite' ),
-			'form_settings'                => esc_html__( 'Form Settings', 'wpforms-lite' ),
-			'form_edit'                    => esc_html__( 'Edit Form', 'wpforms-lite' ),
-			'form_entries'                 => esc_html__( 'View Entries', 'wpforms-lite' ),
-			'themes'                       => esc_html__( 'Themes', 'wpforms-lite' ),
-			'theme_name'                   => esc_html__( 'Theme Name', 'wpforms-lite' ),
-			'theme_delete'                 => esc_html__( 'Delete Theme', 'wpforms-lite' ),
-			'theme_delete_title'           => esc_html__( 'Delete Form Theme', 'wpforms-lite' ),
-			// Translators: %1$s: Theme name.
-			'theme_delete_confirm'         => esc_html__( 'Are you sure you want to delete the %1$s theme?', 'wpforms-lite' ),
-			'theme_delete_cant_undone'     => esc_html__( 'This cannot be undone.', 'wpforms-lite' ),
-			'theme_delete_yes'             => esc_html__( 'Yes, Delete', 'wpforms-lite' ),
-			'theme_copy'                   => esc_html__( 'Copy', 'wpforms-lite' ),
-			'theme_custom'                 => esc_html__( 'Custom Theme', 'wpforms-lite' ),
-			'theme_noname'                 => esc_html__( 'Noname Theme', 'wpforms-lite' ),
-			'field_styles'                 => esc_html__( 'Field Styles', 'wpforms-lite' ),
-			'field_label'                  => esc_html__( 'Field Label', 'wpforms-lite' ),
-			'field_sublabel'               => esc_html__( 'Field Sublabel', 'wpforms-lite' ),
-			'field_border'                 => esc_html__( 'Field Border', 'wpforms-lite' ),
-			'label_styles'                 => esc_html__( 'Label Styles', 'wpforms-lite' ),
-			'button_background'            => esc_html__( 'Button Background', 'wpforms-lite' ),
-			'button_text'                  => esc_html__( 'Button Text', 'wpforms-lite' ),
-			'button_styles'                => esc_html__( 'Button Styles', 'wpforms-lite' ),
-			'container_styles'             => esc_html__( 'Container Styles', 'wpforms-lite' ),
-			'background_styles'            => esc_html__( 'Background Styles', 'wpforms-lite' ),
-			'remove_image'                 => esc_html__( 'Remove Image', 'wpforms-lite' ),
-			'position'                     => esc_html__( 'Position', 'wpforms-lite' ),
-			'top_left'                     => esc_html__( 'Top Left', 'wpforms-lite' ),
-			'top_center'                   => esc_html__( 'Top Center', 'wpforms-lite' ),
-			'top_right'                    => esc_html__( 'Top Right', 'wpforms-lite' ),
-			'center_left'                  => esc_html__( 'Center Left', 'wpforms-lite' ),
-			'center_center'                => esc_html__( 'Center Center', 'wpforms-lite' ),
-			'center_right'                 => esc_html__( 'Center Right', 'wpforms-lite' ),
-			'bottom_left'                  => esc_html__( 'Bottom Left', 'wpforms-lite' ),
-			'bottom_center'                => esc_html__( 'Bottom Center', 'wpforms-lite' ),
-			'bottom_right'                 => esc_html__( 'Bottom Right', 'wpforms-lite' ),
-			'repeat'                       => esc_html__( 'Repeat', 'wpforms-lite' ),
-			'no_repeat'                    => esc_html__( 'No Repeat', 'wpforms-lite' ),
-			'repeat_x'                     => esc_html__( 'Repeat Horizontal', 'wpforms-lite' ),
-			'repeat_y'                     => esc_html__( 'Repeat Vertical', 'wpforms-lite' ),
-			'tile'                         => esc_html__( 'Tile', 'wpforms-lite' ),
-			'cover'                        => esc_html__( 'Cover', 'wpforms-lite' ),
-			'dimensions'                   => esc_html__( 'Dimensions', 'wpforms-lite' ),
-			'width'                        => esc_html__( 'Width', 'wpforms-lite' ),
-			'height'                       => esc_html__( 'Height', 'wpforms-lite' ),
-			'button_color_notice'          => esc_html__( 'Also used for other fields like Multiple Choice, Checkboxes, Rating, and NPS Survey.', 'wpforms-lite' ),
-			'advanced'                     => esc_html__( 'Advanced', 'wpforms-lite' ),
-			'additional_css_classes'       => esc_html__( 'Additional CSS Classes', 'wpforms-lite' ),
-			'form_selected'                => esc_html__( 'Form', 'wpforms-lite' ),
-			'show_title'                   => esc_html__( 'Show Title', 'wpforms-lite' ),
-			'show_description'             => esc_html__( 'Show Description', 'wpforms-lite' ),
-			'panel_notice_head'            => esc_html__( 'Heads up!', 'wpforms-lite' ),
-			'panel_notice_text'            => esc_html__( 'Do not forget to test your form.', 'wpforms-lite' ),
-			'panel_notice_link'            => esc_url( wpforms_utm_link( 'https://wpforms.com/docs/how-to-properly-test-your-wordpress-forms-before-launching-checklist/', 'gutenberg' ) ),
-			'panel_notice_link_text'       => esc_html__( 'Check out our complete guide!', 'wpforms-lite' ),
-			'update_wp_notice_head'        => esc_html__( 'Want to customize your form styles without editing CSS?', 'wpforms-lite' ),
-			'update_wp_notice_text'        => esc_html__( 'Update WordPress to the latest version to use our modern markup and unlock the controls below.', 'wpforms-lite' ),
-			'update_wp_notice_link'        => esc_url( wpforms_utm_link( 'https://wpforms.com/docs/styling-your-forms/', 'Block Settings', 'Form Styles Documentation' ) ),
-			'learn_more'                   => esc_html__( 'Learn more', 'wpforms-lite' ),
-			'use_modern_notice_head'       => esc_html__( 'Want to customize your form styles without editing CSS?', 'wpforms-lite' ),
-			'use_modern_notice_text'       => esc_html__( 'Enable modern markup in your WPForms settings to unlock the controls below.', 'wpforms-lite' ),
-			'use_modern_notice_link'       => esc_url( wpforms_utm_link( 'https://wpforms.com/docs/styling-your-forms/', 'Block Settings', 'Form Styles Documentation' ) ),
-			'lead_forms_panel_notice_head' => esc_html__( 'Form Styles are disabled because Lead Form Mode is turned on.', 'wpforms-lite' ),
-			'lead_forms_panel_notice_text' => esc_html__( 'To change the styling for this form, open it in the form builder and edit the options in the Lead Forms settings.', 'wpforms-lite' ),
-			'size'                         => esc_html__( 'Size', 'wpforms-lite' ),
-			'padding'                      => esc_html__( 'Padding', 'wpforms-lite' ),
-			'background'                   => esc_html__( 'Background', 'wpforms-lite' ),
-			'border'                       => esc_html__( 'Border', 'wpforms-lite' ),
-			'text'                         => esc_html__( 'Text', 'wpforms-lite' ),
-			'menu'                         => esc_html__( 'Menu', 'wpforms-lite' ),
-			'image'                        => esc_html__( 'Image', 'wpforms-lite' ),
-			'media_library'                => esc_html__( 'Media Library', 'wpforms-lite' ),
-			'choose_image'                 => esc_html__( 'Choose Image', 'wpforms-lite' ),
-			'stock_photo'                  => esc_html__( 'Stock Photo', 'wpforms-lite' ),
-			'border_radius'                => esc_html__( 'Border Radius', 'wpforms-lite' ),
-			'border_size'                  => esc_html__( 'Border Size', 'wpforms-lite' ),
-			'border_style'                 => esc_html__( 'Border Style', 'wpforms-lite' ),
-			'none'                         => esc_html__( 'None', 'wpforms-lite' ),
-			'solid'                        => esc_html__( 'Solid', 'wpforms-lite' ),
-			'dashed'                       => esc_html__( 'Dashed', 'wpforms-lite' ),
-			'dotted'                       => esc_html__( 'Dotted', 'wpforms-lite' ),
-			'double'                       => esc_html__( 'Double', 'wpforms-lite' ),
-			'shadow_size'                  => esc_html__( 'Shadow', 'wpforms-lite' ),
-			'border_width'                 => esc_html__( 'Border Size', 'wpforms-lite' ),
-			'border_color'                 => esc_html__( 'Border', 'wpforms-lite' ),
-			'colors'                       => esc_html__( 'Colors', 'wpforms-lite' ),
-			'label'                        => esc_html__( 'Label', 'wpforms-lite' ),
-			'sublabel_hints'               => esc_html__( 'Sublabel & Hint', 'wpforms-lite' ),
-			'error_message'                => esc_html__( 'Error Message', 'wpforms-lite' ),
-			'small'                        => esc_html__( 'Small', 'wpforms-lite' ),
-			'medium'                       => esc_html__( 'Medium', 'wpforms-lite' ),
-			'large'                        => esc_html__( 'Large', 'wpforms-lite' ),
-			'btn_yes'                      => esc_html__( 'Yes', 'wpforms-lite' ),
-			'btn_no'                       => esc_html__( 'No', 'wpforms-lite' ),
-			'copy_paste_settings'          => esc_html__( 'Copy / Paste Style Settings', 'wpforms-lite' ),
-			'copy_paste_error'             => esc_html__( 'There was an error parsing your JSON code. Please check your code and try again.', 'wpforms-lite' ),
-			'copy_paste_notice'            => esc_html__( 'If you\'ve copied style settings from another form, you can paste them here to add the same styling to this form. Any current style settings will be overwritten.', 'wpforms-lite' ),
-			'custom_css'                   => esc_html__( 'Custom CSS', 'wpforms-lite' ),
-			'custom_css_notice'            => esc_html__( 'Further customize the look of this form without having to edit theme files.', 'wpforms-lite' ),
+			'form_select'                => esc_html__( 'Select a Form', 'wpforms-lite' ),
+			'form_settings'              => esc_html__( 'Form Settings', 'wpforms-lite' ),
+			'form_edit'                  => esc_html__( 'Edit Form', 'wpforms-lite' ),
+			'form_entries'               => esc_html__( 'View Entries', 'wpforms-lite' ),
+			'form_selected'              => esc_html__( 'Form', 'wpforms-lite' ),
+			'show_title'                 => esc_html__( 'Show Title', 'wpforms-lite' ),
+			'show_description'           => esc_html__( 'Show Description', 'wpforms-lite' ),
+			'panel_notice_head'          => esc_html__( 'Heads up!', 'wpforms-lite' ),
+			'panel_notice_text'          => esc_html__( 'Do not forget to test your form.', 'wpforms-lite' ),
+			'panel_notice_link'          => esc_url( wpforms_utm_link( 'https://wpforms.com/docs/how-to-properly-test-your-wordpress-forms-before-launching-checklist/', 'gutenberg' ) ),
+			'panel_notice_link_text'     => esc_html__( 'Check out our complete guide!', 'wpforms-lite' ),
+			'learn_more'                 => esc_html__( 'Learn more', 'wpforms-lite' ),
 			// Translators: %1$s: Opening strong tag, %2$s: Closing strong tag.
-			'wpforms_empty_info'           => sprintf( esc_html__( 'You can use %1$sWPForms%2$s to build contact forms, surveys, payment forms, and more with just a few clicks.', 'wpforms-lite' ), '<strong>','</strong>' ),
+			'wpforms_empty_info'         => sprintf( esc_html__( 'You can use %1$sWPForms%2$s to build contact forms, surveys, payment forms, and more with just a few clicks.', 'wpforms-lite' ), '<strong>','</strong>' ),
 			// Translators: %1$s: Opening anchor tag, %2$s: Closing anchor tag.
-			'wpforms_empty_help'           => sprintf( esc_html__( 'Need some help? Check out our %1$scomprehensive guide.%2$s', 'wpforms-lite' ), '<a target="_blank" href="' . esc_url( wpforms_utm_link( 'https://wpforms.com/docs/creating-first-form/', 'gutenberg', 'Create Your First Form Documentation' ) ) . '">','</a>' ),
-			'other_styles'                 => esc_html__( 'Other Styles', 'wpforms-lite' ),
-			'page_break'                   => esc_html__( 'Page Break', 'wpforms-lite' ),
-			'rating'                       => esc_html__( 'Rating', 'wpforms-lite' ),
-			'heads_up'                     => esc_html__( 'Heads Up!', 'wpforms-lite' ),
-			'form_not_available_message'   => esc_html__( 'It looks like the form you had selected is in the Trash or has been permanently deleted.', 'wpforms-lite' ),
+			'wpforms_empty_help'         => sprintf( esc_html__( 'Need some help? Check out our %1$scomprehensive guide.%2$s', 'wpforms-lite' ), '<a target="_blank" href="' . esc_url( wpforms_utm_link( 'https://wpforms.com/docs/creating-first-form/', 'gutenberg', 'Create Your First Form Documentation' ) ) . '">','</a>' ),
+			'form_not_available_message' => esc_html__( 'It looks like the form you had selected is in the Trash or has been permanently deleted.', 'wpforms-lite' ),
 		];
+
+		$editor = wpforms()->obj( 'themes_editor' );
 
 		return [
 			'logo_url'          => WPFORMS_PLUGIN_URL . 'assets/images/wpforms-logo.svg',
 			'block_preview_url' => WPFORMS_PLUGIN_URL . 'assets/images/integrations/gutenberg/block-preview.png',
 			'block_empty_url'   => WPFORMS_PLUGIN_URL . 'assets/images/empty-states/no-forms.svg',
-			'route_namespace'   => RestApi::ROUTE_NAMESPACE,
-			'wpnonce'           => wp_create_nonce( 'wpforms-gutenberg-form-selector' ),
 			'urls'              => [
 				'form_url'    => admin_url( 'admin.php?page=wpforms-builder&view=fields&form_id={ID}' ),
 				'entries_url' => admin_url( 'admin.php?view=list&page=wpforms-entries&form_id={ID}' ),
 			],
 			'forms'             => $this->get_form_list(),
 			'strings'           => $strings,
-			'isAdmin'           => current_user_can( 'manage_options' ),
 			'canViewForms'      => $this->current_user_can_view_forms(),
 			'canCreateForms'    => wpforms_current_user_can( 'create_forms' ),
 			'isPro'             => wpforms()->is_pro(),
+			// The attribute defaults the block declares; they must not change, or saved blocks would lose values.
 			'defaults'          => self::DEFAULT_ATTRIBUTES,
-			'is_modern_markup'  => $this->render_engine === 'modern',
-			'is_full_styling'   => $this->disable_css_setting === 1,
+			'is_full_styling'   => $this->render_engine === 'modern' && $this->disable_css_setting === 1,
 			'wpforms_guide'     => esc_url( wpforms_utm_link( 'https://wpforms.com/docs/creating-first-form/', 'gutenberg', 'Create Your First Form Documentation' ) ),
 			'get_started_url'   => esc_url( admin_url( 'admin.php?page=wpforms-builder' ) ),
-			'sizes'             => [
-				'field-size'            => CSSVars::FIELD_SIZE,
-				'label-size'            => CSSVars::LABEL_SIZE,
-				'button-size'           => CSSVars::BUTTON_SIZE,
-				'container-shadow-size' => CSSVars::CONTAINER_SHADOW_SIZE,
-			],
+			'themesEditor'      => $editor instanceof ThemesEditor ? $editor->get_support()->get_editor_launch_data() : Support::get_unavailable_launch_data(),
 		];
 	}
 
@@ -599,9 +492,8 @@ abstract class FormSelector implements IntegrationInterface {
 	/**
 	 * Get the form list item data exposed to the block editor.
 	 *
-	 * Only the data the block editor consumes is included: field types and theme settings.
-	 * The full form definition (notifications, confirmations, integrations)
-	 * must never reach the page source.
+	 * Only the data the block editor consumes is included. The form definition
+	 * (fields, notifications, confirmations, integrations) must never reach the page source.
 	 *
 	 * @since 2.0.1
 	 *
@@ -615,27 +507,13 @@ abstract class FormSelector implements IntegrationInterface {
 		$title      = htmlspecialchars_decode( $form->post_title, ENT_QUOTES );
 		$title      = trim( mb_substr( trim( $title ), 0, $max_length ) );
 		$title      = mb_strlen( $title ) === $max_length ? $title . '…' : $title;
-
-		$form_data = (array) wpforms_decode( $form->post_content );
-		$fields    = isset( $form_data['fields'] ) && is_array( $form_data['fields'] ) ? $form_data['fields'] : [];
-
-		$content = [
-			'fields'   => array_map(
-				static function ( $field ) {
-
-					return [ 'type' => $field['type'] ?? '' ];
-				},
-				$fields
-			),
-			'settings' => [
-				'themes' => $form_data['settings']['themes'] ?? null,
-			],
-		];
+		$editor     = wpforms()->obj( 'themes_editor' );
 
 		return [
-			'ID'           => $form->ID,
-			'post_title'   => $title,
-			'post_content' => (string) wp_json_encode( $content ),
+			'ID'         => $form->ID,
+			'post_title' => $title,
+			'isLeadForm' => $editor instanceof ThemesEditor && $form instanceof WP_Post && $editor->get_support()->is_unstyled_lead_form_post( $form ),
+			'canEdit'    => $editor instanceof ThemesEditor && $editor->can_edit( (int) $form->ID ),
 		];
 	}
 
@@ -690,8 +568,6 @@ abstract class FormSelector implements IntegrationInterface {
 
 		$id = ! empty( $attr['formId'] ) ? absint( $attr['formId'] ) : 0;
 
-		$this->current_form_id = $id;
-
 		if ( empty( $id ) ) {
 			return '';
 		}
@@ -701,6 +577,9 @@ abstract class FormSelector implements IntegrationInterface {
 		if ( $this->is_block_renderer_request() && ! $this->current_user_can_view_forms() ) {
 			return '';
 		}
+
+		// The editor preview sends every declared attribute with its default; keep the saved shape only.
+		$attr = $this->block_styles->strip_defaults( $attr );
 
 		if ( $this->is_gb_editor() ) {
 			$this->disable_fields_in_gb_editor();
@@ -712,7 +591,21 @@ abstract class FormSelector implements IntegrationInterface {
 		$this->add_class_callback( $id, $attr );
 
 		// Maybe override block attributes with the theme settings.
-		$attr = $this->maybe_override_block_attributes( $attr );
+		$attr = $this->block_styles->resolve_attributes( $attr );
+
+		$embed_context = wpforms()->obj( 'embed_context' );
+
+		// The resolved attributes are the styles the block prints; the panel reads them, the render does not.
+		if ( $embed_context instanceof EmbedContext ) {
+			$embed_context->set(
+				[
+					'type'    => EmbedContext::TYPE_BLOCK,
+					'id'      => (string) ( $attr['clientId'] ?? '' ),
+					'form_id' => $id,
+					'legacy'  => $attr,
+				]
+			);
+		}
 
 		// Get block content.
 		$content = $this->get_content( $id, $title, $desc, $attr );
@@ -730,69 +623,6 @@ abstract class FormSelector implements IntegrationInterface {
 		return (string) apply_filters( 'wpforms_gutenberg_block_form_content', $content, $id );
 
 		// phpcs:enable WPForms.PHP.ValidateHooks.InvalidHookName
-	}
-
-	/**
-	 * Maybe override block attributes.
-	 *
-	 * This method is used to override block attributes with the theme settings.
-	 *
-	 * @since 1.8.8
-	 *
-	 * @param array $attr Attributes passed by WPForms Gutenberg block.
-	 *
-	 * @return array
-	 */
-	private function maybe_override_block_attributes( array $attr ): array {
-
-		$theme_slug = (string) ( $attr['theme'] ?? '' );
-
-		// Previously added blocks (FS 1.0) don't have the themeName attribute.
-		// To preserve existing styling of such old blocks, we shouldn't override attributes.
-		if ( ! isset( $attr['themeName'] ) || ( empty( $attr['themeName'] ) && $theme_slug === 'default' ) ) {
-			return $attr;
-		}
-
-		if ( $theme_slug === '' ) {
-			$theme_slug = $this->get_theme_slug( $attr );
-		}
-
-		$theme_data = $this->themes_data_obj->get_theme( $theme_slug );
-
-		// Theme doesn't exist, let's return.
-		if ( ! $theme_data ) {
-			return $attr;
-		}
-
-		// Override block attributes with the theme settings.
-		return array_merge( $attr, $theme_data['settings'] );
-	}
-
-	/**
-	 * Get the theme slug.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @param array $attr Attributes passed by WPForms Gutenberg block.
-	 *
-	 * @return string
-	 */
-	private function get_theme_slug( array $attr ): string {
-
-		$form_handler = wpforms()->obj( 'form' );
-
-		if ( ! $form_handler ) {
-			return 'default';
-		}
-
-		$form_id   = (int) $attr['formId'];
-		$form_data = $form_handler->get( $form_id, [ 'content_only' => true ] );
-
-		if ( empty( $form_data['settings']['themes']['wpformsTheme'] ) ) {
-			return 'default';
-		}
-
-		return $form_data['settings']['themes']['wpformsTheme'];
 	}
 
 	/**
@@ -896,9 +726,7 @@ abstract class FormSelector implements IntegrationInterface {
 		 */
 		$desc = (bool) apply_filters( 'wpforms_gutenberg_block_form_desc', $desc, $id );
 
-		$this->output_css_vars( $attr );
-		$this->output_form_custom_css( $id );
-		$this->output_custom_css( $attr );
+		$this->block_styles->print( $id, $attr );
 
 		wpforms_display( $id, $title, $desc );
 
@@ -1026,135 +854,6 @@ abstract class FormSelector implements IntegrationInterface {
 				echo '</fieldset>';
 			},
 			30
-		);
-	}
-
-	/**
-	 * Output CSS variables for the particular form.
-	 *
-	 * @since 1.8.1
-	 *
-	 * @param array $attr Attributes passed by WPForms Gutenberg block.
-	 */
-	private function output_css_vars( array $attr ): void {
-
-		if ( empty( $this->css_vars_obj ) || ! method_exists( $this->css_vars_obj, 'get_vars' ) ) {
-			return;
-		}
-
-		if ( $this->render_engine === 'classic' || $this->disable_css_setting !== 1 ) {
-			return;
-		}
-
-		$css_vars = $this->css_vars_obj->get_customized_css_vars( $attr );
-
-		if ( empty( $css_vars ) ) {
-			return;
-		}
-
-		$style_id = "#wpforms-css-vars-{$attr['formId']}-block-{$attr['clientId']}";
-
-		/**
-		 * Filter the CSS selector for output CSS variables for styling the GB block form.
-		 *
-		 * @since 1.8.1
-		 *
-		 * @param string $selector The CSS selector for output CSS variables for styling the GB block form.
-		 * @param array  $attr     Attributes passed by WPForms Gutenberg block.
-		 * @param array  $css_vars CSS variables data.
-		 */
-		$vars_selector = apply_filters(
-			'wpforms_integrations_gutenberg_form_selector_output_css_vars_selector',
-			"#wpforms-{$attr['formId']}.wpforms-block-{$attr['clientId']}",
-			$attr,
-			$css_vars
-		);
-
-		$style_id      = rtrim( $style_id, '-' );
-		$vars_selector = rtrim( $vars_selector, '-' );
-
-		$this->css_vars_obj->output_selector_vars( $vars_selector, $css_vars, $style_id, $this->current_form_id );
-	}
-
-	/**
-	 * Output custom CSS styles.
-	 *
-	 * @since 1.8.8
-	 *
-	 * @param array $attr Attributes passed by WPForms Gutenberg block.
-	 */
-	private function output_custom_css( array $attr ): void {
-
-		if ( wpforms_get_render_engine() === 'classic' ) {
-			return;
-		}
-
-		$custom_css = trim( $attr['customCss'] ?? '' );
-
-		if ( empty( $custom_css ) ) {
-			return;
-		}
-
-		$style_id = "#wpforms-custom-css-{$attr['formId']}-block-{$attr['clientId']}";
-
-		printf(
-			'<style id="%1$s">
-				%2$s
-			</style>',
-			sanitize_key( $style_id ),
-			wp_strip_all_tags( $custom_css ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		);
-	}
-
-	/**
-	 * Output form-level custom CSS styles loaded from the form settings.
-	 *
-	 * Mirrors the shortcode render path so custom CSS configured in
-	 * the Form Builder (Settings → Themes → Advanced) is also applied
-	 * when the form is embedded via the Gutenberg block.
-	 *
-	 * @since 1.10.2
-	 *
-	 * @param int $form_id Form ID.
-	 */
-	private function output_form_custom_css( int $form_id ): void {
-
-		static $outputted_forms = [];
-
-		if ( $this->render_engine === 'classic' || in_array( $form_id, $outputted_forms, true ) ) {
-			return;
-		}
-
-		$form_handler = wpforms()->obj( 'form' );
-
-		if ( ! $form_handler ) {
-			return;
-		}
-
-		$form_data = $form_handler->get( $form_id, [ 'content_only' => true ] );
-
-		if ( empty( $form_data ) ) {
-			return;
-		}
-
-		$custom_css = trim( $form_data['settings']['themes']['customCss'] ?? '' );
-
-		if ( empty( $custom_css ) ) {
-			return;
-		}
-
-		$outputted_forms[] = $form_id;
-		$style_id          = "wpforms-custom-css-{$form_id}-form";
-
-		printf(
-			'<style id="%1$s">
-				#wpforms-%2$d {
-					%3$s
-				}
-			</style>',
-			sanitize_key( $style_id ),
-			absint( $form_id ),
-			wp_strip_all_tags( $custom_css ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		);
 	}
 

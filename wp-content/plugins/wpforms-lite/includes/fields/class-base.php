@@ -160,6 +160,15 @@ abstract class WPForms_Field {
 	protected $frontend_obj;
 
 	/**
+	 * Rendered dynamic choice IDs keyed by form, field and dynamic source, then by choice ID.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @var array
+	 */
+	private $dynamic_choice_ids = [];
+
+	/**
 	 * Primary class constructor.
 	 *
 	 * @since 1.0.0
@@ -3980,15 +3989,17 @@ abstract class WPForms_Field {
 	 */
 	private function get_field_html( array $field, string $value, array $form_data ): string {
 
+		// The choices value is rebuilt from raw stored data, so it must be escaped before it is wrapped in markup.
+		// It is escaped, not stripped, so text such as `<3` survives.
 		if ( ! empty( $field['image'] ) ) {
-			$value = $this->get_choices_value( $field, $form_data );
+			$value = esc_html( $this->get_choices_value( $field, $form_data ) );
 
 			return $this->get_field_html_image( $field['image'], $value );
 		}
 
 		if ( ! empty( $field['images'] ) ) {
 			$items  = [];
-			$value  = $this->get_choices_value( $field, $form_data );
+			$value  = esc_html( $this->get_choices_value( $field, $form_data ) );
 			$values = explode( "\n", $value );
 
 			foreach ( $values as $key => $choice_label ) {
@@ -4355,10 +4366,109 @@ abstract class WPForms_Field {
 			return false;
 		}
 
-		$form_id = absint( $form_data['id'] );
-		$dynamic = wpforms_get_field_dynamic_choices( $field, $form_id, $form_data );
+		return empty( $this->get_dynamic_choice_ids( (array) $field, (array) $form_data ) );
+	}
 
-		return empty( $dynamic );
+	/**
+	 * Get the IDs of the dynamic choices the field renders, as array keys.
+	 *
+	 * Validation and formatting read this list so they accept exactly what the visitor was shown.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array $field     Field settings.
+	 * @param array $form_data Form data and settings.
+	 *
+	 * @return array
+	 */
+	protected function get_dynamic_choice_ids( array $field, array $form_data ): array {
+
+		$current_form_id = absint( $form_data['id'] ?? 0 );
+		$cache_key       = implode(
+			':',
+			[
+				$current_form_id,
+				$field['id'] ?? '',
+				$field['dynamic_choices'] ?? '',
+				$field['dynamic_post_type'] ?? '',
+				$field['dynamic_taxonomy'] ?? '',
+			]
+		);
+
+		if ( isset( $this->dynamic_choice_ids[ $cache_key ] ) ) {
+			return $this->dynamic_choice_ids[ $cache_key ];
+		}
+
+		$choices = wpforms_get_field_dynamic_choices( $field, $current_form_id, $form_data );
+		$ids     = [];
+
+		// The helper returns false, not an empty array, when the dynamic source is unset.
+		foreach ( is_array( $choices ) ? $choices : [] as $choice ) {
+			$ids[ (int) $choice['value'] ] = true;
+		}
+
+		$this->dynamic_choice_ids[ $cache_key ] = $ids;
+
+		return $ids;
+	}
+
+	/**
+	 * Get the post titles or term names of the submitted IDs that are among the rendered choices, in submission order.
+	 *
+	 * An empty submission returns early, so no choice list is built for it.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array $ids       Submitted choice IDs.
+	 * @param array $field     Field settings.
+	 * @param array $form_data Form data and settings.
+	 *
+	 * @return array
+	 */
+	protected function get_submitted_dynamic_choice_labels( array $ids, array $field, array $form_data ): array {
+
+		$ids = array_filter( array_map( 'intval', $ids ) );
+
+		if ( empty( $ids ) ) {
+			return [];
+		}
+
+		$rendered  = $this->get_dynamic_choice_ids( $field, $form_data );
+		$submitted = [];
+
+		foreach ( $ids as $id ) {
+			$label = isset( $rendered[ $id ] ) ? $this->get_dynamic_choice_label( $id, $field ) : null;
+
+			if ( $label !== null ) {
+				$submitted[] = $label;
+			}
+		}
+
+		return $submitted;
+	}
+
+	/**
+	 * Get the plain post title or term name of a rendered dynamic choice.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param int   $id    Post or term ID.
+	 * @param array $field Field settings.
+	 *
+	 * @return string|null
+	 */
+	private function get_dynamic_choice_label( int $id, array $field ) {
+
+		if ( ( $field['dynamic_choices'] ?? '' ) === 'taxonomy' ) {
+			$term = get_term( $id, $field['dynamic_taxonomy'] ?? '' );
+
+			return $term instanceof WP_Term ? wpforms_get_term_name( $term ) : null;
+		}
+
+		// Rendered labels carry the hierarchy padding, so read the plain title.
+		$post = get_post( $id );
+
+		return $post instanceof WP_Post ? wpforms_get_post_title( $post ) : null;
 	}
 
 	/**
@@ -4771,8 +4881,8 @@ abstract class WPForms_Field {
 	/**
 	 * Validate a dynamic post-type choice submission.
 	 *
-	 * Each submitted ID must cast to a positive integer AND map to a post of the
-	 * field's configured `dynamic_post_type`.
+	 * Each submitted ID must cast to a positive integer AND be one of the posts
+	 * the field renders as choices.
 	 *
 	 * @since 1.10.0.5
 	 *
@@ -4791,16 +4901,16 @@ abstract class WPForms_Field {
 			return;
 		}
 
+		$rendered = $this->get_dynamic_choice_ids( $field, $form_data );
+
 		$this->validate_dynamic_id_submission(
 			$field_id,
 			$field_submit,
 			$field,
 			$form_data,
-			static function ( $id ) use ( $post_type ) {
+			static function ( $id ) use ( $rendered ) {
 
-				$post = get_post( $id );
-
-				return ! empty( $post ) && ! is_wp_error( $post ) && $post->post_type === $post_type;
+				return isset( $rendered[ (int) $id ] );
 			}
 		);
 	}
@@ -4808,8 +4918,8 @@ abstract class WPForms_Field {
 	/**
 	 * Validate a dynamic taxonomy choice submission.
 	 *
-	 * Each submitted ID must cast to a positive integer AND map to a term in the
-	 * field's configured `dynamic_taxonomy`.
+	 * Each submitted ID must cast to a positive integer AND be one of the terms
+	 * the field renders as choices.
 	 *
 	 * @since 1.10.0.5
 	 *
@@ -4828,16 +4938,16 @@ abstract class WPForms_Field {
 			return;
 		}
 
+		$rendered = $this->get_dynamic_choice_ids( $field, $form_data );
+
 		$this->validate_dynamic_id_submission(
 			$field_id,
 			$field_submit,
 			$field,
 			$form_data,
-			static function ( $id ) use ( $taxonomy ) {
+			static function ( $id ) use ( $rendered ) {
 
-				$term = get_term( $id, $taxonomy );
-
-				return ! empty( $term ) && ! is_wp_error( $term );
+				return isset( $rendered[ (int) $id ] );
 			}
 		);
 	}

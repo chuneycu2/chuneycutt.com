@@ -1,14 +1,14 @@
 <?php
 /**
- * Payments sidebar button in the builder.
+ * Payments sidebar button in the builder, also used for Drip in the Marketing panel.
  *
  * @since 1.8.2
  *
- * @var string $configured  Whether payment is configured.
- * @var string $slug        Slug of the payment integration.
- * @var string $icon        Icon of the payment integration.
- * @var string $name        Name of the payment integration.
- * @var bool   $recommended Whether payment is recommended.
+ * @var string $configured  Whether the integration is configured.
+ * @var string $slug        Slug of the integration.
+ * @var string $icon        Icon of the integration.
+ * @var string $name        Name of the integration.
+ * @var bool   $recommended Whether the integration is recommended.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

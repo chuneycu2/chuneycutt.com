@@ -240,8 +240,15 @@ class Requirements {
 			self::ADDON => '1.6.0',
 		],
 		'wpforms-drip/wpforms-drip.php'                                 => [
-			self::EXT     => 'curl',
-			self::LICENSE => self::PLUS_PRO_AND_TOP,
+			// Deprecated: Drip is built into core since 2.0.5, release candidates included, so the
+			// bound sits below the first one; a plain 2.0.5 would let the addon load on them.
+			self::EXT      => 'curl',
+			self::LICENSE  => self::PLUS_PRO_AND_TOP,
+			self::WPFORMS  => [
+				self::VERSION => '2.0.5-RC1',
+				self::COMPARE => '<',
+			],
+			self::PRIORITY => 20,
 		],
 		'wpforms-dropbox/wpforms-dropbox.php'                           => [
 			self::ADDON => '1.1.0',

@@ -1400,6 +1400,97 @@ class WPForms_Form_Handler {
 	}
 
 	/**
+	 * Update top-level settings of a form without re-saving the whole form.
+	 *
+	 * Unlike `update()`, nothing else in the form is normalized or re-sanitized.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param string|int $form_id  Form ID.
+	 * @param array      $settings Settings key => value to write.
+	 * @param array      $args     Additional arguments: `cap`, `skip_revision`.
+	 *
+	 * @return false|int|WP_Error
+	 */
+	public function update_settings( $form_id, array $settings, array $args = [] ) { // phpcs:ignore WPForms.PHP.HooksMethod.InvalidPlaceForAddingHooks
+
+		if ( empty( $form_id ) || empty( $settings ) ) {
+			return false;
+		}
+
+		$this->remove_form_content_filters();
+
+		if ( ! isset( $args['cap'] ) ) {
+			$args['cap'] = 'edit_form_single';
+		}
+
+		$form = $this->get_single( absint( $form_id ), $args );
+
+		if ( empty( $form ) ) {
+			return false;
+		}
+
+		$data = wpforms_decode( $form->post_content );
+
+		// wpforms_decode() falls back to false or an empty array on bad JSON;
+		// writing settings onto either would leave the form holding only settings.
+		if ( ! is_array( $data ) || empty( $data ) ) {
+			return false;
+		}
+
+		foreach ( $settings as $key => $value ) {
+			$data['settings'][ wpforms_sanitize_key( $key ) ] = $value;
+		}
+
+		$form = [
+			'ID'           => $form_id,
+			'post_content' => wpforms_encode( $data ),
+		];
+
+		/**
+		 * Filter the form before its settings are updated.
+		 *
+		 * @since 2.0.5
+		 *
+		 * @param array $form Form post data.
+		 * @param array $data Form data.
+		 */
+		$form = (array) apply_filters( 'wpforms_form_handler_update_settings_args', $form, $data );
+
+		if ( ! empty( $args['skip_revision'] ) ) {
+			remove_action( 'post_updated', 'wp_save_post_revision' );
+		}
+
+		try {
+			$result = wp_update_post( $form, true );
+		} finally {
+			if ( ! empty( $args['skip_revision'] ) ) {
+				add_action( 'post_updated', 'wp_save_post_revision' );
+			}
+		}
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		if ( ! $result ) {
+			return false;
+		}
+
+		/**
+		 * Fires after form settings are updated.
+		 *
+		 * @since 2.0.5
+		 *
+		 * @param int   $form_id  Form ID.
+		 * @param array $settings Settings written.
+		 */
+		do_action( 'wpforms_form_handler_update_settings_after', (int) $form_id, $settings );
+
+		return (int) $form_id;
+	}
+
+	/**
 	 * Delete form meta information from a form.
 	 *
 	 * @since 1.4.0

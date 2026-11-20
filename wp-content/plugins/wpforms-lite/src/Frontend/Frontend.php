@@ -213,6 +213,13 @@ class Frontend {
 	 */
 	public function output( $id, $title = false, $description = false ): void {
 
+		$embed_context = wpforms()->obj( 'embed_context' );
+
+		// Taken first so a pending context never survives an early return below.
+		if ( $embed_context instanceof EmbedContext ) {
+			$embed_context->take( (int) $id );
+		}
+
 		if ( empty( $id ) ) {
 			return;
 		}

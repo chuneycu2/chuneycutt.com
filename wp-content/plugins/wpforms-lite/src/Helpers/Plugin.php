@@ -107,13 +107,15 @@ class Plugin {
 	 * so a `public` entry point can never install without the right permission.
 	 *
 	 * @since 2.0.0
+	 * @since 2.0.5.1 Added the `$overwrite` parameter.
 	 *
 	 * @param string $plugin_file  Plugin main file relative to `WP_PLUGIN_DIR`.
 	 * @param string $download_url Resolved package URL.
+	 * @param bool   $overwrite    Replace a copy already on disk instead of refusing it.
 	 *
 	 * @return true|WP_Error
 	 */
-	public function install_from_url( string $plugin_file, string $download_url ) {
+	public function install_from_url( string $plugin_file, string $download_url, bool $overwrite = false ) {
 
 		$generic_error = esc_html__( 'Could not install the plugin. Please download and install it manually.', 'wpforms-lite' );
 		$is_addon      = $this->is_addon( $plugin_file );
@@ -132,7 +134,7 @@ class Plugin {
 			return new WP_Error( 'wpforms_install_plugin_installer', $generic_error );
 		}
 
-		$installed = $installer->install( $download_url );
+		$installed = $installer->install( $download_url, [ 'overwrite_package' => $overwrite ] );
 
 		if ( is_wp_error( $installed ) ) {
 			return $installed;

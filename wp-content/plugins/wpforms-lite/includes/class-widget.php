@@ -85,7 +85,16 @@ class WPForms_Widget extends WP_Widget {
 		}
 
 		if ( ! empty( $instance['form_id'] ) ) {
-			wpforms()->obj( 'frontend' )->output( absint( $instance['form_id'] ), (bool) $instance['show_title'], (bool) $instance['show_desc'] );
+			$form_id   = absint( $instance['form_id'] );
+			$widget_id = sanitize_key( $args['widget_id'] ?? (string) $form_id );
+
+			// Scoped to the widget, so other embeds of this form keep their styles; an embed override still wins.
+			wpforms()->obj( 'css_vars' )->output_css_vars_for_shortcode(
+				[ 'id' => $form_id ],
+				".{$this->widget_options['classname']} #wpforms-{$form_id}",
+				"wpforms-css-vars-widget-{$widget_id}"
+			);
+			wpforms()->obj( 'frontend' )->output( $form_id, (bool) $instance['show_title'], (bool) $instance['show_desc'] );
 		}
 
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped

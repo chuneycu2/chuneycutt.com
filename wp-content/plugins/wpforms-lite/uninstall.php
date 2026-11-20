@@ -158,6 +158,9 @@ if ( $wpforms_posts ) {
 	}
 }
 
+// Delete the per-embed theme overrides stored on the posts that embed a form.
+delete_post_meta_by_key( '_wpforms_embed_themes' );
+
 // Delete all the plugin settings.
 $wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE 'wpforms\_%'" );
 

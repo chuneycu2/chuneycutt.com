@@ -206,6 +206,8 @@ class SetupWizard {
 	private function hooks(): void {
 
 		add_action( 'rest_api_init', [ $this->rest_api, 'register_routes' ] );
+		add_filter( 'rest_pre_dispatch', [ $this->rest_api, 'filter_rest_pre_dispatch' ], 10, 3 );
+		add_filter( 'rest_post_dispatch', [ $this->rest_api, 'filter_rest_post_dispatch' ], PHP_INT_MAX, 3 );
 		add_action( 'admin_init', [ $this, 'maybe_record_first_activation' ] );
 		add_action( 'admin_init', [ $this, 'maybe_launch' ], PHP_INT_MAX );
 		add_action( 'admin_notices', [ $this->failed_installs_notice, 'maybe_display' ] );

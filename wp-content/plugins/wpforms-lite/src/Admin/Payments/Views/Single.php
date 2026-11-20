@@ -1090,7 +1090,7 @@ class Single implements PaymentsViewsInterface {
 				);
 
 			$is_empty_value    = wpforms_is_empty_string( $field_value );
-			$is_empty_quantity = isset( $field['quantity'] ) && ! $field['quantity'];
+			$is_empty_quantity = wpforms_payment_is_zero_quantity( $field );
 
 			if ( $is_empty_value ) {
 				$prepared_fields[ $key ]['field_value'] = esc_html__( 'Empty', 'wpforms-lite' );

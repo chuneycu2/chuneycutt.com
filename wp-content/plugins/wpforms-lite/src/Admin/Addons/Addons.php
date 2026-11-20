@@ -54,6 +54,13 @@ class Addons {
 	const ULTIMATE = 'ultimate';
 
 	/**
+	 * Addons whose feature is built into core and that the admin must no longer be offered.
+	 *
+	 * @since 2.0.5
+	 */
+	private const BUNDLED_IN_CORE = [ 'wpforms-drip' ];
+
+	/**
 	 * Addons cache object.
 	 *
 	 * @since 1.6.6
@@ -144,7 +151,23 @@ class Addons {
 		$this->addons = $this->cache->get();
 
 		$this->populate_addons_data();
+		$this->remove_bundled_addons();
 		$this->hooks();
+	}
+
+	/**
+	 * Drop the addons whose feature is built into core.
+	 *
+	 * The feed keeps listing them for the cores that still need them; here they would only show up
+	 * as a locked item next to the core feature. Custom Captcha stays: its field education reads the entry.
+	 *
+	 * @since 2.0.5
+	 */
+	private function remove_bundled_addons(): void {
+
+		foreach ( self::BUNDLED_IN_CORE as $slug ) {
+			unset( $this->addons[ $slug ] );
+		}
 	}
 
 	/**
@@ -188,6 +211,8 @@ class Addons {
 			$this->cache->update( true );
 
 			$this->addons = $this->cache->get();
+
+			$this->remove_bundled_addons();
 		}
 
 		// WPForms 1.8.7 core includes Custom Captcha.

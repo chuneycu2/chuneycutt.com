@@ -3,7 +3,7 @@ Contributors: wpforms, smub
 Tags: contact form, contact form plugin, forms, form builder, custom form
 Requires at least: 5.5
 Tested up to: 7.1
-Stable tag: 2.0.4
+Stable tag: 2.0.5.1
 Requires PHP: 7.2
 License: GNU General Public License v2.0 or later
 
@@ -392,6 +392,30 @@ Thank you,
 Syed Balkhi
 
 == Changelog ==
+= 2.0.5.1 =
+- Added: Form themes can now be edited live on any page with a form using the new front-end theme editor, for the whole form or for a single embed.
+- Added: Drip is now built into WPForms and works on every plan, including Lite.
+- Added: New Email Summaries Recipients and From Email settings in WPForms > Settings > Email screen.
+- Added: Added ability for admins to set a custom 'From' email address for weekly Email Summaries, with validation on save and fallback to admin email when empty.
+- Changed: The Form Builder Themes panel and style settings in the Gutenberg block and Elementor widget were replaced with an Edit Theme button that opens the front-end theme editor.
+- Changed: PayPal Commerce payments put on hold by PayPal are now recorded as Pending and completed when PayPal releases the funds, instead of being rejected as declined.
+- Changed: Permanently deleting a form now also deletes its Form Analytics data.
+- Changed: The Disable Email Summaries setting moved from the Misc settings to a new Email Summary section in the Email settings.
+- Changed: Payment items with a quantity of 0 are no longer included in the `{all_fields}` smart tag in notification emails, consistent with other empty fields.
+- Fixed: Text typed right after picking a smart tag from the Smart Tags list in Form Builder settings appeared before the tag instead of after it.
+- Fixed: Notifications sent with the Legacy email template used an invalid or non-Email-field smart tag in the From Email field as-is instead of falling back to the site admin email.
+- Fixed: Custom form themes were saved to the server repeatedly while editing a template or template part in the Site Editor.
+- Fixed: A template favorited or unfavorited while the template list was still loading could show its old state in Favorite Templates for up to a day.
+- Fixed: The WordPress admin and WPForms admin pages could show a critical error with some third-party plugins active, such as WP Job Manager – Company Profiles.
+- Fixed: The "Other" choice of a Checkboxes field was not preselected when the AI Smart Form Editor was asked to make it the default.
+- Fixed: Row checkboxes and first-column text in the payments table were misaligned with the rest of the row on WordPress 7.1 and newer.
+- Fixed: A form theme color containing CSS code could change the styling of the whole page instead of only the form.
+- Fixed: Line breaks in custom notification email messages were lost on some servers, causing the entire message to appear as one paragraph.
+- Fixed: Form location link handling in the Locations column of the Forms list was improved for better security.
+- Fixed: Dynamic Choices handling in the Dropdown, Multiple Choice, and Checkboxes fields was improved for better security.
+- Fixed: Display of Multiple Choice and Checkboxes field values on the single payment page was improved for better security.
+- Fixed: Forms using PayPal Commerce payment conditional logic could not be submitted when the conditions skipped the PayPal payment.
+
 = 2.0.4 =
 - Added: Trial period option for Stripe subscriptions to delay the first payment by a set number of days.
 - Added: Typing an approval such as "yes" in the AI Form Generator chat now applies the generated form, the same as clicking the Use This Form button.

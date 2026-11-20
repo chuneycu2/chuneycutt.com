@@ -31,7 +31,7 @@ class PaymentCaptureCompleted extends Base {
 
 		// Update the status if it wasn't updated already.
 		// Update only if payment has COMPLETED status.
-		if ( $this->db_payment->status !== 'processed' || $this->data->status !== 'COMPLETED' ) {
+		if ( ! in_array( $this->db_payment->status, [ 'processed', 'pending' ], true ) || $this->data->status !== 'COMPLETED' ) {
 			return false;
 		}
 

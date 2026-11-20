@@ -268,6 +268,9 @@ class UsageTracking implements IntegrationInterface {
 			$data['url_primary'] = network_site_url();
 		}
 
+		// Kept last: it is the largest key, and no other key should depend on it fitting into the request.
+		$data['wpforms_abilities'] = $this->get_abilities_data();
+
 		return $data;
 	}
 
@@ -455,6 +458,8 @@ class UsageTracking implements IntegrationInterface {
 					'turnstile-secret-key',
 					'turnstile-fail-msg',
 					'pdf-ninja-api_key',
+					'email-summaries-recipients',
+					'email-summaries-from-email',
 				]
 			)
 		);
@@ -1489,6 +1494,18 @@ class UsageTracking implements IntegrationInterface {
 		 * @param array $events Per-block event counters.
 		 */
 		return (array) apply_filters( 'wpforms_integrations_usage_tracking_usage_tracking_get_email_summaries_data', [] );
+	}
+
+	/**
+	 * Get monthly Abilities API call counters.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @return array
+	 */
+	private function get_abilities_data(): array {
+
+		return ( new AbilitiesStats() )->get_report();
 	}
 
 	/**

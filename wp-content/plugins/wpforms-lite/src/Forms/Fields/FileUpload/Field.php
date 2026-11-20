@@ -224,6 +224,34 @@ class Field extends WPForms_Field {
 			]
 		);
 
+		// Restrict Dimensions toggle.
+		$fld = $this->field_element(
+			'toggle',
+			$field,
+			[
+				'slug'    => 'restrict_dimensions',
+				'value'   => ! empty( $field['restrict_dimensions'] ) ? 1 : '',
+				'desc'    => esc_html__( 'Restrict Dimensions', 'wpforms-lite' ),
+				'tooltip' => esc_html__( 'Reject images whose width or height in pixels is outside the limits below.', 'wpforms-lite' ),
+				'class'   => 'wpforms-file-upload-restrict-dimensions',
+			],
+			false
+		);
+
+		$this->field_element(
+			'row',
+			$field,
+			[
+				'slug'    => 'restrict_dimensions',
+				'content' => $fld,
+			]
+		);
+
+		$this->field_option_dimensions_row( $field, 'exact', esc_html__( 'Exact Dimensions', 'wpforms-lite' ) );
+		$this->field_option_dimensions_row( $field, 'min', esc_html__( 'Min Dimensions', 'wpforms-lite' ) );
+		$this->field_option_dimensions_row( $field, 'max', esc_html__( 'Max Dimensions', 'wpforms-lite' ) );
+		$this->field_option_camera_dimensions_notice( $field );
+
 		// Required toggle.
 		$this->field_option( 'required', $field );
 
@@ -315,6 +343,219 @@ class Field extends WPForms_Field {
 				'markup' => 'close',
 			]
 		);
+	}
+
+	/**
+	 * Render a Width / Height pair of dimension inputs as one field option row.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array  $field  Field data and settings.
+	 * @param string $prefix Option key prefix: `exact`, `min` or `max`.
+	 * @param string $label  Row label.
+	 */
+	private function field_option_dimensions_row( array $field, string $prefix, string $label ): void {
+
+		$is_locked      = $this->is_dimensions_row_locked( $field, $prefix );
+		$conflict_sides = $prefix === 'exact' ? [] : $this->get_dimension_conflict_sides( $field );
+		$inputs         = [
+			'width'  => $this->get_dimension_input( $field, $prefix, 'width', $is_locked, in_array( 'width', $conflict_sides, true ) ),
+			'height' => $this->get_dimension_input( $field, $prefix, 'height', $is_locked, in_array( 'height', $conflict_sides, true ) ),
+		];
+		$conflict_error = $prefix === 'max' ? $this->get_dimensions_conflict_error( $field, ! empty( $conflict_sides ) ) : '';
+
+		$lbl = $this->field_element(
+			'label',
+			$field,
+			[
+				'slug'  => "{$prefix}_width",
+				'value' => $label,
+			],
+			false
+		);
+
+		$this->field_element(
+			'row',
+			$field,
+			[
+				'slug'    => "{$prefix}_dimensions",
+				'class'   => empty( $field['restrict_dimensions'] ) ? 'wpforms-hidden' : '',
+				'content' => $lbl . sprintf(
+					'<div class="wpforms-input-row">
+						<div class="width">%1$s<label for="wpforms-field-option-%2$d-%3$s_width" class="sub-label">%4$s</label></div>
+						<div class="height">%5$s<label for="wpforms-field-option-%2$d-%3$s_height" class="sub-label">%6$s</label></div>
+					</div>',
+					$inputs['width'],
+					(int) $field['id'],
+					esc_attr( $prefix ),
+					esc_html__( 'Width', 'wpforms-lite' ),
+					$inputs['height'],
+					esc_html__( 'Height', 'wpforms-lite' )
+				) . $conflict_error,
+			]
+		);
+	}
+
+	/**
+	 * Get the sides whose Min dimension is larger than the Max dimension.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array $field Field data and settings.
+	 *
+	 * @return array Sides in conflict: `width`, `height` or both.
+	 */
+	private function get_dimension_conflict_sides( array $field ): array {
+
+		// While an exact dimension is set, the range is locked and ignored.
+		if ( $this->is_dimensions_row_locked( $field, 'min' ) ) {
+			return [];
+		}
+
+		$sides = [];
+
+		foreach ( [ 'width', 'height' ] as $side ) {
+			$min = $this->get_dimension_option( $field, "min_{$side}" );
+			$max = $this->get_dimension_option( $field, "max_{$side}" );
+
+			if ( $min > 0 && $max > 0 && $min > $max ) {
+				$sides[] = $side;
+			}
+		}
+
+		return $sides;
+	}
+
+	/**
+	 * Get the error row shown under the Max dimensions while a Min dimension is larger.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array $field      Field data and settings.
+	 * @param bool  $is_visible Whether the error is shown on load.
+	 *
+	 * @return string Error row markup.
+	 */
+	private function get_dimensions_conflict_error( array $field, bool $is_visible ): string {
+
+		return $this->field_element(
+			'row',
+			$field,
+			[
+				'slug'    => 'dimensions_error',
+				'content' => esc_html__( "Min Dimensions can't be larger than Max Dimensions.", 'wpforms-lite' ),
+				'class'   => [
+					$is_visible ? '' : 'wpforms-hidden',
+					'wpforms-error',
+					'wpforms-error-message',
+				],
+			],
+			false
+		);
+	}
+
+	/**
+	 * Render the notice that dimension limits skip camera photos, shown while both Restrict Dimensions and the camera are on.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array $field Field data and settings.
+	 */
+	private function field_option_camera_dimensions_notice( array $field ): void {
+
+		$is_visible = ! empty( $field['restrict_dimensions'] ) && ! empty( $field['camera_enabled'] );
+
+		$this->field_element(
+			'row',
+			$field,
+			[
+				'slug'    => 'dimensions_camera_notice',
+				'class'   => $is_visible ? '' : 'wpforms-hidden',
+				'content' => sprintf(
+					'<div class="wpforms-alert-warning wpforms-alert"><p>%s</p></div>',
+					esc_html__( 'Dimension limits don’t apply to photos taken with a camera, since users can’t control the image size their device captures.', 'wpforms-lite' )
+				),
+			]
+		);
+	}
+
+	/**
+	 * Whether the inputs of a dimensions row are locked at zero.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array  $field  Field data and settings.
+	 * @param string $prefix Option key prefix: `exact`, `min` or `max`.
+	 *
+	 * @return bool True for a min or max row when an exact dimension is set.
+	 */
+	private function is_dimensions_row_locked( array $field, string $prefix ): bool {
+
+		return $prefix !== 'exact' && ( $this->get_dimension_option( $field, 'exact_width' ) > 0 || $this->get_dimension_option( $field, 'exact_height' ) > 0 );
+	}
+
+	/**
+	 * Get a dimension option as a whole number of pixels.
+	 *
+	 * Every reader goes through it, so the builder and the form agree on any saved value, legacy negative or decimal ones included.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array  $field Field data and settings.
+	 * @param string $key   Option key, e.g. `min_width`.
+	 *
+	 * @return int Pixels, 0 when the option is not set.
+	 */
+	private function get_dimension_option( array $field, string $key ): int {
+
+		return absint( $field[ $key ] ?? 0 );
+	}
+
+	/**
+	 * Get the markup of a single width or height dimension input.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array  $field     Field data and settings.
+	 * @param string $prefix    Option key prefix: `exact`, `min` or `max`.
+	 * @param string $side      Dimension side: `width` or `height`.
+	 * @param bool   $is_locked Whether the input is locked at zero by an exact dimension.
+	 * @param bool   $has_error Whether the input is marked as conflicting with its pair.
+	 *
+	 * @return string Input markup.
+	 */
+	private function get_dimension_input( array $field, string $prefix, string $side, bool $is_locked, bool $has_error ): string {
+
+		$key   = "{$prefix}_{$side}";
+		$value = $this->get_dimension_option( $field, $key );
+
+		$input = $this->field_element(
+			'text',
+			$field,
+			[
+				'slug'  => $key,
+				'type'  => 'number',
+				'class' => [
+					$prefix === 'exact' ? 'wpforms-file-upload-exact-dimension' : 'wpforms-file-upload-range-dimension',
+					$has_error ? 'wpforms-error' : '',
+					$is_locked ? 'wpforms-hidden' : '',
+				],
+				'attrs' => [
+					'min'     => 0,
+					'step'    => 1,
+					'pattern' => '[0-9]*',
+				],
+				'value' => $value > 0 ? $value : '',
+			],
+			false
+		);
+
+		if ( ! $is_locked ) {
+			return $input;
+		}
+
+		// The real input stays in the form, hidden, so a save keeps its value. This one only shows the lock.
+		return $input . '<input type="number" class="wpforms-file-upload-range-dimension-locked" value="0" disabled>';
 	}
 
 	/**
@@ -421,6 +662,8 @@ class Field extends WPForms_Field {
 			'password_match_error_text'   => esc_html__( 'Please check the password for the following fields: {fields}', 'wpforms-lite' ),
 			'password_empty_error_title'  => esc_html__( 'Passwords Are Empty', 'wpforms-lite' ),
 			'password_empty_error_text'   => esc_html__( 'Please enter a password for the following fields: {fields}', 'wpforms-lite' ),
+			'dimensions_error_title'      => esc_html__( 'Invalid Image Dimensions', 'wpforms-lite' ),
+			'dimensions_error_text'       => esc_html__( 'Min Dimensions can\'t be larger than Max Dimensions for the following fields: {fields}', 'wpforms-lite' ),
 			'notification_warning_title'  => esc_html__( 'Cannot Enable Restrictions', 'wpforms-lite' ),
 			'notification_warning_text'   => esc_html__( 'This field is attached to Notifications. In order to enable restrictions, please first remove it from File Upload Attachments in Notifications.', 'wpforms-lite' ),
 			'notification_error_title'    => esc_html__( 'Cannot Enable Attachments', 'wpforms-lite' ),
@@ -457,6 +700,37 @@ class Field extends WPForms_Field {
 		}
 
 		return $max_file_number;
+	}
+
+	/**
+	 * Get the image dimension limits set for the field.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array $field Field data.
+	 *
+	 * @return array Limits in pixels keyed by option name, e.g. `[ 'min_width' => 800 ]`. Empty when nothing is restricted.
+	 */
+	protected function get_image_dimension_limits( array $field ): array {
+
+		if ( empty( $field['restrict_dimensions'] ) ) {
+			return [];
+		}
+
+		$limits = [];
+
+		foreach ( [ 'exact_width', 'exact_height', 'min_width', 'min_height', 'max_width', 'max_height' ] as $key ) {
+			$limits[ $key ] = $this->get_dimension_option( $field, $key );
+		}
+
+		$limits = array_filter( $limits );
+
+		// Exact dimensions override the range, including stale range values saved before the exact ones.
+		if ( isset( $limits['exact_width'] ) || isset( $limits['exact_height'] ) ) {
+			$limits = array_intersect_key( $limits, array_flip( [ 'exact_width', 'exact_height' ] ) );
+		}
+
+		return $limits;
 	}
 
 	/**

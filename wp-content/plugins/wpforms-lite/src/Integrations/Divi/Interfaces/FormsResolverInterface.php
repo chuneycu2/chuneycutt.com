@@ -40,8 +40,11 @@ interface FormsResolverInterface {
 	 * Retrieves those forms and formats them as an option array.
 	 *
 	 * @since 1.9.9
+	 * @since 2.0.5 Added the `$forms` parameter.
+	 *
+	 * @param array|null $forms Forms already fetched with `get_forms()`, to spare a second query.
 	 *
 	 * @return array Array of form options.
 	 */
-	public function get_form_options(): array;
+	public function get_form_options( ?array $forms = null ): array;
 }

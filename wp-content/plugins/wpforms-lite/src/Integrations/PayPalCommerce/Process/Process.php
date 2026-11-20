@@ -157,12 +157,11 @@ class Process extends Base {
 			return;
 		}
 
-		$order_data = $order_response->get_body();
+		$order_data     = $order_response->get_body();
+		$capture_status = $order_data['purchase_units'][0]['payments']['captures'][0]['status'] ?? '';
 
-		// Validate card payment status.
-		if (
-			empty( $order_data['purchase_units'][0]['payments']['captures'][0]['status'] ) || $order_data['purchase_units'][0]['payments']['captures'][0]['status'] !== 'COMPLETED'
-		) {
+		// A PENDING capture is held by PayPal (e.g. PENDING_REVIEW), not declined; the capture webhooks settle it later.
+		if ( ! in_array( $capture_status, [ 'COMPLETED', 'PENDING' ], true ) ) {
 			$error_title    = esc_html__( 'This payment cannot be processed because it was declined by payment processor.', 'wpforms-lite' );
 			$this->errors[] = $error_title;
 
@@ -365,6 +364,20 @@ class Process extends Base {
 	}
 
 	/**
+	 * Whether PayPal put the order's first capture on hold.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array $order Order data containing the capture array.
+	 *
+	 * @return bool
+	 */
+	private function is_capture_pending( array $order ): bool {
+
+		return ( $order['purchase_units'][0]['payments']['captures'][0]['status'] ?? '' ) === 'PENDING';
+	}
+
+	/**
 	 * Get order data.
 	 *
 	 * @since 1.10.0
@@ -471,7 +484,7 @@ class Process extends Base {
 			$payment_data['transaction_id'] = sanitize_text_field( $order_data['purchase_units'][0]['payments']['captures'][0]['id'] );
 			$payment_data['title']          = $this->get_payment_title( $order_data, $form_data );
 
-			return $this->add_generic_payment_data( $payment_data );
+			return $this->add_generic_payment_data( $payment_data, $order_data );
 		}
 
 		$subscription_processor_data = $this->get_subscription_processor_data();
@@ -483,7 +496,7 @@ class Process extends Base {
 			$payment_data['subscription_id']     = sanitize_text_field( $subscription_processor_data['id'] );
 			$payment_data['customer_id']         = sanitize_text_field( $subscription_processor_data['payment_source']['paypal']['account_id'] );
 
-			return $this->add_generic_payment_data( $payment_data );
+			return $this->add_generic_payment_data( $payment_data, $subscription_processor_data );
 		}
 
 		// Determine whether it is a subscription.
@@ -650,7 +663,7 @@ class Process extends Base {
 	}
 
 	/**
-	 * Add the processed payment log when the capture id is available.
+	 * Log the capture outcome once the capture id is available.
 	 *
 	 * @since 1.10.2
 	 *
@@ -662,6 +675,19 @@ class Process extends Base {
 		$capture_id = $order['purchase_units'][0]['payments']['captures'][0]['id'] ?? '';
 
 		if ( $capture_id === '' ) {
+			return;
+		}
+
+		if ( $this->is_capture_pending( $order ) ) {
+			wpforms()->obj( 'payment_meta' )->add_log(
+				$payment_id,
+				sprintf(
+					'PayPal Commerce payment is on hold by PayPal. (Reason: %s, Transaction ID: %s)',
+					$order['purchase_units'][0]['payments']['captures'][0]['status_details']['reason'] ?? 'UNKNOWN',
+					$capture_id
+				)
+			);
+
 			return;
 		}
 
@@ -828,12 +854,13 @@ class Process extends Base {
 	 * @since 1.10.0
 	 *
 	 * @param array $payment_data Payment data.
+	 * @param array $order        Captured order data, empty for a subscription without a capture.
 	 *
 	 * @return array
 	 */
-	private function add_generic_payment_data( array $payment_data ): array {
+	private function add_generic_payment_data( array $payment_data, array $order = [] ): array {
 
-		$payment_data['status']  = 'processed';
+		$payment_data['status']  = $this->is_capture_pending( $order ) ? 'pending' : 'processed';
 		$payment_data['gateway'] = PayPalCommerce::SLUG;
 		$payment_data['mode']    = Helpers::is_sandbox_mode() ? 'test' : 'live';
 
@@ -1020,7 +1047,7 @@ class Process extends Base {
 	 */
 	private function stop_without_payment_identifier(): void {
 
-		if ( ! $this->is_card_field_visibility_ok() ) {
+		if ( ! $this->is_card_field_visibility_ok() || $this->is_payment_stopped_by_conditional_logic() ) {
 			$this->maybe_add_conditional_logic_log();
 
 			return;
@@ -1144,6 +1171,19 @@ class Process extends Base {
 	 * @since 1.10.0
 	 */
 	protected function maybe_add_conditional_logic_log(): void {
+	}
+
+	/**
+	 * Determine whether the form's payment-level conditional logic stops every PayPal Commerce payment, one-time and recurring.
+	 * Core has no payment rule evaluator, so it defaults to a payment being expected, and the addon overrides it.
+	 *
+	 * @since 2.0.5.1
+	 *
+	 * @return bool
+	 */
+	protected function is_payment_stopped_by_conditional_logic(): bool {
+
+		return false;
 	}
 
 	/**

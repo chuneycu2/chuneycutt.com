@@ -32,6 +32,15 @@ class Divi implements IntegrationInterface {
 	private $modern_module;
 
 	/**
+	 * The Edit Theme entry shared by both modules.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @var EditTheme
+	 */
+	private $edit_theme;
+
+	/**
 	 * Indicate if the current integration is allowed to load.
 	 *
 	 * @since 1.6.3
@@ -50,6 +59,8 @@ class Divi implements IntegrationInterface {
 	 */
 	public function load() {
 
+		$this->edit_theme = new EditTheme();
+
 		$this->hooks();
 	}
 
@@ -65,6 +76,9 @@ class Divi implements IntegrationInterface {
 
 		// Register module.
 		add_action( 'divi_module_library_modules_dependency_tree', [ $this, 'register_modern_selector' ] );
+
+		// Before the module enqueues its assets at the default priority.
+		add_action( 'divi_visual_builder_assets_before_enqueue_scripts', [ $this, 'add_modern_launch_data' ], 9 );
 
 		if ( wp_doing_ajax() ) {
 			add_action( 'wp_ajax_wpforms_divi_preview', [ $this, 'preview' ] );
@@ -102,6 +116,30 @@ class Divi implements IntegrationInterface {
 		}
 
 		$dependency_tree->add_dependency( $this->modern_module );
+	}
+
+	/**
+	 * Add the Edit Theme launch data to the Divi 5 module once the page query exists.
+	 *
+	 * `insert()` runs for Divi 5 while Divi loads, before the query; the host id and URL
+	 * need the page, so they are added right before the module enqueues its assets.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @return void
+	 */
+	public function add_modern_launch_data(): void {
+
+		if ( ! $this->modern_module ) {
+			return;
+		}
+
+		$this->modern_module->set_localized_data(
+			array_merge(
+				$this->modern_module->get_localized_data(),
+				[ 'themesEditor' => $this->edit_theme->get_data( $this->modern_module->get_forms() ) ]
+			)
+		);
 	}
 
 	/**
@@ -278,7 +316,10 @@ class Divi implements IntegrationInterface {
 		wp_localize_script(
 			'wpforms-divi',
 			'wpforms_divi_builder',
-			$this->legacy_module->get_localized_data()
+			array_merge(
+				$this->legacy_module->get_localized_data(),
+				[ 'themesEditor' => $this->edit_theme->get_data( $this->legacy_module->get_forms() ) ]
+			)
 		);
 	}
 
@@ -355,6 +396,8 @@ class Divi implements IntegrationInterface {
 				esc_html__( 'You do not have permission to preview form.', 'wpforms-lite' )
 			);
 		}
+
+		$this->edit_theme->use_preview_host( absint( filter_input( INPUT_POST, 'post_id', FILTER_SANITIZE_NUMBER_INT ) ) );
 
 		// Disable Anti Spam v3 honeypot.
 		add_filter( 'wpforms_forms_anti_spam_v3_is_honeypot_enabled', '__return_false' );

@@ -110,6 +110,9 @@ class StripeConnect extends AbstractStripeConnect {
 
 		// Inject forced step into bridge payload.
 		add_filter( 'wpforms_setup_wizard_bridge_payload', [ $this, 'inject_forced_step' ] );
+
+		// Clear it only once a session has started, so a failed launch still resumes at payments.
+		add_action( 'wpforms_setup_wizard_bridge_request_session', [ $this, 'clear_forced_step' ] );
 	}
 
 	/**
@@ -139,6 +142,7 @@ class StripeConnect extends AbstractStripeConnect {
 	 * step instead of the welcome screen.
 	 *
 	 * @since 2.0.0
+	 * @since 2.0.5.1 Leaves the transient in place for `clear_forced_step()`.
 	 *
 	 * @param mixed $payload Bridge payload.
 	 *
@@ -152,10 +156,18 @@ class StripeConnect extends AbstractStripeConnect {
 
 		if ( ! empty( $forced_step ) ) {
 			$payload['current_step'] = $forced_step;
-
-			delete_transient( self::TRANSIENT_FORCE_STEP );
 		}
 
 		return $payload;
+	}
+
+	/**
+	 * Clear the forced step once the hosted wizard has started a session.
+	 *
+	 * @since 2.0.5.1
+	 */
+	public function clear_forced_step(): void {
+
+		delete_transient( self::TRANSIENT_FORCE_STEP );
 	}
 }

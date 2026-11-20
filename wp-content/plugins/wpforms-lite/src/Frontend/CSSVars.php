@@ -2,6 +2,8 @@
 
 namespace WPForms\Frontend;
 
+use WPForms\Frontend\Themes\Schema;
+use WPForms\Frontend\ThemesEditor\Data as ThemesEditorData;
 use WPForms\Integrations\Gutenberg\ThemesData;
 use WPForms\Lite\Integrations\Gutenberg\ThemesData as LiteThemesData;
 use WPForms\Pro\Integrations\Gutenberg\ThemesData as ProThemesData;
@@ -196,6 +198,15 @@ class CSSVars {
 	private const WHITE = '#ffffff';
 
 	/**
+	 * Background gradient settings keys, filled by add_gradient_defaults().
+	 *
+	 * @since 2.0.5
+	 *
+	 * @var array
+	 */
+	public const GRADIENT_KEYS = [ 'backgroundGradientDirection', 'backgroundGradientStart', 'backgroundGradientEnd' ];
+
+	/**
 	 * Render engine.
 	 *
 	 * @since 1.8.1
@@ -346,11 +357,7 @@ class CSSVars {
 	 */
 	public function output_selector_vars( string $selector, array $vars, string $style_id = '', $form_id = '' ): void {
 
-		if ( empty( $this->render_engine ) ) {
-			$this->render_engine = wpforms_get_render_engine();
-		}
-
-		if ( $this->render_engine === 'classic' ) {
+		if ( ! $this->is_output_allowed( $form_id ) ) {
 			return;
 		}
 
@@ -371,13 +378,51 @@ class CSSVars {
 	}
 
 	/**
+	 * Whether the CSS variables and the Custom CSS may print.
+	 *
+	 * The classic render engine ignores the variables, so nothing prints there
+	 * unless an integration bridging them onto its own markup opts in.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param string|int $form_id Form ID. Optional. Default is an empty string.
+	 *
+	 * @return bool
+	 */
+	private function is_output_allowed( $form_id = '' ): bool {
+
+		if ( empty( $this->render_engine ) ) {
+			$this->render_engine = wpforms_get_render_engine();
+		}
+
+		$is_allowed = $this->render_engine !== 'classic';
+
+		/**
+		 * Filter whether the CSS variables and the Custom CSS of a form may print.
+		 *
+		 * False on the classic render engine. An integration rendering forms
+		 * with the classic engine returns true when its own stylesheet reads
+		 * the `--wpforms-*` variables.
+		 *
+		 * @since 2.0.5
+		 *
+		 * @param bool       $is_allowed Whether the output may print.
+		 * @param string|int $form_id    Form ID, an empty string when unknown.
+		 */
+		return (bool) apply_filters( 'wpforms_frontend_css_vars_is_output_allowed', $is_allowed, $form_id );
+	}
+
+	/**
 	 * Output CSS vars for the form added as a shortcode.
 	 *
 	 * @since 1.9.7
+	 * @since 2.0.5 Added the `$selector` and `$style_id` parameters.
 	 *
-	 * @param array $atts Shortcode attributes.
+	 * @param array  $atts     Shortcode attributes.
+	 * @param string $selector CSS selector, `#wpforms-{id}` when empty.
+	 * @param string $style_id Style ID, `wpforms-css-vars-{id}` when empty.
 	 */
-	public function output_css_vars_for_shortcode( array $atts ): void {
+	public function output_css_vars_for_shortcode( array $atts, string $selector = '', string $style_id = '' ): void {
 
 		if ( empty( $atts['id'] ) ) {
 			return;
@@ -396,16 +441,25 @@ class CSSVars {
 			return;
 		}
 
-		$attr = isset( $form_data['settings']['themes'] ) ? (array) $form_data['settings']['themes'] : [];
+		$editor  = wpforms()->obj( 'themes_editor' );
+		$context = $editor instanceof ThemesEditor ? $editor->get_context( $form_data ) : '';
+		$schema  = wpforms()->obj( 'themes_schema' );
+
+		// A Form Page answers its own context, so it prints the theme of its slot.
+		$attr = $editor instanceof ThemesEditor
+			? $editor->get_data()->get_stored_theme( $form_data, $context )
+			: (array) ( $form_data['settings']['themes'] ?? [] );
 		$attr = $this->maybe_override_attributes( $attr );
+		$attr = $context !== '' && $schema instanceof Schema ? $schema->apply_pinned( $attr, $context ) : $attr;
+		$attr = ThemesEditorData::add_page_break_color_fallback( $attr, $form_data );
 
-		$css_vars = $this->get_customized_css_vars( $attr );
-		$css_vars = $this->add_css_vars_units( $css_vars );
+		$vars = $this->get_customized_css_vars( $attr );
+		$vars = $this->add_css_vars_units( $vars );
 
-		$selector = "#wpforms-{$form_id}";
-		$style_id = "wpforms-css-vars-{$form_id}";
+		$selector = $selector !== '' ? $selector : "#wpforms-{$form_id}";
+		$style_id = $style_id !== '' ? $style_id : "wpforms-css-vars-{$form_id}";
 
-		$this->output_selector_vars( $selector, $css_vars, $style_id, $form_id );
+		$this->output_selector_vars( $selector, $vars, $style_id, $form_id );
 		$this->output_custom_css( $attr, $selector, $style_id );
 	}
 
@@ -413,16 +467,18 @@ class CSSVars {
 	 * Output custom CSS.
 	 *
 	 * @since 1.9.7
+	 * @since 2.0.5 Added the `data-wpforms-custom-css` attribute and the `$is_rules` parameter.
 	 *
 	 * @param array  $attr     Attributes.
 	 * @param string $selector Selector.
 	 * @param string $style_id Style ID.
+	 * @param bool   $is_rules Whether the Custom CSS is complete rules, printed without the selector around them.
 	 *
 	 * @noinspection PhpMissingParamTypeInspection
 	 */
-	private function output_custom_css( array $attr, string $selector, string $style_id ): void {
+	public function output_custom_css( array $attr, string $selector, string $style_id, bool $is_rules = false ): void {
 
-		if ( wpforms_get_render_engine() === 'classic' ) {
+		if ( ! $this->is_output_allowed() ) {
 			return;
 		}
 
@@ -432,15 +488,29 @@ class CSSVars {
 			return;
 		}
 
+		if ( $is_rules ) {
+			printf(
+				'<style id="%1$s-custom-css" data-wpforms-custom-css="%3$s">
+					%2$s
+				</style>',
+				sanitize_key( $style_id ),
+				wp_strip_all_tags( $custom_css ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				esc_attr( $selector )
+			);
+
+			return;
+		}
+
 		printf(
-			'<style id="%1$s-custom-css">
+			'<style id="%1$s-custom-css" data-wpforms-custom-css="%4$s">
 				%2$s {
 					%3$s
 				}
 			</style>',
 			sanitize_key( $style_id ),
 			$selector, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			wp_strip_all_tags( $custom_css ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			wp_strip_all_tags( $custom_css ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			esc_attr( $selector )
 		);
 	}
 
@@ -515,12 +585,13 @@ class CSSVars {
 	 * Form builder saves values without pixels, we need to add them before outputting as CSS vars.
 	 *
 	 * @since 1.9.7
+	 * @since 2.0.5 Made public.
 	 *
 	 * @param array $css_vars CSS vars.
 	 *
 	 * @return array
 	 */
-	private function add_css_vars_units( array $css_vars ): array {
+	public function add_css_vars_units( array $css_vars ): array {
 
 		$has_pixels = [
 			'field-border-size',
@@ -595,6 +666,7 @@ class CSSVars {
 	 * Generate CSS code from given vars data.
 	 *
 	 * @since 1.8.1
+	 * @since 2.0.5 Invalid values are skipped.
 	 *
 	 * @param array      $vars    Variables data.
 	 * @param string|int $form_id Form ID. Optional. Default is an empty string.
@@ -606,6 +678,12 @@ class CSSVars {
 
 		foreach ( $vars as $name => $value ) {
 			if ( ! is_string( $value ) ) {
+				continue;
+			}
+
+			// A value that is not a single custom property value would close the scoped rule;
+			// skipping it lets the `:root` default apply.
+			if ( ! $this->is_printable_value( $value ) ) {
 				continue;
 			}
 
@@ -624,59 +702,283 @@ class CSSVars {
 	}
 
 	/**
+	 * Whether a value can be printed as a single custom property value inside a scoped rule.
+	 *
+	 * A value from older storage or a filter reaches here unvalidated, so a delimiter, a comment
+	 * or an unclosed function, bracket or string must not let it end the rule.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param string $value Value.
+	 *
+	 * @return bool
+	 */
+	private function is_printable_value( string $value ): bool {
+
+		if ( preg_match( '/[;!{}<>\\\\\x00-\x1F\x7F]|\/\*/', $value ) ) {
+			return false;
+		}
+
+		$closers = [
+			'(' => ')',
+			'[' => ']',
+		];
+		$stack   = [];
+		$quote   = '';
+
+		// Backslashes are rejected above, so a quote always ends at the next matching quote.
+		foreach ( str_split( $value ) as $char ) {
+			if ( $quote !== '' ) {
+				$quote = $char === $quote ? '' : $quote;
+
+				continue;
+			}
+
+			if ( $char === '"' || $char === "'" ) {
+				$quote = $char;
+			} elseif ( isset( $closers[ $char ] ) ) {
+				$stack[] = $closers[ $char ];
+			} elseif ( ( $char === ')' || $char === ']' ) && array_pop( $stack ) !== $char ) {
+				return false;
+			}
+		}
+
+		return $quote === '' && ! $stack;
+	}
+
+	/**
 	 * Get customized CSS vars.
 	 *
 	 * @since 1.8.3
+	 * @since 2.0.5 Added the `$skip_defaults` parameter.
 	 *
-	 * @param array $attr Attributes passed by integration.
+	 * @param array $attr          Attributes passed by integration.
+	 * @param bool  $skip_defaults Whether to leave out variables equal to the root default. Off for an embed override, which must win over a value another printer set.
 	 *
 	 * @return array
 	 */
-	public function get_customized_css_vars( array $attr ): array { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
+	public function get_customized_css_vars( array $attr, bool $skip_defaults = true ): array { // phpcs:ignore Generic.Metrics.CyclomaticComplexity.TooHigh
 
 		$root_css_vars = $this->get_vars();
-		$css_vars      = [];
+		$vars          = [];
 
 		foreach ( $attr as $key => $value ) {
 
 			$var_name = strtolower( preg_replace( '/[A-Z]/', '-$0', $key ) );
 
-			// Skip an attribute that is not the CSS var or has the default value.
-			if ( empty( $root_css_vars[ $var_name ] ) || $root_css_vars[ $var_name ] === $value ) {
+			// Skip an attribute that is not the CSS var, or has the default value when defaults are skipped.
+			if ( empty( $root_css_vars[ $var_name ] ) || ( $skip_defaults && $root_css_vars[ $var_name ] === $value ) ) {
 				continue;
 			}
 
-			$css_vars[ $var_name ] = $value;
+			$vars[ $var_name ] = $value;
 		}
 
 		// Reset border size in case of border style is `none`.
-		$css_vars = $this->maybe_reset_border( $css_vars, 'field-border' );
-		$css_vars = $this->maybe_reset_border( $css_vars, 'button-border' );
+		$vars = $this->maybe_reset_border( $vars, 'field-border' );
+		$vars = $this->maybe_reset_border( $vars, 'button-border' );
 
 		// Set the button alternative background color and use border color for accent in case of transparent color.
-		$button_bg_color = $css_vars['button-background-color'] ?? $root_css_vars['button-background-color'];
+		$button_bg_color = $vars['button-background-color'] ?? $root_css_vars['button-background-color'];
+		$is_solid_button = ! $this->is_transparent_color( $button_bg_color );
 
-		if ( $this->is_transparent_color( $button_bg_color ) ) {
-			$css_vars['button-background-color-alt'] = $button_bg_color;
+		if ( ! $is_solid_button ) {
+			$vars['button-background-color-alt'] = $button_bg_color;
 
-			$border_color = $css_vars['button-border-color'] ?? $root_css_vars['button-border-color'];
+			$border_color = $vars['button-border-color'] ?? $root_css_vars['button-border-color'];
 
-			$css_vars['button-background-color'] = $this->is_transparent_color( $border_color ) ? $root_css_vars['button-background-color'] : $border_color;
-			$button_bg_color                     = $css_vars['button-background-color'];
+			$vars['button-background-color'] = $this->is_transparent_color( $border_color ) ? $root_css_vars['button-background-color'] : $border_color;
+			$button_bg_color                 = $vars['button-background-color'];
 		}
 
 		$button_bg_color = strtolower( $button_bg_color );
 
 		// Set the button alternative text color in case if the background and text color are identical.
-		$button_text_color = strtolower( $css_vars['button-text-color'] ?? $root_css_vars['button-text-color'] );
+		$button_text_color = strtolower( $vars['button-text-color'] ?? $root_css_vars['button-text-color'] );
 
 		if ( $button_bg_color === $button_text_color || $this->is_transparent_color( $button_text_color ) ) {
-			$css_vars['button-text-color-alt'] = $this->get_contrast_color( $button_bg_color );
+			$vars['button-text-color-alt'] = $this->get_contrast_color( $button_bg_color );
+
+			// A ghost button keeps its text; the alt is the contrast of the border it is painted with.
+			if ( $is_solid_button ) {
+				$vars['button-text-color'] = $vars['button-text-color-alt'];
+			}
 		}
 
+		// The full set pins the alternative colors too: the stylesheet reads them before the main ones,
+		// and another printer may have set them for a transparent button this set replaces.
+		if ( ! $skip_defaults ) {
+			$vars['button-background-color-alt'] = $vars['button-background-color-alt'] ?? $button_bg_color;
+			$vars['button-text-color-alt']       = $vars['button-text-color-alt'] ?? $button_text_color;
+		}
+
+		$vars          = $this->apply_background_style( $vars, $attr );
 		$size_css_vars = $this->get_size_css_vars( $attr );
 
-		return array_merge( $css_vars, $size_css_vars );
+		return array_merge( $vars, $size_css_vars );
+	}
+
+	/**
+	 * Reflect the background style in the CSS vars.
+	 *
+	 * A gradient rides the background-url variable, so every consumer works unchanged.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array $css_vars CSS vars.
+	 * @param array $attr     Attributes passed by integration.
+	 *
+	 * @return array
+	 */
+	private function apply_background_style( array $css_vars, array $attr ): array {
+
+		$style = $this->resolve_background_settings( $attr )['backgroundImage'];
+
+		if ( $style === 'gradient' ) {
+			$css_vars['background-url'] = $this->build_gradient( $this->add_gradient_defaults( $attr ) );
+
+			// A gradient has no tile, so the stored image placement must not shape it.
+			foreach ( [ 'background-position', 'background-repeat', 'background-size' ] as $key ) {
+				$css_vars[ $key ] = self::ROOT_VARS[ $key ];
+			}
+
+			return $css_vars;
+		}
+
+		// None and Solid keep a stored image URL for switching back, but never show it.
+		if ( isset( $css_vars['background-url'] ) && in_array( $style, [ 'none', 'solid' ], true ) ) {
+			$css_vars['background-url'] = 'none';
+		}
+
+		return $css_vars;
+	}
+
+	/**
+	 * Resolve the settings to their effective background style.
+	 *
+	 * Legacy `none`, and image styles without an image, split into None
+	 * (a transparent background color) and Solid (a plain background color).
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array $settings         Theme settings.
+	 * @param bool  $none_keeps_color Whether None keeps its color instead of resolving to Solid.
+	 *
+	 * @return array Settings with the resolved style and background color.
+	 */
+	public function resolve_background_settings( array $settings, bool $none_keeps_color = false ): array {
+
+		$style   = $settings['backgroundImage'] ?? 'none';
+		$url     = (string) ( $settings['backgroundUrl'] ?? 'url()' );
+		$has_url = ! in_array( $url, [ '', 'none', 'url()' ], true );
+		$is_none = in_array( $style, [ '', 'none' ], true );
+
+		if ( ! $is_none && ( $has_url || ! in_array( $style, [ 'library', 'stock' ], true ) ) ) {
+			return $settings;
+		}
+
+		if ( $is_none && $none_keeps_color ) {
+			$settings['backgroundImage'] = 'none';
+
+			return $settings;
+		}
+
+		$settings['backgroundImage'] = $this->is_fully_transparent_color( (string) ( $settings['backgroundColor'] ?? '' ) ) ? 'none' : 'solid';
+
+		return $settings;
+	}
+
+	/**
+	 * Fill the background gradient settings with their defaults.
+	 *
+	 * Data saved before gradients gets the stock themes' look:
+	 * white in the center fading to the button color visitors see.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array $settings Theme settings.
+	 *
+	 * @return array
+	 */
+	public function add_gradient_defaults( array $settings ): array {
+
+		$defaults = [
+			'backgroundGradientDirection' => 'radial',
+			'backgroundGradientStart'     => self::WHITE,
+			'backgroundGradientEnd'       => $this->get_button_accent_color( $settings ),
+		];
+
+		return wp_parse_args( $settings, $defaults );
+	}
+
+	/**
+	 * Get the color a button is painted with.
+	 *
+	 * A see-through button background is replaced by the border color, as in get_customized_css_vars().
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array $settings Theme settings.
+	 *
+	 * @return string
+	 */
+	private function get_button_accent_color( array $settings ): string {
+
+		$root       = self::ROOT_VARS['button-background-color'];
+		$background = (string) ( $settings['buttonBackgroundColor'] ?? $root );
+
+		if ( ! $this->is_transparent_color( $background ) ) {
+			return $background;
+		}
+
+		$border = (string) ( $settings['buttonBorderColor'] ?? self::ROOT_VARS['button-border-color'] );
+
+		return $this->is_transparent_color( $border ) ? $root : $border;
+	}
+
+	/**
+	 * Build the CSS gradient for the given theme settings.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param array $settings Theme settings with gradient defaults applied.
+	 *
+	 * @return string
+	 */
+	private function build_gradient( array $settings ): string {
+
+		$start  = $settings['backgroundGradientStart'];
+		$end    = $settings['backgroundGradientEnd'];
+		$angles = [
+			'vertical'   => '180deg',
+			'horizontal' => '90deg',
+			'diagonal'   => '135deg',
+		];
+
+		$direction = $settings['backgroundGradientDirection'];
+
+		if ( isset( $angles[ $direction ] ) ) {
+			return "linear-gradient( {$angles[ $direction ]}, {$start} 0%, {$end} 100% )";
+		}
+
+		return "radial-gradient( ellipse at center, {$start} 0%, {$end} 100% )";
+	}
+
+	/**
+	 * Whether a color is fully transparent.
+	 *
+	 * Only a zero alpha counts, as in the panel's `isTransparentColor()`: a faint
+	 * color is still a deliberate Solid background.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param string $color Color value.
+	 *
+	 * @return bool
+	 */
+	public function is_fully_transparent_color( string $color ): bool {
+
+		return trim( $color ) === '' || (float) ( $this->get_color_as_rgb_array( $color )[3] ?? 1 ) === 0.0;
 	}
 
 	/**

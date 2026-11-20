@@ -12,6 +12,8 @@ use Elementor\Plugin;
 use Elementor\Controls_Manager;
 use Exception;
 use WPForms\Frontend\CSSVars;
+use WPForms\Frontend\ThemesEditor;
+use WPForms\Frontend\ThemesEditor\Support;
 
 /**
  * WPForms modern widget for Elementor page builder.
@@ -21,22 +23,73 @@ use WPForms\Frontend\CSSVars;
 class WidgetModern extends Widget {
 
 	/**
-	 * Size options for widget settings.
+	 * Setting that marks a widget inserted after the style controls were removed.
 	 *
-	 * @since 1.8.3
-	 *
-	 * @var array
+	 * @since 2.0.5
 	 */
-	protected $size_options;
+	private const MARKER = 'themesEditor';
 
 	/**
-	 * Border type options for widget settings.
+	 * Style settings of the removed style controls, with the defaults those controls had.
 	 *
-	 * @since 1.9.6
+	 * Elementor stores only values that differ from a control default, so a widget saved
+	 * with the style controls carries some of these keys and inherits the rest.
 	 *
-	 * @var array
+	 * @since 2.0.5
 	 */
-	private $border_options;
+	private const STYLE_DEFAULTS = [
+		'wpformsTheme'          => 'default',
+		'fieldSize'             => 'medium',
+		'fieldBorderStyle'      => 'solid',
+		'fieldBorderSize'       => '1',
+		'fieldBorderRadius'     => '3',
+		'fieldBackgroundColor'  => CSSVars::ROOT_VARS['field-background-color'],
+		'fieldBorderColor'      => CSSVars::ROOT_VARS['field-border-color'],
+		'fieldTextColor'        => CSSVars::ROOT_VARS['field-text-color'],
+		'fieldMenuColor'        => CSSVars::ROOT_VARS['field-menu-color'],
+		'labelSize'             => 'medium',
+		'labelColor'            => CSSVars::ROOT_VARS['label-color'],
+		'labelSublabelColor'    => CSSVars::ROOT_VARS['label-sublabel-color'],
+		'labelErrorColor'       => CSSVars::ROOT_VARS['label-error-color'],
+		'buttonSize'            => 'medium',
+		'buttonBorderStyle'     => CSSVars::ROOT_VARS['button-border-style'],
+		'buttonBorderSize'      => CSSVars::ROOT_VARS['button-border-size'],
+		'buttonBorderRadius'    => '3',
+		'buttonBackgroundColor' => CSSVars::ROOT_VARS['button-background-color'],
+		'buttonBorderColor'     => CSSVars::ROOT_VARS['button-border-color'],
+		'buttonTextColor'       => CSSVars::ROOT_VARS['button-text-color'],
+		'containerPadding'      => CSSVars::ROOT_VARS['container-padding'],
+		'containerBorderStyle'  => CSSVars::ROOT_VARS['container-border-style'],
+		'containerBorderWidth'  => CSSVars::ROOT_VARS['container-border-width'],
+		'containerBorderRadius' => '3',
+		'containerShadowSize'   => CSSVars::CONTAINER_SHADOW_SIZE['none']['box-shadow'],
+		'containerBorderColor'  => CSSVars::ROOT_VARS['container-border-color'],
+		'backgroundImage'       => 'none',
+		'backgroundPosition'    => CSSVars::ROOT_VARS['background-position'],
+		'backgroundRepeat'      => CSSVars::ROOT_VARS['background-repeat'],
+		'backgroundSize'        => CSSVars::ROOT_VARS['background-size'],
+		'backgroundSizeMode'    => CSSVars::ROOT_VARS['background-size'],
+		'backgroundWidth'       => '100',
+		'backgroundHeight'      => '100',
+		// The control stored a media array; the default stays a value apply_complex_settings() passes through.
+		'backgroundUrl'         => CSSVars::ROOT_VARS['background-url'],
+		'backgroundColor'       => CSSVars::ROOT_VARS['background-color'],
+		'pageBreakColor'        => CSSVars::ROOT_VARS['page-break-color'],
+	];
+
+	/**
+	 * Gradient settings, which the widget never had controls for.
+	 *
+	 * @since 2.0.5
+	 */
+	private const GRADIENT_KEYS = [ 'backgroundGradientDirection', 'backgroundGradientStart', 'backgroundGradientEnd' ];
+
+	/**
+	 * Classes of Elementor's warning alert, which the Form Theme notices use.
+	 *
+	 * @since 2.0.5
+	 */
+	private const WARNING_ALERT_CLASSES = 'elementor-panel-alert elementor-panel-alert-warning';
 
 	/**
 	 * Instance of CSSVars class.
@@ -72,19 +125,6 @@ class WidgetModern extends Widget {
 	 */
 	private function load(): void {
 
-		$this->size_options = [
-			'small'  => esc_html__( 'Small', 'wpforms-lite' ),
-			'medium' => esc_html__( 'Medium', 'wpforms-lite' ),
-			'large'  => esc_html__( 'Large', 'wpforms-lite' ),
-		];
-
-		$this->border_options = [
-			'none'   => esc_html__( 'None', 'wpforms-lite' ),
-			'solid'  => esc_html__( 'Solid', 'wpforms-lite' ),
-			'dashed' => esc_html__( 'Dashed', 'wpforms-lite' ),
-			'dotted' => esc_html__( 'Dotted', 'wpforms-lite' ),
-		];
-
 		$this->css_vars_obj = wpforms()->obj( 'css_vars' );
 	}
 
@@ -111,32 +151,104 @@ class WidgetModern extends Widget {
 	 */
 	private function style_controls(): void {
 
-		$this->add_theme_style_controls();
-
-		if ( $this->is_admin() ) {
-			$this->add_field_style_controls();
-			$this->add_label_style_controls();
-			$this->add_button_style_controls();
-			$this->add_container_style_controls();
-			$this->add_background_style_controls();
-			$this->add_other_style_controls();
-		}
-
+		$this->add_form_theme_controls();
 		$this->add_advanced_style_controls();
 	}
 
 	/**
-	 * Register widget controls for the Theme Style section.
+	 * Register widget controls for the "Form Theme" section.
 	 *
-	 * @since 1.9.6
+	 * Themes are edited in the front-end themes editor; the section opens it.
+	 *
+	 * @since 2.0.5
 	 */
-	private function add_theme_style_controls(): void {
+	private function add_form_theme_controls(): void {
 
 		$this->start_controls_section(
-			'themes',
+			'form_theme',
 			[
-				'label' => esc_html__( 'Themes', 'wpforms-lite' ),
+				'label' => esc_html__( 'Form Theme', 'wpforms-lite' ),
 				'tab'   => Controls_Manager::TAB_STYLE,
+			]
+		);
+
+		$this->add_control(
+			self::MARKER,
+			[
+				'type'    => Controls_Manager::HIDDEN,
+				'default' => '',
+			]
+		);
+
+		$editor  = wpforms()->obj( 'themes_editor' );
+		$data    = $editor instanceof ThemesEditor ? $editor->get_support()->get_editor_launch_data( 'Elementor Widget Settings' ) : Support::get_unavailable_launch_data();
+		$strings = (array) $data['strings'];
+
+		if ( ! $data['supported'] ) {
+			// Without the editor there is nothing to launch and no copy to show.
+			if ( $strings ) {
+				$this->add_control(
+					'themes_editor_unsupported_notice',
+					[
+						'show_label'      => false,
+						'type'            => Controls_Manager::RAW_HTML,
+						// The reason names the setting to change; the generic text covers a site where a filter turned the editor off.
+						'raw'             => $this->get_notice(
+							$strings['unsupported_notice_head'],
+							$data['reason'] !== '' ? $data['reason'] : $strings['unsupported_notice_text'],
+							$strings['unsupported_notice_link'],
+							$strings['learn_more']
+						),
+						'content_classes' => self::WARNING_ALERT_CLASSES,
+					]
+				);
+			}
+
+			$this->end_controls_section();
+
+			return;
+		}
+
+		$notice_form_ids = $this->get_notice_form_ids();
+		$hidden_for      = array_merge( [ '0' ], $notice_form_ids['lead'], $notice_form_ids['no_access'] );
+
+		$this->add_control(
+			'themes_editor_description',
+			[
+				'show_label' => false,
+				'type'       => Controls_Manager::RAW_HTML,
+				'raw'        => esc_html( $strings['description'] ),
+				'condition'  => [
+					'form_id!' => $hidden_for,
+				],
+			]
+		);
+
+		$this->add_control(
+			'themes_editor_button',
+			[
+				'show_label'  => false,
+				'label_block' => true,
+				'type'        => Controls_Manager::BUTTON,
+				'button_type' => 'default',
+				'text'        => esc_html( $strings['button'] ),
+				'event'       => 'wpformsElementorEditThemeClick',
+				'classes'     => 'wpforms-elementor-edit-theme',
+				'condition'   => [
+					'form_id!' => $hidden_for,
+				],
+			]
+		);
+
+		$this->add_control(
+			'themes_editor_admin_bar_hint',
+			[
+				'show_label' => false,
+				'type'       => Controls_Manager::RAW_HTML,
+				'raw'        => esc_html( $strings['admin_bar_hint'] ),
+				'condition'  => [
+					'form_id!' => $hidden_for,
+				],
 			]
 		);
 
@@ -145,594 +257,56 @@ class WidgetModern extends Widget {
 			[
 				'show_label'      => false,
 				'type'            => Controls_Manager::RAW_HTML,
-				'raw'             => sprintf(
-					'<strong>%s</strong>%s',
-					esc_html__( 'Form Styles are disabled because Lead Form Mode is turned on.', 'wpforms-lite' ),
-					esc_html__( 'To change the styling for this form, open it in the form builder and edit the options in the Lead Forms settings.', 'wpforms-lite' )
-				),
+				'raw'             => $this->get_notice( $strings['lead_forms_notice_head'], $strings['lead_forms_notice_text'] ),
 				'classes'         => 'wpforms-elementor-lead-forms-notice',
-				'content_classes' => 'elementor-panel-alert elementor-panel-alert-warning',
+				'content_classes' => self::WARNING_ALERT_CLASSES,
+				'condition'       => [
+					'form_id' => $notice_form_ids['lead'],
+				],
 			]
 		);
 
 		$this->add_control(
-			'wpformsTheme',
+			'no_access_notice',
 			[
-				'type'    => 'wpforms_themes',
-				'default' => 'default',
+				'show_label'      => false,
+				'type'            => Controls_Manager::RAW_HTML,
+				'raw'             => $this->get_notice( $strings['no_access_notice_head'], $strings['no_access_notice_text'] ),
+				'content_classes' => self::WARNING_ALERT_CLASSES,
+				'condition'       => [
+					'form_id' => $notice_form_ids['no_access'],
+				],
 			]
 		);
 
-		if ( $this->is_admin() ) {
-			$this->add_control(
-				'isCustomTheme',
-				[
-					'type' => Controls_Manager::HIDDEN,
-				]
-			);
+		$this->end_controls_section();
+	}
 
-			$this->add_control(
-				'isMigrated',
-				[
-					'type'    => Controls_Manager::HIDDEN,
-					'default' => 'false',
-				]
-			);
+	/**
+	 * Get the HTML of a Form Theme notice, as the block and the Divi modules show it.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param string $head      Bold first sentence.
+	 * @param string $text      Body.
+	 * @param string $link      Documentation URL, if any.
+	 * @param string $link_text Documentation link text.
+	 *
+	 * @return string
+	 */
+	private function get_notice( string $head, string $text, string $link = '', string $link_text = '' ): string {
 
-			$this->add_control(
-				'customThemeName',
-				[
-					'type'      => Controls_Manager::TEXT,
-					'label'     => esc_html__( 'Theme Name', 'wpforms-lite' ),
-					'ai'        => [
-						'active' => false,
-					],
-					'condition' => [
-						'isCustomTheme!' => '',
-					],
-				]
-			);
+		$notice = sprintf( '<strong>%1$s</strong> %2$s', esc_html( $head ), esc_html( $text ) );
 
-			$this->add_control(
-				'deleteThemeButton',
-				[
-					'type'        => Controls_Manager::BUTTON,
-					'event'       => 'WPFormsDeleteThemeButtonClick',
-					'button_type' => 'danger',
-					'text'        => esc_html__( 'DELETE THEME', 'wpforms-lite' ),
-					'condition'   => [
-						'isCustomTheme!' => '',
-					],
-				]
-			);
+		if ( $link === '' ) {
+			return $notice;
 		}
 
-		$this->end_controls_section();
-	}
-
-	/**
-	 * Register widget controls for the Field Style section.
-	 *
-	 * Adds controls to the "Field Styles" section of the Widget Style settings.
-	 *
-	 * @since 1.8.3
-	 */
-	protected function add_field_style_controls(): void {
-
-		$this->start_controls_section(
-			'field_styles',
-			[
-				'label' => esc_html__( 'Field Styles', 'wpforms-lite' ),
-				'tab'   => Controls_Manager::TAB_STYLE,
-			]
-		);
-
-		$this->add_control(
-			'fieldSize',
-			[
-				'label'   => esc_html__( 'Size', 'wpforms-lite' ),
-				'type'    => Controls_Manager::SELECT,
-				'options' => $this->size_options,
-				'default' => 'medium',
-			]
-		);
-
-		$this->add_control(
-			'fieldBorderStyle',
-			[
-				'label'   => esc_html__( 'Border', 'wpforms-lite' ),
-				'type'    => Controls_Manager::SELECT,
-				'options' => $this->border_options,
-				'default' => 'solid',
-			]
-		);
-
-		$this->add_control(
-			'fieldBorderSize',
-			[
-				'label'     => esc_html__( 'Border Size (px)', 'wpforms-lite' ),
-				'type'      => Controls_Manager::NUMBER,
-				'default'   => '1',
-				'min'       => '0',
-				'condition' => [
-					'fieldBorderStyle!' => 'none',
-				],
-			]
-		);
-
-		$this->add_control(
-			'fieldBorderRadius',
-			[
-				'label'   => esc_html__( 'Border Radius (px)', 'wpforms-lite' ),
-				'type'    => Controls_Manager::NUMBER,
-				'min'     => '0',
-				'default' => '3',
-			]
-		);
-
-		$this->add_control(
-			'fieldBackgroundColor',
-			[
-				'label'   => esc_html__( 'Background', 'wpforms-lite' ),
-				'type'    => Controls_Manager::COLOR,
-				'default' => CSSVars::ROOT_VARS['field-background-color'],
-			]
-		);
-
-		$this->add_control(
-			'fieldBorderColor',
-			[
-				'label'   => esc_html__( 'Border', 'wpforms-lite' ),
-				'type'    => Controls_Manager::COLOR,
-				'alpha'   => true,
-				'default' => CSSVars::ROOT_VARS['field-border-color'],
-			]
-		);
-
-		$this->add_control(
-			'fieldTextColor',
-			[
-				'label'   => esc_html__( 'Text', 'wpforms-lite' ),
-				'type'    => Controls_Manager::COLOR,
-				'alpha'   => true,
-				'default' => CSSVars::ROOT_VARS['field-text-color'],
-			]
-		);
-
-		$this->add_control(
-			'fieldMenuColor',
-			[
-				'type'    => Controls_Manager::HIDDEN,
-				'default' => CSSVars::ROOT_VARS['field-menu-color'],
-			]
-		);
-
-		$this->end_controls_section();
-	}
-
-	/**
-	 * Register widget controls for the Label Style section.
-	 *
-	 * Adds controls to the "Label Styles" section of the Widget Style settings.
-	 *
-	 * @since 1.8.3
-	 */
-	private function add_label_style_controls(): void {
-
-		$this->start_controls_section(
-			'label_styles',
-			[
-				'label' => esc_html__( 'Label Styles', 'wpforms-lite' ),
-				'tab'   => Controls_Manager::TAB_STYLE,
-			]
-		);
-
-		$this->add_control(
-			'labelSize',
-			[
-				'label'   => esc_html__( 'Size', 'wpforms-lite' ),
-				'type'    => Controls_Manager::SELECT,
-				'options' => $this->size_options,
-				'default' => 'medium',
-			]
-		);
-
-		$this->add_control(
-			'labelColor',
-			[
-				'label'   => esc_html__( 'Label', 'wpforms-lite' ),
-				'type'    => Controls_Manager::COLOR,
-				'alpha'   => true,
-				'default' => CSSVars::ROOT_VARS['label-color'],
-			]
-		);
-
-		$this->add_control(
-			'labelSublabelColor',
-			[
-				'label'   => esc_html__( 'Sublabel & Hint', 'wpforms-lite' ),
-				'type'    => Controls_Manager::COLOR,
-				'alpha'   => true,
-				'default' => CSSVars::ROOT_VARS['label-sublabel-color'],
-			]
-		);
-
-		$this->add_control(
-			'labelErrorColor',
-			[
-				'label'   => esc_html__( 'Error', 'wpforms-lite' ),
-				'type'    => Controls_Manager::COLOR,
-				'default' => CSSVars::ROOT_VARS['label-error-color'],
-			]
-		);
-
-		$this->end_controls_section();
-	}
-
-	/**
-	 * Register widget controls for the "Button Style" section.
-	 *
-	 * Adds controls to the "Button Styles" section of the Widget Style settings.
-	 *
-	 * @since 1.8.3
-	 */
-	private function add_button_style_controls(): void {
-
-		$this->start_controls_section(
-			'button_styles',
-			[
-				'label' => esc_html__( 'Button Styles', 'wpforms-lite' ),
-				'tab'   => Controls_Manager::TAB_STYLE,
-			]
-		);
-
-		$this->add_control(
-			'buttonSize',
-			[
-				'label'   => esc_html__( 'Size', 'wpforms-lite' ),
-				'type'    => Controls_Manager::SELECT,
-				'options' => $this->size_options,
-				'default' => 'medium',
-			]
-		);
-
-		$this->add_control(
-			'buttonBorderStyle',
-			[
-				'label'   => esc_html__( 'Border', 'wpforms-lite' ),
-				'type'    => Controls_Manager::SELECT,
-				'options' => $this->border_options,
-				'default' => CSSVars::ROOT_VARS['button-border-style'],
-			]
-		);
-
-		$this->add_control(
-			'buttonBorderSize',
-			[
-				'label'     => esc_html__( 'Border Size (px)', 'wpforms-lite' ),
-				'type'      => Controls_Manager::NUMBER,
-				'default'   => CSSVars::ROOT_VARS['button-border-size'],
-				'min'       => '0',
-				'condition' => [
-					'buttonBorderStyle!' => 'none',
-				],
-			]
-		);
-
-		$this->add_control(
-			'buttonBorderRadius',
-			[
-				'label'   => esc_html__( 'Border Radius (px)', 'wpforms-lite' ),
-				'type'    => Controls_Manager::NUMBER,
-				'min'     => '0',
-				'default' => '3',
-			]
-		);
-
-		$this->add_control(
-			'buttonBackgroundColor',
-			[
-				'label'   => esc_html__( 'Background', 'wpforms-lite' ),
-				'type'    => Controls_Manager::COLOR,
-				'default' => CSSVars::ROOT_VARS['button-background-color'],
-			]
-		);
-
-		$this->add_control(
-			'buttonBorderColor',
-			[
-				'label'     => esc_html__( 'Border', 'wpforms-lite' ),
-				'type'      => Controls_Manager::COLOR,
-				'default'   => CSSVars::ROOT_VARS['button-border-color'],
-				'condition' => [
-					'buttonBorderStyle!' => 'none',
-				],
-			]
-		);
-
-		$this->add_control(
-			'buttonTextColor',
-			[
-				'label'   => esc_html__( 'Text', 'wpforms-lite' ),
-				'type'    => Controls_Manager::COLOR,
-				'default' => CSSVars::ROOT_VARS['button-text-color'],
-			]
-		);
-
-		$this->end_controls_section();
-	}
-
-	/**
-	 * Register widget controls for the "Container Style" section.
-	 *
-	 * @since 1.9.6
-	 */
-	private function add_container_style_controls(): void {
-
-		$this->start_controls_section(
-			'container_styles',
-			[
-				'label' => esc_html__( 'Container Styles', 'wpforms-lite' ),
-				'tab'   => Controls_Manager::TAB_STYLE,
-			]
-		);
-
-		$this->add_control(
-			'containerPadding',
-			[
-				'label'   => esc_html__( 'Padding (px)', 'wpforms-lite' ),
-				'type'    => Controls_Manager::NUMBER,
-				'default' => CSSVars::ROOT_VARS['container-padding'],
-				'min'     => '0',
-			]
-		);
-
-		$this->add_control(
-			'containerBorderStyle',
-			[
-				'label'   => esc_html__( 'Border', 'wpforms-lite' ),
-				'type'    => Controls_Manager::SELECT,
-				'options' => $this->border_options,
-				'default' => CSSVars::ROOT_VARS['container-border-style'],
-			]
-		);
-
-		$this->add_control(
-			'containerBorderWidth',
-			[
-				'label'     => esc_html__( 'Border Size (px)', 'wpforms-lite' ),
-				'type'      => Controls_Manager::NUMBER,
-				'default'   => CSSVars::ROOT_VARS['container-border-width'],
-				'min'       => '0',
-				'condition' => [
-					'containerBorderStyle!' => 'none',
-				],
-			]
-		);
-
-		$this->add_control(
-			'containerBorderRadius',
-			[
-				'label'   => esc_html__( 'Border Radius (px)', 'wpforms-lite' ),
-				'type'    => Controls_Manager::NUMBER,
-				'min'     => '0',
-				'default' => '3',
-			]
-		);
-
-		$this->add_control(
-			'containerShadowSize',
-			[
-				'label'   => esc_html__( 'Shadow', 'wpforms-lite' ),
-				'type'    => Controls_Manager::SELECT,
-				'options' => [
-					'none'   => esc_html__( 'None', 'wpforms-lite' ),
-					'small'  => esc_html__( 'Small', 'wpforms-lite' ),
-					'medium' => esc_html__( 'Medium', 'wpforms-lite' ),
-					'large'  => esc_html__( 'Large', 'wpforms-lite' ),
-				],
-				'default' => CSSVars::CONTAINER_SHADOW_SIZE['none']['box-shadow'],
-			]
-		);
-
-		$this->add_control(
-			'containerBorderColor',
-			[
-				'label'     => esc_html__( 'Border', 'wpforms-lite' ),
-				'type'      => Controls_Manager::COLOR,
-				'default'   => CSSVars::ROOT_VARS['container-border-color'],
-				'condition' => [
-					'containerBorderStyle!' => 'none',
-				],
-			]
-		);
-
-		$this->end_controls_section();
-	}
-
-	/**
-	 * Register widget controls for the "Background Style" section.
-	 *
-	 * @since 1.9.6
-	 */
-	private function add_background_style_controls(): void {
-
-		$this->start_controls_section(
-			'background_styles',
-			[
-				'label' => esc_html__( 'Background Styles', 'wpforms-lite' ),
-				'tab'   => Controls_Manager::TAB_STYLE,
-			]
-		);
-
-		$this->add_control(
-			'backgroundImage',
-			[
-				'label'   => esc_html__( 'Image', 'wpforms-lite' ),
-				'type'    => Controls_Manager::SELECT,
-				'options' => [
-					'none'    => esc_html__( 'None', 'wpforms-lite' ),
-					'library' => esc_html__( 'Media Library', 'wpforms-lite' ),
-					'stock'   => esc_html__( 'Stock Photo', 'wpforms-lite' ),
-				],
-				'default' => 'none',
-			]
-		);
-
-		$this->add_control(
-			'backgroundPosition',
-			[
-				'label'     => esc_html__( 'Position', 'wpforms-lite' ),
-				'type'      => Controls_Manager::SELECT,
-				'options'   => [
-					'top left'      => esc_html__( 'Top Left', 'wpforms-lite' ),
-					'top center'    => esc_html__( 'Top Center', 'wpforms-lite' ),
-					'top right'     => esc_html__( 'Top Right', 'wpforms-lite' ),
-					'center left'   => esc_html__( 'Center Left', 'wpforms-lite' ),
-					'center center' => esc_html__( 'Center Center', 'wpforms-lite' ),
-					'center right'  => esc_html__( 'Center Right', 'wpforms-lite' ),
-					'bottom left'   => esc_html__( 'Bottom Left', 'wpforms-lite' ),
-					'bottom center' => esc_html__( 'Bottom Center', 'wpforms-lite' ),
-					'bottom right'  => esc_html__( 'Bottom Right', 'wpforms-lite' ),
-				],
-				'default'   => CSSVars::ROOT_VARS['background-position'],
-				'condition' => [
-					'backgroundImage!' => 'none',
-				],
-			]
-		);
-
-		$this->add_control(
-			'backgroundRepeat',
-			[
-				'label'     => esc_html__( 'Repeat', 'wpforms-lite' ),
-				'type'      => Controls_Manager::SELECT,
-				'options'   => [
-					'no-repeat' => esc_html__( 'No Repeat', 'wpforms-lite' ),
-					'repeat'    => esc_html__( 'Tile', 'wpforms-lite' ),
-					'repeat-x'  => esc_html__( 'Repeat X', 'wpforms-lite' ),
-					'repeat-y'  => esc_html__( 'Repeat Y', 'wpforms-lite' ),
-				],
-				'default'   => CSSVars::ROOT_VARS['background-repeat'],
-				'condition' => [
-					'backgroundImage!' => 'none',
-				],
-			]
-		);
-
-		$this->add_control(
-			'backgroundSize',
-			[
-				'label'     => esc_html__( 'Size', 'wpforms-lite' ),
-				'type'      => Controls_Manager::SELECT,
-				'options'   => [
-					'dimensions' => esc_html__( 'Dimensions', 'wpforms-lite' ),
-					'cover'      => esc_html__( 'Cover', 'wpforms-lite' ),
-				],
-				'default'   => CSSVars::ROOT_VARS['background-size'],
-				'condition' => [
-					'backgroundImage!' => 'none',
-				],
-			]
-		);
-
-		$this->add_control(
-			'backgroundSizeMode',
-			[
-				'type'    => Controls_Manager::HIDDEN,
-				'default' => CSSVars::ROOT_VARS['background-size'],
-			]
-		);
-
-		$this->add_control(
-			'backgroundWidth',
-			[
-				'label'     => esc_html__( 'Width (px)', 'wpforms-lite' ),
-				'type'      => Controls_Manager::NUMBER,
-				'default'   => '100',
-				'min'       => '0',
-				'condition' => [
-					'backgroundImage!' => 'none',
-					'backgroundSize'   => 'dimensions',
-				],
-			]
-		);
-
-		$this->add_control(
-			'backgroundHeight',
-			[
-				'label'     => esc_html__( 'Height (px)', 'wpforms-lite' ),
-				'type'      => Controls_Manager::NUMBER,
-				'default'   => '100',
-				'min'       => '0',
-				'condition' => [
-					'backgroundImage!' => 'none',
-					'backgroundSize'   => 'dimensions',
-				],
-			]
-		);
-
-		$this->add_control(
-			'backgroundUrl',
-			[
-				'label'     => esc_html__( 'Choose Image', 'wpforms-lite' ),
-				'type'      => Controls_Manager::MEDIA,
-				'default'   => [
-					'url' => CSSVars::ROOT_VARS['background-url'],
-				],
-				'ai'        => [
-					'active' => false,
-				],
-				'separator' => 'after',
-				'condition' => [
-					'backgroundImage!' => 'none',
-				],
-			]
-		);
-
-		$this->add_control(
-			'backgroundColor',
-			[
-				'label'   => esc_html__( 'Background', 'wpforms-lite' ),
-				'type'    => Controls_Manager::COLOR,
-				'default' => CSSVars::ROOT_VARS['background-color'],
-			]
-		);
-
-		$this->end_controls_section();
-	}
-
-	/**
-	 * Register widget controls for the "Other Styles" section.
-	 *
-	 * @since 1.9.6
-	 */
-	private function add_other_style_controls(): void {
-
-		$this->start_controls_section(
-			'other_styles',
-			[
-				'label' => esc_html__( 'Other Styles', 'wpforms-lite' ),
-				'tab'   => Controls_Manager::TAB_STYLE,
-			]
-		);
-
-		$this->add_control(
-			'pageBreakColor',
-			[
-				'label'   => esc_html__( 'Page Break', 'wpforms-lite' ),
-				'type'    => Controls_Manager::COLOR,
-				'default' => CSSVars::ROOT_VARS['page-break-color'],
-			]
-		);
-
-		$this->end_controls_section();
+		return sprintf( '%1$s <a href="%2$s" target="_blank" rel="noopener noreferrer">%3$s</a>', $notice, esc_url( $link ), esc_html( $link_text ) );
 	}
 
 	/**
 	 * Register widget controls for the "Advanced" section.
-	 *
-	 * Adds controls to the "Button Styles" section of the Widget Style settings.
 	 *
 	 * @since 1.8.3
 	 */
@@ -758,35 +332,52 @@ class WidgetModern extends Widget {
 				'prefix_class' => '', // Prevents re-rendering of the widget.
 			]
 		);
-		if ( $this->is_admin() ) {
-			$this->add_control(
-				'ACDivider',
-				[
-					'type' => Controls_Manager::DIVIDER,
-				]
-			);
-
-			$this->add_control(
-				'copyPasteJsonValue',
-				[
-					'label'       => esc_html__( 'Copy / Paste Style Settings', 'wpforms-lite' ),
-					'type'        => Controls_Manager::TEXTAREA,
-					'description' => esc_html__( 'If you\'ve copied style settings from another form, you can paste them here to add the same styling to this form. Any current style settings will be overwritten.', 'wpforms-lite' ),
-					'ai'          => [
-						'active' => false,
-					],
-				]
-			);
-
-			$this->add_control(
-				'CPDivider',
-				[
-					'type' => Controls_Manager::DIVIDER,
-				]
-			);
-		}
 
 		$this->end_controls_section();
+	}
+
+	/**
+	 * Get the IDs of the forms whose Form Theme section shows a notice instead of the button.
+	 *
+	 * The addon styles a lead form, and the editor opens only a form the user can edit. Only the
+	 * editor panel reads them, through control conditions built on the editor screen and its
+	 * admin-ajax config request; a front-end render registers the controls too, and skips this.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @return array `lead` and `no_access`, form IDs as the form selector stores them.
+	 */
+	private function get_notice_form_ids(): array {
+
+		$ids = [
+			'lead'      => [],
+			'no_access' => [],
+		];
+
+		if ( ! is_admin() ) {
+			return $ids;
+		}
+
+		$editor       = wpforms()->obj( 'themes_editor' );
+		$form_handler = wpforms()->obj( 'form' );
+
+		if ( ! $editor instanceof ThemesEditor || ! $form_handler || ! $this->current_user_can_view_forms() ) {
+			return $ids;
+		}
+
+		foreach ( (array) $form_handler->get( '', wpforms_get_viewable_forms_args() ) as $form ) {
+			if ( $editor->get_support()->is_unstyled_lead_form_post( $form ) ) {
+				$ids['lead'][] = (string) $form->ID;
+
+				continue;
+			}
+
+			if ( ! $editor->can_edit( (int) $form->ID ) ) {
+				$ids['no_access'][] = (string) $form->ID;
+			}
+		}
+
+		return $ids;
 	}
 
 	/**
@@ -802,30 +393,12 @@ class WidgetModern extends Widget {
 
 		$widget_id      = $this->get_id();
 		$attr           = $this->get_settings_for_display();
-		$css_vars       = $this->css_vars_obj->get_customized_css_vars( $attr );
 		$custom_classes = ! empty( $attr['className'] ) ? trim( $attr['className'] ) : '';
 
-		if ( ! empty( $css_vars ) ) {
-
-			$style_id = 'wpforms-css-vars-elementor-widget-' . $widget_id;
-
-			/**
-			 * Filter the CSS selector for output CSS variables for styling the form in Elementor widget.
-			 *
-			 * @since 1.8.3
-			 *
-			 * @param string $selector The CSS selector for output CSS variables for styling the Elementor Widget.
-			 * @param array  $attr     Attributes passed by Elementor Widget.
-			 * @param array  $css_vars CSS variables data.
-			 */
-			$vars_selector = apply_filters(
-				'wpforms_integrations_elementor_widget_modern_output_css_vars_selector',
-				".elementor-widget-wpforms.elementor-element-{$widget_id}",
-				$attr,
-				$css_vars
-			);
-
-			$this->css_vars_obj->output_selector_vars( $vars_selector, $css_vars, $style_id );
+		if ( $this->is_new_embed() ) {
+			$this->output_form_default_css_vars( (string) $widget_id, (int) ( $attr['form_id'] ?? 0 ) );
+		} else {
+			$this->output_legacy_css_vars( (string) $widget_id, $attr );
 		}
 
 		// Add custom classes.
@@ -845,6 +418,131 @@ class WidgetModern extends Widget {
 	}
 
 	/**
+	 * Output the CSS variables of a widget saved with the style controls, on its wrapper.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param string $widget_id Widget ID.
+	 * @param array  $attr      Widget settings for display.
+	 */
+	private function output_legacy_css_vars( string $widget_id, array $attr ): void {
+
+		$css_vars = $this->css_vars_obj->get_customized_css_vars( $attr );
+
+		if ( empty( $css_vars ) ) {
+			return;
+		}
+
+		$style_id = 'wpforms-css-vars-elementor-widget-' . $widget_id;
+
+		/**
+		 * Filter the CSS selector for output CSS variables for styling the form in Elementor widget.
+		 *
+		 * @since 1.8.3
+		 *
+		 * @param string $selector The CSS selector for output CSS variables for styling the Elementor Widget.
+		 * @param array  $attr     Attributes passed by Elementor Widget.
+		 * @param array  $css_vars CSS variables data.
+		 */
+		$vars_selector = apply_filters(
+			'wpforms_integrations_elementor_widget_modern_output_css_vars_selector',
+			".elementor-widget-wpforms.elementor-element-{$widget_id}",
+			$attr,
+			$css_vars
+		);
+
+		$this->css_vars_obj->output_selector_vars( $vars_selector, $css_vars, $style_id );
+	}
+
+	/**
+	 * Output the form default for a widget inserted after the style controls were removed.
+	 *
+	 * Scoped to the widget's own form: on `#wpforms-{id}` alone it would also beat the
+	 * inherited variables of a legacy widget showing the same form on the page.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param string $widget_id Widget ID.
+	 * @param int    $form_id   Form ID.
+	 */
+	private function output_form_default_css_vars( string $widget_id, int $form_id ): void {
+
+		if ( ! $form_id ) {
+			return;
+		}
+
+		$this->css_vars_obj->output_css_vars_for_shortcode(
+			[ 'id' => $form_id ],
+			".elementor-element-{$widget_id} #wpforms-{$form_id}",
+			'wpforms-css-vars-elementor-widget-' . $widget_id
+		);
+	}
+
+	/**
+	 * Whether the widget was inserted after the style controls were removed and carries no styles of its own.
+	 *
+	 * A widget without the marker was saved before, even with no style changed, and keeps its
+	 * legacy rendering; a marked copy of a styled widget keeps the styles it carries.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @return bool
+	 */
+	private function is_new_embed(): bool {
+
+		$settings = (array) $this->get_data( 'settings' );
+
+		if ( ( $settings[ self::MARKER ] ?? '' ) !== '1' ) {
+			return false;
+		}
+
+		$globals = array_filter( (array) ( $settings['__globals__'] ?? [] ) );
+
+		return ! array_intersect_key( $settings, self::STYLE_DEFAULTS ) && ! array_intersect_key( $globals, self::STYLE_DEFAULTS );
+	}
+
+	/**
+	 * Get the styles the embed renders with, for the themes editor.
+	 *
+	 * The defaults of the removed controls fill the keys the widget does not store, as they did
+	 * while the controls existed, so the editor starts from what the widget renders rather than
+	 * from the form default. A custom theme is named by the slug it has in the shared custom
+	 * themes, which the Elementor widget's own themes joined under another slug.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @return array
+	 */
+	protected function get_legacy_styles(): array {
+
+		if ( $this->is_new_embed() ) {
+			return [];
+		}
+
+		// Empty values are dropped first, as the render drops them, so they fall back to the default too.
+		$styles = (array) $this->prepare_settings( array_merge( self::STYLE_DEFAULTS, array_filter( (array) parent::get_settings_for_display() ) ) );
+		$editor = wpforms()->obj( 'themes_editor' );
+
+		if ( ! $editor instanceof ThemesEditor ) {
+			return $styles;
+		}
+
+		$themes_data = $editor->get_themes_data();
+
+		if ( ( $styles['isCustomTheme'] ?? '' ) === 'true' ) {
+			$styles['wpformsTheme'] = $themes_data->get_elementor_theme_slug( (string) $styles['wpformsTheme'] );
+		}
+
+		// The widget never had gradient controls. Its theme's gradient, or one derived from its own
+		// colors, keeps the form default's gradient out and the theme comparison on the real values.
+		$theme    = $themes_data->get_theme( (string) $styles['wpformsTheme'] );
+		$styles   = array_merge( $styles, array_intersect_key( (array) ( $theme['settings'] ?? [] ), array_flip( self::GRADIENT_KEYS ) ) );
+		$css_vars = $this->css_vars_obj;
+
+		return $css_vars instanceof CSSVars ? $css_vars->add_gradient_defaults( $styles ) : $styles;
+	}
+
+	/**
 	 * Get settings for display.
 	 *
 	 * @since 1.8.3
@@ -860,6 +558,20 @@ class WidgetModern extends Widget {
 		if ( ! empty( $setting_key ) ) {
 			return $settings;
 		}
+
+		return $this->prepare_settings( $settings );
+	}
+
+	/**
+	 * Turn widget settings into the values the CSS variables are built from.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param mixed $settings Widget settings.
+	 *
+	 * @return mixed Updated settings.
+	 */
+	private function prepare_settings( $settings ) {
 
 		$settings = $this->remove_empty_settings( $settings );
 		$settings = $this->apply_dimension_settings( $settings );
@@ -994,17 +706,5 @@ class WidgetModern extends Widget {
 		}
 
 		return $settings;
-	}
-
-	/**
-	 * Check if the user is an admin.
-	 *
-	 * @since 1.9.6
-	 *
-	 * @return bool True if the user is an admin, false otherwise.
-	 */
-	private function is_admin(): bool {
-
-		return current_user_can( 'manage_options' );
 	}
 }

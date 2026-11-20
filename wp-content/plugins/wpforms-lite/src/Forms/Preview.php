@@ -203,25 +203,76 @@ class Preview {
 			return '';
 		}
 
-		$admin_url = admin_url( 'admin.php' );
+		$links = $this->get_preview_links();
 
-		$links = [];
+		$content = '';
 
-		if ( wpforms_current_user_can( 'edit_form_single', $this->form_data['id'] ) ) {
-			$links[] = [
-				'url'  => esc_url(
-					add_query_arg(
-						[
-							'page'    => 'wpforms-builder',
-							'view'    => 'fields',
-							'form_id' => absint( $this->form_data['id'] ),
-						],
-						$admin_url
-					)
-				),
-				'text' => $this->is_form_template ? esc_html__( 'Edit Form Template', 'wpforms-lite' ) : esc_html__( 'Edit Form', 'wpforms-lite' ),
-			];
+		$content .= $this->add_preview_notice();
+
+		$content .= '<div class="wpforms-preview-notice-box">';
+
+		$content .= '<p>';
+		$content .= $this->is_form_template ?
+			esc_html__( 'This is a preview of the latest saved revision of your form template. If this preview does not match your template, save your changes and then refresh this page. This template preview is not publicly accessible.', 'wpforms-lite' ) :
+			esc_html__( 'This is a preview of the latest saved revision of your form. If this preview does not match your form, save your changes and then refresh this page. This form preview is not publicly accessible.', 'wpforms-lite' );
+
+		$content .= ' ';
+		$content .= sprintf(
+			wp_kses(
+				/* translators: %s - WPForms doc link. */
+				__( 'For form testing tips, <a href="%s" target="_blank" rel="noopener noreferrer">check out our complete guide</a>!', 'wpforms-lite' ),
+				[
+					'a' => [
+						'href'   => [],
+						'target' => [],
+						'rel'    => [],
+					],
+				]
+			),
+			esc_url(
+				wpforms_utm_link(
+					'https://wpforms.com/docs/how-to-properly-test-your-wordpress-forms-before-launching-checklist/',
+					$this->is_form_template ? 'Form Template Preview' : 'Form Preview',
+					'Form Testing Tips Documentation'
+				)
+			)
+		);
+		$content .= '</p>';
+
+		if ( ! empty( $links ) ) {
+			$content .= '<p class="wpforms-preview-notice-links">';
+
+			foreach ( $links as $key => $link ) {
+				$link_class = empty( $link['class'] ) ? '' : ' class="' . esc_attr( $link['class'] ) . '"';
+				$content   .= '<a href="' . $link['url'] . '"' . $link_class . '>' . $link['text'] . '</a>';
+				$l          = array_keys( $links );
+
+				if ( end( $l ) !== $key ) {
+					$content .= '<span class="wpforms-preview-notice-separator">|</span>';
+				}
+			}
+
+			$content .= '</p>';
 		}
+
+		$content .= '</div>';
+
+		$content .= do_shortcode( '[wpforms id="' . absint( $this->form_data['id'] ) . '"]' );
+
+		return $content;
+	}
+
+	/**
+	 * Get the links shown above the previewed form.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @return array
+	 */
+	private function get_preview_links(): array {
+
+		$admin_url = admin_url( 'admin.php' );
+		$links     = $this->get_edit_links( $admin_url );
 
 		if ( wpforms()->is_pro() && wpforms_current_user_can( 'view_entries_form_single', $this->form_data['id'] ) ) {
 			$links[] = [
@@ -261,62 +312,55 @@ class Preview {
 		if ( ! empty( $_GET['new_window'] ) ) { // phpcs:ignore
 			$links[] = [
 				'url'  => 'javascript:window.close();',
-				'text' => esc_html__( 'Close this window', 'wpforms-lite' ),
+				'text' => esc_html__( 'Close this Tab', 'wpforms-lite' ),
 			];
 		}
 
-		$content = '';
+		return $links;
+	}
 
-		$content .= $this->add_preview_notice();
+	/**
+	 * Get the links of a user who can edit the form: the builder and, when supported, the themes editor.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param string $admin_url Admin URL.
+	 *
+	 * @return array
+	 */
+	private function get_edit_links( string $admin_url ): array {
 
-		$content .= '<p>';
-		$content .= $this->is_form_template ?
-			esc_html__( 'This is a preview of the latest saved revision of your form template. If this preview does not match your template, save your changes and then refresh this page. This template preview is not publicly accessible.', 'wpforms-lite' ) :
-			esc_html__( 'This is a preview of the latest saved revision of your form. If this preview does not match your form, save your changes and then refresh this page. This form preview is not publicly accessible.', 'wpforms-lite' );
-
-		if ( ! empty( $links ) ) {
-			$content .= '<br>';
-			$content .= '<span class="wpforms-preview-notice-links">';
-
-			foreach ( $links as $key => $link ) {
-				$content .= '<a href="' . $link['url'] . '">' . $link['text'] . '</a>';
-				$l        = array_keys( $links );
-
-				if ( end( $l ) !== $key ) {
-					$content .= ' <span style="display:inline-block;margin:0 6px;opacity: 0.5">|</span> ';
-				}
-			}
-
-			$content .= '</span>';
+		if ( ! wpforms_current_user_can( 'edit_form_single', $this->form_data['id'] ) ) {
+			return [];
 		}
-		$content .= '</p>';
 
-		$content .= '<p>';
-		$content .= sprintf(
-			wp_kses(
-				/* translators: %s - WPForms doc link. */
-				__( 'For form testing tips, check out our <a href="%s" target="_blank" rel="noopener noreferrer">complete guide!</a>', 'wpforms-lite' ),
-				[
-					'a' => [
-						'href'   => [],
-						'target' => [],
-						'rel'    => [],
-					],
-				]
-			),
-			esc_url(
-				wpforms_utm_link(
-					'https://wpforms.com/docs/how-to-properly-test-your-wordpress-forms-before-launching-checklist/',
-					$this->is_form_template ? 'Form Template Preview' : 'Form Preview',
-					'Form Testing Tips Documentation'
-				)
-			)
-		);
-		$content .= '</p>';
+		$links = [
+			[
+				'url'  => esc_url(
+					add_query_arg(
+						[
+							'page'    => 'wpforms-builder',
+							'view'    => 'fields',
+							'form_id' => absint( $this->form_data['id'] ),
+						],
+						$admin_url
+					)
+				),
+				'text' => $this->is_form_template ? esc_html__( 'Edit Form Template', 'wpforms-lite' ) : esc_html__( 'Edit Form', 'wpforms-lite' ),
+			],
+		];
 
-		$content .= do_shortcode( '[wpforms id="' . absint( $this->form_data['id'] ) . '"]' );
+		$themes_editor = wpforms()->obj( 'themes_editor' );
 
-		return $content;
+		if ( $themes_editor && $themes_editor->is_form_supported( $this->form_data ) ) {
+			$links[] = [
+				'url'   => '#',
+				'class' => 'wpforms-themes-editor-link',
+				'text'  => esc_html__( 'Edit Theme', 'wpforms-lite' ),
+			];
+		}
+
+		return $links;
 	}
 
 	/**

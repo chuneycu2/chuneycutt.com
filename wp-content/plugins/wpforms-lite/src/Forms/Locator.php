@@ -661,12 +661,16 @@ class Locator {
 		if ( $location_url ) {
 			$location_full_url = $this->home_url . $location_url;
 
+			// Only the label is decoded, and escaped as text, so a percent-encoded slug can never become markup.
+			// The href keeps the encoded URL, so a decoded reserved character cannot change the link target.
+			$location_label = urldecode( $location_url );
+
 			// phpcs:ignore Generic.Commenting.DocComment.MissingShort
 			/** @noinspection HtmlUnknownTarget */
 			$location_link = sprintf(
 				' <a href="%1$s" target="_blank" class="wpforms-locations-link">%2$s <i class="fa fa-external-link" aria-hidden="true"></i></a>',
 				esc_url( $location_full_url ),
-				esc_url( $location_url )
+				esc_html( $location_label )
 			);
 		}
 
@@ -684,7 +688,7 @@ class Locator {
 		// Escaped above.
 		return sprintf(
 			'<span class="wpforms-locations-list-item">%s</span>',
-			$location_edit_link . wp_kses_post( urldecode( $location_link ) )
+			$location_edit_link . $location_link
 		);
 	}
 

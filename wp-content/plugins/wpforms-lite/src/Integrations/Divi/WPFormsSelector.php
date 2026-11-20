@@ -7,6 +7,7 @@ namespace WPForms\Integrations\Divi;
 
 use ET_Builder_Module;
 use WP_Post;
+use WPForms\Frontend\EmbedContext;
 use WPForms\Integrations\Divi\Interfaces\FormsResolverInterface;
 use WPForms\Integrations\Divi\Interfaces\LocalizedDataInterface;
 use WPForms\Integrations\Divi\Traits\FormsResolverTrait;
@@ -57,6 +58,17 @@ class WPFormsSelector extends ET_Builder_Module implements LocalizedDataInterfac
 	public function init(): void {
 
 		$this->name = esc_html__( 'WPForms', 'wpforms-lite' );
+
+		$this->settings_modal_toggles = [
+			'general' => [
+				'toggles' => [
+					'form_theme' => [
+						'title'    => esc_html__( 'Form Theme', 'wpforms-lite' ),
+						'priority' => 10,
+					],
+				],
+			],
+		];
 	}
 
 	/**
@@ -85,7 +97,8 @@ class WPFormsSelector extends ET_Builder_Module implements LocalizedDataInterfac
 	 */
 	public function get_fields(): array {
 
-		$forms         = $this->get_form_options();
+		$posts         = $this->get_forms();
+		$forms         = $this->get_form_options( $posts );
 		$default_value = '';
 
 		if ( ! empty( $forms ) ) {
@@ -93,7 +106,7 @@ class WPFormsSelector extends ET_Builder_Module implements LocalizedDataInterfac
 			$default_value = 0;
 		}
 
-		return [
+		$fields = [
 			'form_id'    => [
 				'label'           => esc_html__( 'Form', 'wpforms-lite' ),
 				'type'            => 'select',
@@ -123,6 +136,10 @@ class WPFormsSelector extends ET_Builder_Module implements LocalizedDataInterfac
 				],
 			],
 		];
+
+		$edit_theme = new EditTheme();
+
+		return $fields + $edit_theme->get_fields( $edit_theme->get_data( $posts ) );
 	}
 
 
@@ -169,6 +186,17 @@ class WPFormsSelector extends ET_Builder_Module implements LocalizedDataInterfac
 		$form_id    = absint( $this->props['form_id'] );
 		$show_title = ( $this->props['show_title'] ?? '' ) === 'on';
 		$show_desc  = ( $this->props['show_desc'] ?? '' ) === 'on';
+
+		$embed_context = wpforms()->obj( 'embed_context' );
+
+		if ( $embed_context instanceof EmbedContext ) {
+			$embed_context->set(
+				[
+					'type'    => EmbedContext::TYPE_DIVI,
+					'form_id' => $form_id,
+				]
+			);
+		}
 
 		return do_shortcode(
 			sprintf(

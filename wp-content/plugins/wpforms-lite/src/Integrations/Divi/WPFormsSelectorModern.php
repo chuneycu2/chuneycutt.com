@@ -15,6 +15,7 @@ use ET\Builder\Packages\Module\Options\Css\CssStyle;
 use ET\Builder\Packages\ModuleLibrary\ModuleRegistration;
 use ET\Builder\VisualBuilder\Assets\PackageBuildManager;
 use WP_Post;
+use WPForms\Frontend\EmbedContext;
 use WPForms\Integrations\Divi\Interfaces\FormsResolverInterface;
 use WPForms\Integrations\Divi\Interfaces\LocalizedDataInterface;
 use WPForms\Integrations\Divi\Traits\FormsResolverTrait;
@@ -140,6 +141,17 @@ class WPFormsSelectorModern implements DependencyInterface, LocalizedDataInterfa
 		// If no form selected, return the empty string.
 		if ( empty( $form_id ) ) {
 			return '';
+		}
+
+		$embed_context = wpforms()->obj( 'embed_context' );
+
+		if ( $embed_context instanceof EmbedContext ) {
+			$embed_context->set(
+				[
+					'type'    => EmbedContext::TYPE_DIVI,
+					'form_id' => $form_id,
+				]
+			);
 		}
 
 		// Generate the form shortcode output.

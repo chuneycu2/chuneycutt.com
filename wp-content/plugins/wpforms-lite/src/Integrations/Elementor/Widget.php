@@ -10,6 +10,8 @@ namespace WPForms\Integrations\Elementor;
 use Elementor\Plugin;
 use Elementor\Widget_Base;
 use Elementor\Controls_Manager;
+use WPForms\Frontend\EmbedContext;
+use WPForms\Frontend\ThemesEditor;
 
 /**
  * WPForms widget for Elementor page builder.
@@ -308,14 +310,10 @@ class Widget extends Widget_Base {
 	 */
 	private function add_legacy_styles_notice() {
 
-		$is_modern      = wpforms_get_render_engine() === 'modern';
-		$is_full_styles = (int) wpforms_setting( 'disable-css', '1' ) === 1;
+		$editor      = wpforms()->obj( 'themes_editor' );
+		$notice_text = $editor instanceof ThemesEditor ? $editor->get_support()->get_legacy_styling_reason() : '';
 
-		if ( ! $is_modern || ! $is_full_styles ) {
-			$notice_text = ! $is_modern
-				? __( 'Upgrade your forms to use our modern markup and unlock extensive style controls.', 'wpforms-lite' )
-				: __( 'Update your forms to use base and form theme styling and unlock extensive style controls.', 'wpforms-lite' );
-
+		if ( $notice_text !== '' ) {
 			$this->add_control(
 				'legacy_styling_notice',
 				[
@@ -434,11 +432,36 @@ class Widget extends Widget_Base {
 	 */
 	public function render_form() {
 
+		$embed_context = wpforms()->obj( 'embed_context' );
+
+		if ( $embed_context instanceof EmbedContext ) {
+			$embed_context->set(
+				[
+					'type'    => EmbedContext::TYPE_ELEMENTOR,
+					'id'      => (string) $this->get_id(),
+					'form_id' => (int) $this->get_settings_for_display( 'form_id' ),
+					'legacy'  => $this->get_legacy_styles(),
+				]
+			);
+		}
+
 		wpforms_display(
 			$this->get_settings_for_display( 'form_id' ),
 			$this->get_settings_for_display( 'display_form_name' ) === 'yes',
 			$this->get_settings_for_display( 'display_form_description' ) === 'yes'
 		);
+	}
+
+	/**
+	 * Get the styles the embed renders with, for the themes editor.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @return array
+	 */
+	protected function get_legacy_styles(): array {
+
+		return (array) $this->get_settings_for_display();
 	}
 
 	/**

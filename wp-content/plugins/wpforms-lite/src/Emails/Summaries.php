@@ -2,6 +2,7 @@
 namespace WPForms\Emails;
 
 use Exception;
+use WPForms\Admin\Notice;
 use WPForms\Emails\Summaries\Data;
 use WPForms\Emails\Summaries\Milestones;
 use WPForms\Emails\Summaries\Slot\AbstractBlock;
@@ -143,9 +144,10 @@ class Summaries {
 	}
 
 	/**
-	 * Add "Disable Email Summaries" to WPForms settings.
+	 * Add the Email Summary section to the Email settings tab, right above the Sending section.
 	 *
 	 * @since 1.5.4
+	 * @since 2.0.5 Moved from the Misc tab to the Email tab, with the Recipients and From Email settings.
 	 *
 	 * @param array $settings WPForms settings.
 	 *
@@ -155,6 +157,10 @@ class Summaries {
 
 		/** This filter is documented in wpforms/src/Emails/Summaries.php */
 		if ( (bool) apply_filters( 'wpforms_emails_summaries_is_disabled', false ) ) {
+			return $settings;
+		}
+
+		if ( ! isset( $settings['email'] ) || ! is_array( $settings['email'] ) ) {
 			return $settings;
 		}
 
@@ -169,31 +175,133 @@ class Summaries {
 			Preview::PREVIEW_NONCE_NAME
 		);
 
-		$desc = esc_html__( 'Disable Email Summaries weekly delivery.', 'wpforms-lite' );
+		$desc = esc_html__( 'Turn off the weekly email that recaps your form entries and performance.', 'wpforms-lite' );
 
 		if ( ! $this->is_disabled() ) {
-			$desc .= ' <a href="' . $url . '" target="_blank">' . esc_html__( 'View Email Summary Example', 'wpforms-lite' ) . '</a>.';
+			$desc .= ' <a href="' . $url . '" target="_blank">' . esc_html__( 'View Email Summary Example', 'wpforms-lite' ) . '</a>';
 		}
 
-		// Get the uninstall data setting.
-		$uninstall_data = $settings['misc']['uninstall-data'];
+		$is_hidden = (bool) wpforms_setting( 'email-summaries-disable', false );
 
-		// Remove the uninstall data setting.
-		unset( $settings['misc']['uninstall-data'] );
-
-		// Add the email summaries setting.
-		$settings['misc']['email-summaries-disable'] = [
-			'id'     => 'email-summaries-disable',
-			'name'   => esc_html__( 'Disable Email Summaries', 'wpforms-lite' ),
-			'desc'   => $desc,
-			'type'   => 'toggle',
-			'status' => true,
+		$section = [
+			'email-summaries-heading'    => [
+				'id'       => 'email-summaries-heading',
+				'content'  => '<h4>' . esc_html__( 'Email Summary', 'wpforms-lite' ) . '</h4>',
+				'type'     => 'content',
+				'no_label' => true,
+				'class'    => [ 'section-heading', 'no-desc' ],
+			],
+			'email-summaries-disable'    => [
+				'id'     => 'email-summaries-disable',
+				'name'   => esc_html__( 'Disable Email Summaries', 'wpforms-lite' ),
+				'desc'   => $desc,
+				'type'   => 'toggle',
+				'status' => true,
+			],
+			'email-summaries-recipients' => [
+				'id'        => 'email-summaries-recipients',
+				'name'      => esc_html__( 'Recipients', 'wpforms-lite' ),
+				'desc'      => sprintf(
+					/* translators: %s - site admin email address. */
+					esc_html__( 'Separate multiple addresses with commas. Leave empty to send to the site admin email (%s).', 'wpforms-lite' ),
+					esc_html( get_option( 'admin_email' ) )
+				),
+				'type'      => 'text',
+				'is_hidden' => $is_hidden,
+				'filter'    => [ $this, 'sanitize_recipients_setting' ],
+			],
+			'email-summaries-from-email' => [
+				'id'        => 'email-summaries-from-email',
+				'name'      => esc_html__( 'From Email', 'wpforms-lite' ),
+				'desc'      => esc_html__( 'The email address Email Summaries are sent from. Leave empty to use the site admin email. For best deliverability, use an address on your site\'s domain.', 'wpforms-lite' ),
+				'type'      => 'text',
+				'filter'    => [ $this, 'sanitize_from_email_setting' ],
+				'is_hidden' => $is_hidden,
+			],
 		];
 
-		// Add the uninstall data setting to the end.
-		$settings['misc']['uninstall-data'] = $uninstall_data;
+		$settings['email'] = wpforms_array_insert( $settings['email'], $section, 'sending-heading', 'before' );
 
 		return $settings;
+	}
+
+	/**
+	 * Sanitize the Email Summaries Recipients setting to a comma-separated list of valid emails.
+	 *
+	 * The invalid addresses it removes are named in an error notice.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param mixed $value Raw setting value.
+	 *
+	 * @return string
+	 */
+	public function sanitize_recipients_setting( $value ): string {
+
+		if ( ! is_scalar( $value ) ) {
+			return '';
+		}
+
+		$entries = array_filter( array_map( 'trim', explode( ',', (string) $value ) ), 'strlen' );
+		$emails  = array_filter( $entries, 'is_email' );
+		$invalid = array_unique( array_diff_key( $entries, $emails ) );
+
+		if ( $invalid ) {
+			Notice::error(
+				sprintf(
+					/* translators: %s - comma-separated list of the invalid email addresses that were removed. */
+					esc_html__( 'These Recipients addresses are not valid and were removed: %s', 'wpforms-lite' ),
+					esc_html( implode( ', ', $invalid ) )
+				)
+			);
+		}
+
+		return implode( ',', array_unique( $emails ) );
+	}
+
+	/**
+	 * Sanitize the submitted From Email address, keeping the previous one when the new one is not valid.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param mixed  $value      Submitted value.
+	 * @param string $id         Field ID.
+	 * @param array  $field      Field definition.
+	 * @param mixed  $value_prev Previously saved value.
+	 *
+	 * @return string
+	 *
+	 * @noinspection PhpUnusedParameterInspection
+	 */
+	public function sanitize_from_email_setting( $value, string $id, array $field, $value_prev ): string { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+
+		$address = is_scalar( $value ) ? trim( (string) $value ) : '';
+
+		if ( $address === '' ) {
+			return '';
+		}
+
+		if ( is_email( $address ) ) {
+			return sanitize_email( $address );
+		}
+
+		Notice::error( esc_html__( 'The From Email address for Email Summaries is not valid. The previous address was kept.', 'wpforms-lite' ) );
+
+		return is_string( $value_prev ) ? $value_prev : '';
+	}
+
+	/**
+	 * The stored From Email address, or an empty string when none is set or the stored one is not valid.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @return string
+	 */
+	private function get_from_address(): string {
+
+		$address = wpforms_setting( 'email-summaries-from-email', '' );
+
+		return is_string( $address ) && is_email( $address ) ? $address : '';
 	}
 
 	/**
@@ -373,16 +481,20 @@ class Summaries {
 		 * Filters the summaries recipient email address.
 		 *
 		 * @since 1.5.4
+		 * @since 2.0.5 The default is the Email Summaries Recipients setting when set.
 		 *
-		 * @param string $option Default summaries recipient email address.
+		 * @param string $option Comma-separated recipients from the setting, or the site admin email when the setting is empty.
 		 */
-		$to_email = apply_filters( 'wpforms_emails_summaries_cron_to_email', get_option( 'admin_email' ) );
+		$to_email = apply_filters( 'wpforms_emails_summaries_cron_to_email', wpforms_setting( 'email-summaries-recipients', get_option( 'admin_email' ) ) );
 
-		$sent = ( new Mailer() )
+		$mailer = ( new Mailer() )
 			->template( $template )
 			->subject( $subject )
-			->to_email( $to_email )
-			->send();
+			->to_email( $to_email );
+
+		$mailer->__set( 'from_address', $this->get_from_address() );
+
+		$sent = $mailer->send();
 
 		if ( $sent === true ) {
 			$this->pipeline->on_sent( $this->blocks, $this->context );

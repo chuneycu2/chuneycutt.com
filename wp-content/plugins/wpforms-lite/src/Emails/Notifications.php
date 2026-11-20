@@ -694,7 +694,7 @@ class Notifications extends Mailer {
 
 		$message = '';
 
-		if ( ! $show_empty_fields && ( ! isset( $field['value'] ) || (string) $field['value'] === '' ) ) {
+		if ( ! $show_empty_fields && ( ! isset( $field['value'] ) || (string) $field['value'] === '' || wpforms_payment_is_zero_quantity( $field ) ) ) {
 			return $message;
 		}
 
@@ -879,7 +879,7 @@ class Notifications extends Mailer {
 			[ $field_name, $field_val ] = $this->process_special_field_values( $field );
 		} else {
 			// Handle fields that are not empty in $this->fields.
-			if ( ! $show_empty_fields && ( ! isset( $this->fields[ $field_id ]['value'] ) || (string) $this->fields[ $field_id ]['value'] === '' ) ) {
+			if ( ! $show_empty_fields && ( ! isset( $this->fields[ $field_id ]['value'] ) || (string) $this->fields[ $field_id ]['value'] === '' || wpforms_payment_is_zero_quantity( $this->fields[ $field_id ] ) ) ) {
 				return '';
 			}
 
@@ -1341,7 +1341,13 @@ class Notifications extends Mailer {
 		$dom = new DOMDocument( '1.0', 'UTF-8' );
 
 		// We should encode `<` and `>` symbols to prevent unexpected HTML tags.
-		$html = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>' . wp_pre_kses_less_than( $content ) . '</body></html>';
+		$content_encoded = wp_pre_kses_less_than( $content );
+
+		// libxml2 2.14+ turns CRLF into LF while parsing, and process_message() converts only CRLF to `<br/>`.
+		// Encode the carriage return as an entity so the parse keeps it.
+		$content_encoded = str_replace( "\r", '&#13;', $content_encoded );
+
+		$html = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>' . $content_encoded . '</body></html>';
 
 		$dom->loadHTML( $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NOERROR );
 

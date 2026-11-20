@@ -3,21 +3,27 @@
 namespace WPForms\SetupWizard;
 
 use WP_Error;
+use WP_HTTP_Response;
 use WP_REST_Request;
 use WP_REST_Response;
+use WP_REST_Server;
 use WPForms\SetupChecklist\Page;
 use WPForms\SetupWizard\Service\StateManager;
+use WPForms\SetupWizard\Transport\Cipher;
 
 /**
  * Setup Wizard REST API.
  *
  * Exposes the endpoints the SPA calls back into:
- * - `GET  /hydrate`              Initial fetch of settings + wizard_settings.
+ * - `POST /hydrate`              Initial fetch of settings + wizard_settings.
  * - `POST /update`               Persist wizard step state.
  * - `POST /install-plugins`      License-gated install of addons/cross-product plugins.
  * - `POST /complete`             Finalize the wizard.
- * - `GET  /license/key`          Fetch the configured license key.
+ * - `POST /stripe/connect-url`   Get the Stripe Connect URL for the wizard.
+ * - `POST /license/key`          Fetch the configured license key.
  * - `POST /license/verify`       Validate and activate a license key.
+ * - `POST /health`               Confirm the hosted wizard's key reaches this site.
+ * - `POST /revoke`               Retire the key the request was sealed with.
  *
  * Every route uses `validate_request()` as its `permission_callback`. The
  * permission callback also hydrates the bound user into the current request
@@ -32,19 +38,21 @@ class RestApi {
 	 * REST namespace.
 	 *
 	 * @since 2.0.0
+	 * @since 2.0.5.1 Public, so `Auth` measures sealed endpoints from the same route.
 	 *
 	 * @var string
 	 */
-	private const ROUTE_NAMESPACE = 'wpforms/v1';
+	public const ROUTE_NAMESPACE = 'wpforms/v1';
 
 	/**
 	 * Route prefix shared by all wizard routes.
 	 *
 	 * @since 2.0.0
+	 * @since 2.0.5.1 Public, so `Auth` measures sealed endpoints from the same route.
 	 *
 	 * @var string
 	 */
-	private const ROUTE_BASE = '/setup-wizard';
+	public const ROUTE_BASE = '/setup-wizard';
 
 	/**
 	 * License API base URL, used when the Pro `WPFORMS_UPDATER_API` constant is
@@ -119,7 +127,7 @@ class RestApi {
 			self::ROUTE_NAMESPACE,
 			self::ROUTE_BASE . '/hydrate',
 			[
-				'methods'             => 'GET',
+				'methods'             => 'POST',
 				'callback'            => [ $this, 'hydrate' ],
 				'permission_callback' => $permission,
 			]
@@ -188,7 +196,7 @@ class RestApi {
 			self::ROUTE_NAMESPACE,
 			self::ROUTE_BASE . '/license/key',
 			[
-				'methods'             => 'GET',
+				'methods'             => 'POST',
 				'callback'            => [ $this, 'license_key' ],
 				'permission_callback' => $permission,
 			]
@@ -210,6 +218,163 @@ class RestApi {
 				],
 			]
 		);
+
+		register_rest_route(
+			self::ROUTE_NAMESPACE,
+			self::ROUTE_BASE . '/health',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'health' ],
+				'permission_callback' => $permission,
+			]
+		);
+
+		register_rest_route(
+			self::ROUTE_NAMESPACE,
+			self::ROUTE_BASE . '/revoke',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'revoke' ],
+				'permission_callback' => $permission,
+			]
+		);
+	}
+
+	/**
+	 * Authenticate a sealed wizard request before WordPress validates its params.
+	 *
+	 * WordPress checks required args and sanitizes them before the permission callback
+	 * runs, and a sealed body carries only `c`, so the params are replaced with the
+	 * opened plaintext here.
+	 *
+	 * @since 2.0.5.1
+	 *
+	 * @param mixed           $result  Response to replace the requested version with.
+	 * @param WP_REST_Server  $server  Server instance.
+	 * @param WP_REST_Request $request Request used to generate the response.
+	 *
+	 * @return mixed
+	 * @noinspection PhpUnusedParameterInspection
+	 */
+	public function filter_rest_pre_dispatch( $result, $server, $request ) {
+
+		if ( $result !== null || ! $request instanceof WP_REST_Request || ! self::is_wizard_route( $request->get_route() ) ) {
+			return $result;
+		}
+
+		// An extra query arg is outside what the body seals.
+		$extra = array_diff( array_keys( $request->get_query_params() ), self::allowed_query_keys() );
+
+		if ( $extra !== [] ) {
+			return $this->auth->get_refusal();
+		}
+
+		$user_id = $this->auth->verify( $request );
+
+		if ( is_wp_error( $user_id ) ) {
+			return $user_id;
+		}
+
+		$verified = (array) $this->auth->verified( $request );
+
+		// A new body re-parses the JSON params, which outrank the body params set alongside.
+		// The header is not sealed, and get_json_params() reads nothing without a JSON type.
+		$request->set_body( (string) wp_json_encode( (object) $verified['params'] ) );
+		$request->set_header( 'Content-Type', 'application/json' );
+		$request->set_body_params( (array) $verified['params'] );
+		$request->set_query_params( [] );
+
+		return $result;
+	}
+
+	/**
+	 * Seal a successful answer to a verified wizard request.
+	 *
+	 * @since 2.0.5.1
+	 *
+	 * @param WP_HTTP_Response $response Result to send to the client.
+	 * @param WP_REST_Server   $server   Server instance.
+	 * @param WP_REST_Request  $request  Request used to generate the response.
+	 *
+	 * @return WP_HTTP_Response
+	 * @noinspection PhpUnusedParameterInspection
+	 */
+	public function filter_rest_post_dispatch( $response, $server, $request ) {
+
+		if ( ! $response instanceof WP_HTTP_Response || ! $request instanceof WP_REST_Request ) {
+			return $response;
+		}
+
+		$verified = $this->auth->verified( $request );
+		$status   = $response->get_status();
+
+		if ( $verified === null || $status < 200 || $status >= 300 || $status === 204 ) {
+			return $response;
+		}
+
+		$nonce     = Cipher::nonce();
+		$plaintext = wp_json_encode( $response->get_data() );
+		$sealed    = $plaintext === false ? '' : Cipher::seal(
+			(string) $verified['wire_key'],
+			$plaintext,
+			Cipher::response_aad( (string) $verified['endpoint'], (string) $verified['nonce'], $nonce ),
+			$nonce
+		);
+
+		// An unopenable success would leave the wizard guessing; a plain error names the failure.
+		if ( $sealed === '' ) {
+			$response->set_status( 500 );
+			$response->set_data(
+				[
+					'code'    => 'seal_failed',
+					'message' => '',
+					'data'    => [ 'status' => 500 ],
+				]
+			);
+
+			return $response;
+		}
+
+		$response->set_data(
+			[
+				'n' => $nonce,
+				'c' => $sealed,
+			]
+		);
+
+		return $response;
+	}
+
+	/**
+	 * Whether a route belongs to the wizard; WordPress matches routes case-insensitively.
+	 *
+	 * @since 2.0.5.1
+	 *
+	 * @param string $route Requested route.
+	 *
+	 * @return bool
+	 */
+	private static function is_wizard_route( string $route ): bool {
+
+		$prefix = '/' . self::ROUTE_NAMESPACE . self::ROUTE_BASE . '/';
+
+		return strncasecmp( $route, $prefix, strlen( $prefix ) ) === 0;
+	}
+
+	/**
+	 * Get the query keys a wizard request may carry: those this site's own REST base carries.
+	 *
+	 * Parsed with parse_str(), the way PHP fills `$_GET`, so mangled keys still match.
+	 *
+	 * @since 2.0.5.1
+	 *
+	 * @return array
+	 */
+	private static function allowed_query_keys(): array {
+
+		parse_str( (string) wp_parse_url( rest_url( self::ROUTE_NAMESPACE . self::ROUTE_BASE ), PHP_URL_QUERY ), $query );
+
+		return array_unique( array_merge( [ 'rest_route' ], array_keys( $query ) ) );
 	}
 
 	/**
@@ -282,8 +447,8 @@ class RestApi {
 	/**
 	 * Permission callback for every wizard route.
 	 *
-	 * Verifies the session token via Auth, hydrates the bound user with
-	 * `wp_set_current_user()`, and refreshes the token TTL on success.
+	 * Reads the user `filter_rest_pre_dispatch()` verified for this request and hydrates
+	 * it with `wp_set_current_user()`.
 	 *
 	 * @since 2.0.0
 	 *
@@ -293,14 +458,11 @@ class RestApi {
 	 */
 	public function validate_request( WP_REST_Request $request ) {
 
-		$user_id = $this->auth->validate_request( $request );
+		$verified = $this->auth->verified( $request );
+		$user_id  = (int) ( $verified['user_id'] ?? 0 );
 
 		if ( $user_id <= 0 ) {
-			return new WP_Error(
-				'rest_forbidden',
-				esc_html__( 'Invalid Setup Wizard session.', 'wpforms-lite' ),
-				[ 'status' => 401 ]
-			);
+			return $this->auth->get_refusal();
 		}
 
 		wp_set_current_user( $user_id );
@@ -317,7 +479,54 @@ class RestApi {
 	}
 
 	/**
-	 * `GET /hydrate` Initial fetch of the wizard state.
+	 * `POST /health` Answer whether the hosted wizard's key reaches this site.
+	 *
+	 * It answers the authentication question and nothing else, so a site too slow to
+	 * assemble the hydrate payload can still hand off.
+	 *
+	 * @since 2.0.5.1
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function health(): WP_REST_Response {
+
+		return new WP_REST_Response(
+			[
+				'ok'      => true,
+				// Lets the hosted wizard log this site's clock offset.
+				'time'    => time(),
+				'version' => WPFORMS_VERSION,
+			],
+			200
+		);
+	}
+
+	/**
+	 * `POST /revoke` Retire the key, on exit or on a switch to another site.
+	 *
+	 * The request is sealed like any other; the answer is a 204 with no body, which
+	 * the post-dispatch filter leaves unsealed.
+	 *
+	 * @since 2.0.5.1
+	 *
+	 * @param WP_REST_Request $request REST request.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function revoke( WP_REST_Request $request ): WP_REST_Response {
+
+		$verified = $this->auth->verified( $request );
+
+		// Only the key this request was sealed with: a newer launch may have minted another since.
+		if ( $verified !== null ) {
+			$this->auth->revoke_key( (string) $verified['wire_key'] );
+		}
+
+		return new WP_REST_Response( null, 204 );
+	}
+
+	/**
+	 * `POST /hydrate` Initial fetch of the wizard state.
 	 *
 	 * @since 2.0.0
 	 *
@@ -394,7 +603,7 @@ class RestApi {
 		$outcome = (string) $request->get_param( 'outcome' );
 
 		$this->service->complete( $outcome );
-		$this->auth->revoke();
+		$this->auth->revoke_key( (string) ( $this->auth->verified( $request )['wire_key'] ?? '' ) );
 
 		$state = $this->service->get_state();
 
@@ -437,7 +646,7 @@ class RestApi {
 	}
 
 	/**
-	 * `GET /license/key` Fetch the configured license key only.
+	 * `POST /license/key` Fetch the configured license key only.
 	 *
 	 * @since 2.0.0
 	 *

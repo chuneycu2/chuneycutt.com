@@ -213,6 +213,41 @@ class Loader {
 		];
 
 		$this->classes[] = [
+			'name' => 'Frontend\EmbedContext',
+			'id'   => 'embed_context',
+		];
+
+		$this->classes[] = [
+			'name' => 'Frontend\ThemesEditor',
+			'id'   => 'themes_editor',
+		];
+
+		$this->classes[] = [
+			'name' => 'Frontend\ThemesEditor\Overrides',
+			'id'   => 'themes_editor_overrides',
+		];
+
+		$this->classes[] = [
+			'name' => 'Frontend\ThemesEditor\Resolver',
+			'id'   => 'themes_editor_resolver',
+		];
+
+		$this->classes[] = [
+			'name' => 'Frontend\ThemesEditor\EmbedFinder',
+			'id'   => 'themes_editor_embed_finder',
+		];
+
+		$this->classes[] = [
+			'name' => 'Frontend\Themes\Schema',
+			'id'   => 'themes_schema',
+		];
+
+		$this->classes[] = [
+			'name' => 'Frontend\Themes\SettingsSanitizer',
+			'id'   => 'themes_settings_sanitizer',
+		];
+
+		$this->classes[] = [
 			'name' => 'Frontend\Classic',
 			'id'   => 'frontend_classic',
 		];
@@ -1230,6 +1265,13 @@ class Loader {
 			'condition' => wpforms()->is_pro() && ProAnalytics::is_allowed(),
 		];
 
+		// Runs on both tiers and on every licence: Lite collects form-level rows too, and a
+		// Pro install below the Analytics licence still aggregates field-level ones.
+		$this->classes[] = [
+			'name' => 'Analytics\Reset',
+			'id'   => 'analytics_reset',
+		];
+
 		$this->classes[] = [
 			'name' => 'Analytics\Aggregation',
 			'id'   => 'analytics_aggregation',
@@ -1264,6 +1306,12 @@ class Loader {
 			'id'        => 'analytics_ajax',
 			'hook'      => 'admin_init',
 			'condition' => wpforms()->is_pro() && ProAnalytics::is_allowed() && wpforms_is_admin_ajax(),
+		];
+
+		$this->classes[] = [
+			'name'      => 'Admin\Settings\AnalyticsReset',
+			'id'        => 'settings_analytics_reset',
+			'condition' => is_admin() && wpforms()->is_pro() && ProAnalytics::is_allowed(),
 		];
 	}
 }

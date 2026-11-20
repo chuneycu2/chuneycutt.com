@@ -2,6 +2,7 @@
 
 namespace WPForms\SetupWizard;
 
+use WP_Error;
 use WPForms\SetupChecklist\Page;
 use WPForms\SetupWizard\Service\StateManager;
 
@@ -9,8 +10,8 @@ use WPForms\SetupWizard\Service\StateManager;
  * Setup Wizard launch screen.
  *
  * The seam `SetupWizard::maybe_launch()` delegates the launch tail to. The
- * base implementation keeps the historical behavior: preflight the SPA and
- * either redirect to the Welcome fallback or render the auto-POST bridge.
+ * base implementation starts a hosted wizard session and either redirects to
+ * the Welcome fallback or renders the auto-POST bridge.
  * The Lite override renders the local Welcome screen instead (the wizard's
  * first screen must live on the WP site, see #18533).
  *
@@ -74,20 +75,46 @@ class Screen {
 	 */
 	public function launch(): bool {
 
-		// Preflight: a top-level POST abandons the bridge page, so the only way
-		// to recover from an unreachable or erroring SPA is to check it here,
-		// before the handoff, and send the user to the Welcome fallback instead.
-		if ( ! $this->bridge->is_spa_reachable() ) {
+		// A top-level POST abandons the bridge page, so a wizard that cannot start a
+		// session has to be caught here and the user sent to the Welcome fallback.
+		$ticket = $this->bridge->request_session( $this->get_exit_url(), $this->get_restart_url() );
+
+		if ( is_wp_error( $ticket ) ) {
+			$this->log_session_failure( $ticket );
+
 			wp_safe_redirect( $this->get_fallback_url() );
 
 			return false;
 		}
 
-		$this->bridge->render(
-			$this->bridge->build_payload( $this->get_exit_url(), $this->get_restart_url() )
-		);
+		$this->bridge->render( $ticket );
 
 		return true;
+	}
+
+	/**
+	 * Log why the hosted wizard session could not be started.
+	 *
+	 * @since 2.0.5.1
+	 *
+	 * @param WP_Error $error Error returned by the session request.
+	 */
+	protected function log_session_failure( WP_Error $error ): void {
+
+		// A site owner forcing the local wizard through the filter is a choice, not a failure.
+		if ( $error->get_error_code() === 'wpforms_setup_wizard_forced_unreachable' ) {
+			return;
+		}
+
+		wpforms_log(
+			'Setup Wizard: session start failed',
+			[
+				'code'    => $error->get_error_code(),
+				'message' => $error->get_error_message(),
+				'data'    => $error->get_error_data(),
+			],
+			[ 'type' => [ 'error' ] ]
+		);
 	}
 
 	/**

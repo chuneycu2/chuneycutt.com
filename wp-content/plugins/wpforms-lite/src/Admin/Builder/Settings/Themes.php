@@ -2,9 +2,7 @@
 
 namespace WPForms\Admin\Builder\Settings;
 
-use WPForms\Frontend\CSSVars;
-use WPForms\Integrations\Gutenberg\RestApi;
-use WPForms\Integrations\Gutenberg\ThemesData;
+use WPForms\Frontend\ThemesEditor;
 use WPForms_Builder_Panel_Settings;
 
 /**
@@ -15,101 +13,11 @@ use WPForms_Builder_Panel_Settings;
 class Themes {
 
 	/**
-	 * Form data.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @var array
-	 */
-	public $form_data;
-
-	/**
-	 * CSS vars class instance.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @var CSSVars
-	 */
-	protected $css_vars_obj;
-
-	/**
-	 * Rest API class instance.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @var ThemesData
-	 */
-	protected $themes_data_obj;
-
-	/**
-	 * Size options for themes settings.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @var array
-	 */
-	protected $size_options;
-
-	/**
-	 * Border type options for themes settings.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @var array
-	 */
-	private $border_options;
-
-	/**
-	 * Is admin.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @var bool
-	 */
-	private $is_admin;
-
-	/**
-	 * Whether a modern engine is enabled.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @var bool
-	 */
-	private $is_modern;
-
-	/**
-	 * Whether full style is used.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @var bool
-	 */
-	private $is_full_styles;
-
-	/**
 	 * Init class.
 	 *
 	 * @since 1.8.8
 	 */
 	public function init(): void {
-
-		$this->css_vars_obj   = wpforms()->obj( 'css_vars' );
-		$this->is_admin       = current_user_can( 'manage_options' );
-		$this->is_modern      = wpforms_get_render_engine() === 'modern';
-		$this->is_full_styles = (int) wpforms_setting( 'disable-css', '1' ) === 1;
-
-		$this->size_options = [
-			'small'  => esc_html__( 'Small', 'wpforms-lite' ),
-			'medium' => esc_html__( 'Medium', 'wpforms-lite' ),
-			'large'  => esc_html__( 'Large', 'wpforms-lite' ),
-		];
-
-		$this->border_options = [
-			'none'   => esc_html__( 'None', 'wpforms-lite' ),
-			'solid'  => esc_html__( 'Solid', 'wpforms-lite' ),
-			'dashed' => esc_html__( 'Dashed', 'wpforms-lite' ),
-			'dotted' => esc_html__( 'Dotted', 'wpforms-lite' ),
-		];
 
 		$this->hooks();
 	}
@@ -119,1138 +27,457 @@ class Themes {
 	 *
 	 * @since 1.8.8
 	 */
-	protected function hooks(): void {
+	private function hooks(): void {
 
-		// If the current user can't add posts, he can't save themes either. Enqueue no-access assets.
-		if ( ! current_user_can( 'edit_posts' ) ) {
-			add_action( 'admin_enqueue_scripts', [ $this, 'enqueues_no_access' ] );
-			add_filter( 'wpforms_builder_panel_sidebar_section_classes', [ $this, 'add_pro_class' ], 10, 3 );
+		add_action( 'wpforms_form_settings_panel_content', [ $this, 'launcher_panel_content' ] );
 
-			return;
-		}
-
-		add_action( 'wpforms_form_settings_panel_content', [ $this, 'panel_content' ] );
-		add_action( 'wpforms_builder_panel_sidebar_after', [ $this, 'sidebar_content' ], 10, 2 );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueues' ] );
+		// After the builder registers its scripts (PHP_INT_MAX), so the
+		// inline script attaches to the wpforms-builder handle.
+		add_action( 'admin_enqueue_scripts', [ $this, 'launcher_enqueues' ], PHP_INT_MAX );
 	}
 
 	/**
-	 * Enqueue assets for the builder themes.
+	 * Whether the front-end themes editor is available for this site.
 	 *
-	 * @since 1.9.7
+	 * @since 2.0.5
+	 *
+	 * @return bool
 	 */
-	public function enqueues(): void {
+	private function is_editor_supported(): bool {
 
-		$min = wpforms_get_min_suffix();
+		$editor = $this->get_editor();
 
-		wp_enqueue_script(
-			'wpforms-builder-themes',
-			WPFORMS_PLUGIN_URL . "assets/js/admin/builder/themes/builder-themes{$min}.js",
-			[ 'wpforms-builder', 'wp-api-fetch' ],
-			WPFORMS_VERSION,
-			true
-		);
-
-		wp_enqueue_style(
-			'wpforms-full',
-			WPFORMS_PLUGIN_URL . "assets/css/frontend/modern/wpforms-full{$min}.css",
-			[],
-			WPFORMS_VERSION
-		);
-
-		wp_localize_script(
-			'wpforms-builder-themes',
-			'wpforms_builder_themes',
-			$this->get_localize_data()
-		);
-
-		wp_add_inline_style( 'wpforms-full', $this->css_vars_obj->get_root_vars_css() );
+		return $editor !== null && $editor->is_supported();
 	}
 
 	/**
-	 * Enqueue assets for the builder themes for the users who don't have access to the theme settings.
+	 * Get the front-end themes editor instance.
 	 *
-	 * @since 1.9.8
+	 * @since 2.0.5
+	 *
+	 * @return ThemesEditor|null
 	 */
-	public function enqueues_no_access(): void {
+	private function get_editor(): ?ThemesEditor {
 
-		$min = wpforms_get_min_suffix();
+		$editor = wpforms()->obj( 'themes_editor' );
 
-		wp_enqueue_script(
-			'wpforms-builder-themes-no-access',
-			WPFORMS_PLUGIN_URL . "assets/js/admin/builder/themes/builder-themes-no-access{$min}.js",
-			[ 'wpforms-builder', 'wp-api-fetch' ],
-			WPFORMS_VERSION,
-			true
-		);
-
-		wp_localize_script(
-			'wpforms-builder-themes-no-access',
-			'wpforms_builder_themes_no_access',
-			$this->get_localize_data()
-		);
+		return $editor instanceof ThemesEditor ? $editor : null;
 	}
 
 	/**
-	 * Add a class to the themes section if the user doesn't have access to it.
+	 * Render the Themes panel as a front-end editor launcher.
 	 *
-	 * @since 1.9.8
-	 *
-	 * @param array  $classes Sidebar section classes.
-	 * @param string $name    Sidebar section name.
-	 * @param string $slug    Sidebar section slug.
-	 *
-	 * @return array
-	 * @noinspection PhpUnusedParameterInspection
-	 */
-	public function add_pro_class( array $classes, string $name, string $slug ): array {
-
-		if ( $slug !== 'themes' ) {
-			return $classes;
-		}
-
-		return array_merge( $classes, [ 'wpforms-panel-sidebar-section-no-access' ] );
-	}
-
-	/**
-	 * Get localize data.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @return array
-	 */
-	protected function get_localize_data(): array {
-
-		return [
-			'modules'         => $this->get_modules(),
-			'sizes'           => [
-				'field-size'            => CSSVars::FIELD_SIZE,
-				'label-size'            => CSSVars::LABEL_SIZE,
-				'button-size'           => CSSVars::BUTTON_SIZE,
-				'container-shadow-size' => CSSVars::CONTAINER_SHADOW_SIZE,
-			],
-			'strings'         => [
-				'heads_up'                 => esc_html__( 'Heads Up!', 'wpforms-lite' ),
-				'themes_error'             => esc_html__( 'Error loading themes. Please try again later.', 'wpforms-lite' ),
-				'button_background'        => esc_html__( 'Button Background', 'wpforms-lite' ),
-				'button_text'              => esc_html__( 'Button Text', 'wpforms-lite' ),
-				'copy_paste_error'         => esc_html__( 'There was an error parsing your JSON code. Please check your code and try again.', 'wpforms-lite' ),
-				'field_label'              => esc_html__( 'Field Label', 'wpforms-lite' ),
-				'field_sublabel'           => esc_html__( 'Field Sublabel', 'wpforms-lite' ),
-				'field_border'             => esc_html__( 'Field Border', 'wpforms-lite' ),
-				'theme_delete_title'       => esc_html__( 'Delete Form Theme', 'wpforms-lite' ),
-				// Translators: %1$s: Theme name.
-				'theme_delete_confirm'     => esc_html__( 'Are you sure you want to delete the %1$s theme?', 'wpforms-lite' ),
-				'theme_delete_cant_undone' => esc_html__( 'This cannot be undone.', 'wpforms-lite' ),
-				'theme_delete_yes'         => esc_html__( 'Yes, Delete', 'wpforms-lite' ),
-				'theme_copy'               => esc_html__( 'Copy', 'wpforms-lite' ),
-				'theme_custom'             => esc_html__( 'Custom Theme', 'wpforms-lite' ),
-				'theme_noname'             => esc_html__( 'Noname Theme', 'wpforms-lite' ),
-				'pro_sections'             => [
-					'background' => esc_html__( 'Background Styles', 'wpforms-lite' ),
-					'container'  => esc_html__( 'Container Styles', 'wpforms-lite' ),
-					'themes'     => esc_html__( 'Themes', 'wpforms-lite' ),
-				],
-				'permission_modal'         => [
-					'title'   => esc_html__( 'Insufficient Permissions', 'wpforms-lite' ),
-					'content' => esc_html__( "Sorry, your user role doesn't have permission to access this feature.", 'wpforms-lite' ),
-					'confirm' => esc_html__( 'OK', 'wpforms-lite' ),
-				],
-			],
-			'isAdmin'         => $this->is_admin,
-			'isPro'           => wpforms()->is_pro(),
-			'isModern'        => $this->is_modern,
-			'isFullStyles'    => $this->is_full_styles,
-			'route_namespace' => RestApi::ROUTE_NAMESPACE,
-		];
-	}
-
-	/**
-	 * Get Form Builder themes modules.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @return array Modules list.
-	 */
-	public function get_modules(): array {
-
-		$min = wpforms_get_min_suffix();
-
-		return [
-			[
-				'name' => 'common',
-				'path' => "./modules/common{$min}.js",
-			],
-			[
-				'name' => 'themes',
-				'path' => "./modules/themes{$min}.js",
-			],
-			[
-				'name' => 'stockPhotos',
-				'path' => "./modules/stock-photos{$min}.js",
-			],
-			[
-				'name' => 'background',
-				'path' => "./modules/background{$min}.js",
-			],
-			[
-				'name' => 'advancedSettings',
-				'path' => "./modules/advanced-settings{$min}.js",
-			],
-		];
-	}
-
-	/**
-	 * Add a content for `Themes` panel.
-	 *
-	 * @since 1.8.8
+	 * @since 2.0.5
 	 *
 	 * @param WPForms_Builder_Panel_Settings $instance Settings panel instance.
 	 *
 	 * @noinspection HtmlUnknownTarget
 	 */
-	public function panel_content( WPForms_Builder_Panel_Settings $instance ): void {
+	public function launcher_panel_content( WPForms_Builder_Panel_Settings $instance ): void {
 
-		$this->form_data = $instance->form_data;
-		$url             = wpforms_utm_link( 'https://wpforms.com/docs/styling-your-forms/', 'Builder Themes', 'Description Link' );
+		$form_data    = (array) $instance->form_data;
+		$editor       = $this->get_editor();
+		$support      = $editor !== null ? $editor->get_support() : null;
+		$notice       = $this->get_addon_notice( $editor, $form_data );
+		$is_lead_form = $notice === 'lead_forms';
+		$is_cf_form   = $notice === 'conversational_forms';
+		$is_fp_form   = $notice === 'form_pages';
 
 		?>
 		<div class="wpforms-panel-content-section wpforms-panel-content-section-themes">
-			<div class="wpforms-panel-content-section-themes-inner">
-				<div class="wpforms-panel-content-section-themes-top">
-					<div class="wpforms-panel-content-section-title">
-						<?php esc_html_e( 'Form Themes', 'wpforms-lite' ); ?>
-					</div>
+			<div class="wpforms-panel-content-section-title">
+				<?php esc_html_e( 'Form Themes', 'wpforms-lite' ); ?>
+			</div>
 
-					<div class="wpforms-panel-content-section-themes-preview">
-						<p class="wpforms-panel-content-section-themes-preview-description">
-							<?php
-								echo wp_kses_post(
-									sprintf(
-										/* translators: %s - URL to the documentation. */
-										__( 'Customize the look and feel of your form with premade themes or simple style settings that allow you to use your own colors to match your brand. Themes and style settings are also available in the Block Editor and Elementor, where you can see a realtime preview. <a href="%s" target="_blank">Learn more about styling your forms</a>.', 'wpforms-lite' ),
-										$url
-									)
-								);
-							?>
-						</p>
+			<?php // All blocks render: the Themes click shows one by the current Lead Form Mode and Conversational Forms toggles. ?>
+			<div class="wpforms-builder-themes-lf-content"<?php echo $is_lead_form ? '' : ' hidden'; ?>>
+				<?php $this->render_lead_forms_notice(); ?>
+			</div>
 
-						<div class="wpforms-alert wpforms-alert-warning wpforms-alert-warning-wide wpforms-builder-themes-preview-notice">
-							<h4>
-								<?php esc_html_e( 'Preview only', 'wpforms-lite' ); ?>
-							</h4>
-							<p>
-								<?php esc_html_e( 'The fields shown below are for demo purposes and do not reflect the fields in your actual form.', 'wpforms-lite' ); ?>
-							</p>
-						</div>
+			<?php if ( $support !== null && $support->is_conversational_forms_active() ) : ?>
+				<div class="wpforms-builder-themes-cf-content"<?php echo $is_cf_form ? '' : ' hidden'; ?>>
+					<?php $this->render_conversational_forms_notice(); ?>
+				</div>
+			<?php endif; ?>
 
-						<?php
-						echo wpforms_render( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-							'builder/themes/notices',
-							[
-								'is_modern'      => $this->is_modern,
-								'is_full_styles' => $this->is_full_styles,
-							],
-							true
-						);
+			<?php if ( $support !== null && $support->is_form_pages_active() ) : ?>
+				<div class="wpforms-builder-themes-fp-content"<?php echo $is_fp_form ? '' : ' hidden'; ?>>
+					<?php $this->render_form_pages_notice(); ?>
+				</div>
+			<?php endif; ?>
 
-							// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-							echo wpforms_render( 'builder/themes/preview' );
-						?>
-					</div>
-
-				</div> <!-- .wpforms-panel-content-section-themes-top -->
-			</div> <!-- .wpforms-panel-content-section-themes-inner -->
-		</div> <!-- .wpforms-panel-content-section-themes -->
+			<div class="wpforms-builder-themes-launcher-content"<?php echo $notice !== '' ? ' hidden' : ''; ?>>
+				<?php $this->render_launcher( $editor, absint( $form_data['id'] ?? 0 ) ); ?>
+			</div>
+		</div>
 		<?php
 	}
 
 	/**
-	 * Add content for the Themes Sidebar.
+	 * Render the launcher button, or the notice explaining why the editor cannot run.
 	 *
-	 * @param object $form Current form object.
-	 * @param string $slug Current panel slug.
+	 * @since 2.0.5
 	 *
-	 * @since 1.9.7
+	 * @param ThemesEditor|null $editor  Front-end editor, null when it is not registered.
+	 * @param int               $form_id Form ID.
 	 */
-	public function sidebar_content( $form, $slug ): void {
+	private function render_launcher( ?ThemesEditor $editor, int $form_id ): void {
 
-		if ( $slug !== 'settings' ) {
+		if ( ! $this->is_editor_supported() || $editor === null ) {
+			$this->render_unsupported_notice();
+
 			return;
 		}
 
-		$form_obj = wpforms()->obj( 'form' );
+		?>
+		<p>
+			<?php esc_html_e( 'Themes are edited live on your site with the front-end theme editor.', 'wpforms-lite' ); ?>
+		</p>
 
-		if ( ! $form_obj || ! isset( $form->ID ) ) {
-			return;
+		<a href="<?php echo esc_url( $editor->get_editor_url( $form_id ) ); ?>" target="_blank" rel="noopener" class="wpforms-btn wpforms-btn-md wpforms-btn-orange">
+			<?php esc_html_e( 'Edit Your Theme', 'wpforms-lite' ); ?>
+		</a>
+		<?php
+	}
+
+	/**
+	 * Which addon notice the panel opens on: the addon that owns the form's styling and does not bridge the editor yet.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param ThemesEditor|null $editor    Front-end editor, null when it is not registered.
+	 * @param array             $form_data Form data.
+	 *
+	 * @return string `lead_forms`, `conversational_forms`, `form_pages`, or empty for the launcher.
+	 */
+	private function get_addon_notice( ?ThemesEditor $editor, array $form_data ): string {
+
+		if ( $editor === null ) {
+			return '';
 		}
 
-		$form_data = $form_obj->get( $form->ID, [ 'content_only' => true ] );
+		$support = $editor->get_support();
 
-		$this->form_data = $form_data;
-
-		$this->show_sidebar_html();
-	}
-
-	/**
-	 * Show sidebar HTML.
-	 *
-	 * @since 1.9.7
-	 */
-	private function show_sidebar_html(): void {
-		?>
-		<div id="wpforms-builder-themes-sidebar" class="wpforms-hidden">
-			<div class="wpforms-builder-themes-sidebar-head">
-				<button id="wpforms-builder-themes-back"> <?php esc_html_e( 'Back to Settings', 'wpforms-lite' ); ?></button>
-			</div>
-			<div id="wpforms-builder-themes-sidebar-tabs">
-				<a href="#" class="active"><?php esc_html_e( 'General', 'wpforms-lite' ); ?></a>
-				<?php if ( $this->is_admin ) : ?>
-					<a href="#"><?php esc_html_e( 'Advanced', 'wpforms-lite' ); ?></a>
-				<?php endif; ?>
-			</div>
-			<div class="wpforms-builder-themes-sidebar-content">
-
-				<div class="wpforms-builder-themes-sidebar-general wpforms-builder-themes-sidebar-tab-content">
-					<?php $this->show_sidebar_themes(); ?>
-					<div class="wpforms-builder-themes-restricted <?php echo esc_attr( ! $this->is_admin ? 'wpforms-hidden' : '' ); ?>">
-						<?php $this->show_sidebar_field_styles(); ?>
-						<?php $this->show_sidebar_label_styles(); ?>
-						<?php $this->show_sidebar_button_styles(); ?>
-						<?php $this->show_sidebar_container_styles(); ?>
-						<?php $this->show_sidebar_background_styles(); ?>
-						<?php $this->show_sidebar_other_styles(); ?>
-					</div>
-				</div>
-				<div class="wpforms-builder-themes-sidebar-advanced wpforms-builder-themes-sidebar-tab-content wpforms-hidden">
-					<?php $this->show_sidebar_advanced(); ?>
-				</div>
-
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Show sidebar themes.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @return void
-	 */
-	private function show_sidebar_themes(): void {
-
-		?>
-		<div class="wpforms-add-fields-group">
-			<a href="#" class="wpforms-add-fields-heading" data-group="themes">
-				<span><?php esc_html_e( 'Themes', 'wpforms-lite' ); ?></span>
-				<i class="fa fa-angle-down"></i>
-			</a>
-			<div class="wpforms-add-fields-buttons">
-				<?php
-
-				wpforms_panel_field(
-					'text',
-					'themes',
-					'wpformsTheme',
-					$this->form_data,
-					esc_html__( 'Theme', 'wpforms-lite' ),
-					[
-						'parent' => 'settings',
-						'type'   => 'hidden',
-						'value'  => $this->form_data['settings']['themes']['wpformsTheme'] ?? 'default',
-						'class'  => 'wpforms-hidden',
-					]
-				);
-
-				wpforms_panel_field(
-					'text',
-					'themes',
-					'isCustomTheme',
-					$this->form_data,
-					false,
-					[
-						'parent' => 'settings',
-						'type'   => 'hidden',
-						'value'  => $this->form_data['settings']['themes']['isCustomTheme'] ?? '',
-						'class'  => 'wpforms-hidden',
-					]
-				);
-
-				?>
-
-				<div class="wpforms-builder-themes-control"></div>
-
-				<?php
-
-				wpforms_panel_field(
-					'text',
-					'themes',
-					'themeName',
-					$this->form_data,
-					esc_html__( 'Theme Name', 'wpforms-lite' ),
-					[
-						'parent' => 'settings',
-						'type'   => 'text',
-						'value'  => $this->form_data['settings']['themes']['themeName'] ?? '',
-						'class'  => 'wpforms-hidden',
-					]
-				);
-
-				?>
-
-				<button id="wpforms-builder-themer-remove-theme" class="wpforms-hidden"><?php esc_html_e( 'Delete Theme', 'wpforms-lite' ); ?></button>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Show sidebar field styles.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @return void
-	 */
-	private function show_sidebar_field_styles(): void {
-
-		?>
-		<div class="wpforms-add-fields-group">
-			<a href="#" class="wpforms-add-fields-heading" data-group="field_styles">
-				<span><?php esc_html_e( 'Field Styles', 'wpforms-lite' ); ?></span>
-				<i class="fa fa-angle-down"></i>
-			</a>
-			<div class="wpforms-add-fields-buttons">
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-
-					wpforms_panel_field(
-						'select',
-						'themes',
-						'fieldSize',
-						$this->form_data,
-						esc_html__( 'Size', 'wpforms-lite' ),
-						[
-							'parent'  => 'settings',
-							'options' => $this->size_options,
-							'value'   => $this->form_data['settings']['themes']['fieldSize'] ?? 'medium',
-						]
-					);
-
-					wpforms_panel_field(
-						'select',
-						'themes',
-						'fieldBorderStyle',
-						$this->form_data,
-						esc_html__( 'Border', 'wpforms-lite' ),
-						[
-							'parent'  => 'settings',
-							'options' => $this->border_options,
-							'value'   => $this->form_data['settings']['themes']['fieldBorderStyle'] ?? 'solid',
-						]
-					);
-					?>
-				</div>
-
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-
-					wpforms_panel_field(
-						'text',
-						'themes',
-						'fieldBorderSize',
-						$this->form_data,
-						esc_html__( 'Border Size', 'wpforms-lite' ),
-						[
-							'parent'      => 'settings',
-							'type'        => 'number',
-							'min'         => 0,
-							'value'       => $this->form_data['settings']['themes']['fieldBorderSize'] ?? '1',
-							'input_class' => 'wpforms-builder-themes-number-input',
-							'class'       => 'wpforms-builder-themes-number-input-wrapper',
-						]
-					);
-
-					wpforms_panel_field(
-						'text',
-						'themes',
-						'fieldBorderRadius',
-						$this->form_data,
-						esc_html__( 'Border Radius', 'wpforms-lite' ),
-						[
-							'parent'      => 'settings',
-							'type'        => 'number',
-							'min'         => 0,
-							'value'       => $this->form_data['settings']['themes']['fieldBorderRadius'] ?? '3',
-							'input_class' => 'wpforms-builder-themes-number-input',
-							'class'       => 'wpforms-builder-themes-number-input-wrapper',
-						]
-					);
-
-					?>
-				</div>
-
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-
-					wpforms_panel_field(
-						'color',
-						'themes',
-						'fieldBackgroundColor',
-						$this->form_data,
-						esc_html__( 'Background', 'wpforms-lite' ),
-						[
-							'parent' => 'settings',
-							'value'  => $this->form_data['settings']['themes']['fieldBackgroundColor'] ?? CSSVars::ROOT_VARS['field-background-color'],
-						]
-					);
-
-					wpforms_panel_field(
-						'color',
-						'themes',
-						'fieldBorderColor',
-						$this->form_data,
-						esc_html__( 'Border', 'wpforms-lite' ),
-						[
-							'parent' => 'settings',
-							'value'  => $this->form_data['settings']['themes']['fieldBorderColor'] ?? CSSVars::ROOT_VARS['field-border-color'],
-						]
-					);
-
-					wpforms_panel_field(
-						'color',
-						'themes',
-						'fieldTextColor',
-						$this->form_data,
-						esc_html__( 'Text', 'wpforms-lite' ),
-						[
-							'parent' => 'settings',
-							'value'  => $this->form_data['settings']['themes']['fieldTextColor'] ?? CSSVars::ROOT_VARS['field-text-color'],
-						]
-					);
-
-					?>
-				</div>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Show sidebar label styles.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @return void
-	 */
-	private function show_sidebar_label_styles(): void {
-
-		?>
-		<div class="wpforms-add-fields-group">
-			<a href="#" class="wpforms-add-fields-heading" data-group="label_styles">
-				<span><?php esc_html_e( 'Label Styles', 'wpforms-lite' ); ?></span>
-				<i class="fa fa-angle-down"></i>
-			</a>
-			<div class="wpforms-add-fields-buttons">
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-
-					wpforms_panel_field(
-						'select',
-						'themes',
-						'labelSize',
-						$this->form_data,
-						esc_html__( 'Size', 'wpforms-lite' ),
-						[
-							'parent'  => 'settings',
-							'options' => $this->size_options,
-							'value'   => $this->form_data['settings']['themes']['labelSize'] ?? 'medium',
-						]
-					);
-
-					?>
-				</div>
-
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-
-					wpforms_panel_field(
-						'color',
-						'themes',
-						'labelColor',
-						$this->form_data,
-						esc_html__( 'Label', 'wpforms-lite' ),
-						[
-							'parent' => 'settings',
-							'value'  => $this->form_data['settings']['themes']['labelColor'] ?? CSSVars::ROOT_VARS['label-color'],
-						]
-					);
-
-					wpforms_panel_field(
-						'color',
-						'themes',
-						'labelSublabelColor',
-						$this->form_data,
-						esc_html__( 'Sublabel', 'wpforms-lite' ),
-						[
-							'parent' => 'settings',
-							'value'  => $this->form_data['settings']['themes']['labelSublabelColor'] ?? CSSVars::ROOT_VARS['label-sublabel-color'],
-						]
-					);
-
-					wpforms_panel_field(
-						'color',
-						'themes',
-						'labelErrorColor',
-						$this->form_data,
-						esc_html__( 'Error', 'wpforms-lite' ),
-						[
-							'parent' => 'settings',
-							'value'  => $this->form_data['settings']['themes']['labelErrorColor'] ?? CSSVars::ROOT_VARS['label-error-color'],
-						]
-					);
-
-					?>
-				</div>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Show sidebar button styles.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @return void
-	 */
-	private function show_sidebar_button_styles(): void {
-
-		?>
-		<div class="wpforms-add-fields-group">
-			<a href="#" class="wpforms-add-fields-heading" data-group="button_styles">
-				<span><?php esc_html_e( 'Button Styles', 'wpforms-lite' ); ?></span>
-				<i class="fa fa-angle-down"></i>
-			</a>
-			<div class="wpforms-add-fields-buttons">
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-
-					wpforms_panel_field(
-						'select',
-						'themes',
-						'buttonSize',
-						$this->form_data,
-						esc_html__( 'Size', 'wpforms-lite' ),
-						[
-							'parent'  => 'settings',
-							'options' => $this->size_options,
-							'value'   => $this->form_data['settings']['themes']['buttonSize'] ?? 'medium',
-						]
-					);
-
-					wpforms_panel_field(
-						'select',
-						'themes',
-						'buttonBorderStyle',
-						$this->form_data,
-						esc_html__( 'Border', 'wpforms-lite' ),
-						[
-							'parent'  => 'settings',
-							'options' => $this->border_options,
-							'value'   => $this->form_data['settings']['themes']['buttonBorderStyle'] ?? CSSVars::ROOT_VARS['button-border-style'],
-						]
-					);
-
-					?>
-				</div>
-
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-
-					wpforms_panel_field(
-						'text',
-						'themes',
-						'buttonBorderSize',
-						$this->form_data,
-						esc_html__( 'Border Size', 'wpforms-lite' ),
-						[
-							'parent'      => 'settings',
-							'type'        => 'number',
-							'min'         => 0,
-							'value'       => $this->form_data['settings']['themes']['buttonBorderSize'] ?? '1',
-							'input_class' => 'wpforms-builder-themes-number-input',
-							'class'       => 'wpforms-builder-themes-number-input-wrapper',
-						]
-					);
-
-					wpforms_panel_field(
-						'text',
-						'themes',
-						'buttonBorderRadius',
-						$this->form_data,
-						esc_html__( 'Border Radius', 'wpforms-lite' ),
-						[
-							'parent'      => 'settings',
-							'type'        => 'number',
-							'min'         => 0,
-							'value'       => $this->form_data['settings']['themes']['buttonBorderRadius'] ?? '3',
-							'input_class' => 'wpforms-builder-themes-number-input',
-							'class'       => 'wpforms-builder-themes-number-input-wrapper',
-						]
-					);
-
-					?>
-				</div>
-
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-
-					wpforms_panel_field(
-						'color',
-						'themes',
-						'buttonBackgroundColor',
-						$this->form_data,
-						esc_html__( 'Background', 'wpforms-lite' ),
-						[
-							'parent' => 'settings',
-							'value'  => $this->form_data['settings']['themes']['buttonBackgroundColor'] ?? CSSVars::ROOT_VARS['button-background-color'],
-						]
-					);
-
-					wpforms_panel_field(
-						'color',
-						'themes',
-						'buttonBorderColor',
-						$this->form_data,
-						esc_html__( 'Border', 'wpforms-lite' ),
-						[
-							'parent' => 'settings',
-							'value'  => $this->form_data['settings']['themes']['buttonBorderColor'] ?? CSSVars::ROOT_VARS['button-border-color'],
-						]
-					);
-
-					wpforms_panel_field(
-						'color',
-						'themes',
-						'buttonTextColor',
-						$this->form_data,
-						esc_html__( 'Text', 'wpforms-lite' ),
-						[
-							'parent' => 'settings',
-							'value'  => $this->form_data['settings']['themes']['buttonTextColor'] ?? CSSVars::ROOT_VARS['button-text-color'],
-						]
-					);
-
-					?>
-				</div>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Show sidebar container styles.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @return void
-	 */
-	private function show_sidebar_container_styles(): void {
-
-		?>
-		<div class="wpforms-add-fields-group">
-			<a href="#" class="wpforms-add-fields-heading" data-group="container_styles">
-				<span><?php esc_html_e( 'Container Styles', 'wpforms-lite' ); ?></span>
-				<i class="fa fa-angle-down"></i>
-			</a>
-			<div class="wpforms-add-fields-buttons wpforms-builder-themes-pro-section">
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-
-					wpforms_panel_field(
-						'text',
-						'themes',
-						'containerPadding',
-						$this->form_data,
-						esc_html__( 'Padding', 'wpforms-lite' ),
-						[
-							'parent'      => 'settings',
-							'type'        => 'number',
-							'min'         => 0,
-							'value'       => $this->form_data['settings']['themes']['containerPadding'] ?? '0',
-							'input_class' => 'wpforms-builder-themes-number-input',
-							'class'       => 'wpforms-builder-themes-number-input-wrapper',
-						]
-					);
-
-					wpforms_panel_field(
-						'select',
-						'themes',
-						'containerBorderStyle',
-						$this->form_data,
-						esc_html__( 'Border', 'wpforms-lite' ),
-						[
-							'parent'  => 'settings',
-							'options' => $this->border_options,
-							'value'   => $this->form_data['settings']['themes']['containerBorderStyle'] ?? CSSVars::ROOT_VARS['container-border-style'],
-						]
-					);
-
-					?>
-				</div>
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-
-					wpforms_panel_field(
-						'text',
-						'themes',
-						'containerBorderWidth',
-						$this->form_data,
-						esc_html__( 'Border Size', 'wpforms-lite' ),
-						[
-							'parent'      => 'settings',
-							'type'        => 'number',
-							'min'         => 0,
-							'value'       => $this->form_data['settings']['themes']['containerBorderWidth'] ?? '1',
-							'input_class' => 'wpforms-builder-themes-number-input',
-							'class'       => 'wpforms-builder-themes-number-input-wrapper',
-						]
-					);
-
-					wpforms_panel_field(
-						'text',
-						'themes',
-						'containerBorderRadius',
-						$this->form_data,
-						esc_html__( 'Border Radius', 'wpforms-lite' ),
-						[
-							'parent'      => 'settings',
-							'type'        => 'number',
-							'min'         => 0,
-							'value'       => $this->form_data['settings']['themes']['containerBorderRadius'] ?? '3',
-							'input_class' => 'wpforms-builder-themes-number-input',
-							'class'       => 'wpforms-builder-themes-number-input-wrapper',
-						]
-					);
-
-					?>
-				</div>
-
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-
-					wpforms_panel_field(
-						'color',
-						'themes',
-						'containerBorderColor',
-						$this->form_data,
-						esc_html__( 'Border', 'wpforms-lite' ),
-						[
-							'parent' => 'settings',
-							'value'  => $this->form_data['settings']['themes']['containerBorderColor'] ?? CSSVars::ROOT_VARS['container-border-color'],
-						]
-					);
-
-					wpforms_panel_field(
-						'select',
-						'themes',
-						'containerShadowSize',
-						$this->form_data,
-						esc_html__( 'Shadow', 'wpforms-lite' ),
-						[
-							'parent'  => 'settings',
-							'options' => [
-								'none'   => esc_html__( 'None', 'wpforms-lite' ),
-								'small'  => esc_html__( 'Small', 'wpforms-lite' ),
-								'medium' => esc_html__( 'Medium', 'wpforms-lite' ),
-								'large'  => esc_html__( 'Large', 'wpforms-lite' ),
-							],
-							'value'   => $this->form_data['settings']['themes']['containerShadowSize'] ?? CSSVars::CONTAINER_SHADOW_SIZE['none']['box-shadow'],
-						]
-					);
-
-					?>
-				</div>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Show sidebar background styles.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @return void
-	 */
-	private function show_sidebar_background_styles(): void {
-
-		?>
-		<div class="wpforms-add-fields-group">
-			<a href="#" class="wpforms-add-fields-heading" data-group="background_styles"><span><?php esc_html_e( 'Background Styles', 'wpforms-lite' ); ?></span><i class="fa fa-angle-down"></i></a>
-			<div class="wpforms-add-fields-buttons wpforms-builder-themes-pro-section">
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-					wpforms_panel_field(
-						'color',
-						'themes',
-						'backgroundColor',
-						$this->form_data,
-						esc_html__( 'Color', 'wpforms-lite' ),
-						[
-							'parent' => 'settings',
-							'value'  => $this->form_data['settings']['themes']['backgroundColor'] ?? CSSVars::ROOT_VARS['background-color'],
-						]
-					);
-					?>
-				</div>
-
-				<div class="wpforms-builder-themes-fields-row">
-					<?php
-
-					wpforms_panel_field(
-						'select',
-						'themes',
-						'backgroundImage',
-						$this->form_data,
-						esc_html__( 'Image', 'wpforms-lite' ),
-						[
-							'parent'  => 'settings',
-							'options' => [
-								'none'    => esc_html__( 'None', 'wpforms-lite' ),
-								'library' => esc_html__( 'Media Library', 'wpforms-lite' ),
-								'stock'   => esc_html__( 'Stock Photo', 'wpforms-lite' ),
-							],
-							'value'   => $this->form_data['settings']['themes']['backgroundImage'] ?? 'none',
-						]
-					);
-
-					wpforms_panel_field(
-						'select',
-						'themes',
-						'backgroundPosition',
-						$this->form_data,
-						esc_html__( 'Position', 'wpforms-lite' ),
-						[
-							'parent'  => 'settings',
-							'options' => [
-								'top left'      => esc_html__( 'Top Left', 'wpforms-lite' ),
-								'top center'    => esc_html__( 'Top Center', 'wpforms-lite' ),
-								'top right'     => esc_html__( 'Top Right', 'wpforms-lite' ),
-								'center left'   => esc_html__( 'Center Left', 'wpforms-lite' ),
-								'center center' => esc_html__( 'Center Center', 'wpforms-lite' ),
-								'center right'  => esc_html__( 'Center Right', 'wpforms-lite' ),
-								'bottom left'   => esc_html__( 'Bottom Left', 'wpforms-lite' ),
-								'bottom center' => esc_html__( 'Bottom Center', 'wpforms-lite' ),
-								'bottom right'  => esc_html__( 'Bottom Right', 'wpforms-lite' ),
-							],
-							'value'   => $this->form_data['settings']['themes']['backgroundPosition'] ?? CSSVars::ROOT_VARS['background-position'],
-						]
-					);
-					?>
-
-				</div>
-				<div class="wpforms-builder-themes-fields-row wpforms-builder-themes-conditional-hide">
-					<?php
-
-					wpforms_panel_field(
-						'select',
-						'themes',
-						'backgroundRepeat',
-						$this->form_data,
-						esc_html__( 'Repeat', 'wpforms-lite' ),
-						[
-							'parent'  => 'settings',
-							'options' => [
-								'no-repeat' => esc_html__( 'No Repeat', 'wpforms-lite' ),
-								'repeat'    => esc_html__( 'Tile', 'wpforms-lite' ),
-								'repeat-x'  => esc_html__( 'Repeat X', 'wpforms-lite' ),
-								'repeat-y'  => esc_html__( 'Repeat Y', 'wpforms-lite' ),
-							],
-							'value'   => $this->form_data['settings']['themes']['backgroundRepeat'] ?? CSSVars::ROOT_VARS['background-repeat'],
-						]
-					);
-
-					wpforms_panel_field(
-						'select',
-						'themes',
-						'backgroundSizeMode',
-						$this->form_data,
-						esc_html__( 'Size', 'wpforms-lite' ),
-						[
-							'parent'  => 'settings',
-							'options' => [
-								'dimensions' => esc_html__( 'Dimensions', 'wpforms-lite' ),
-								'cover'      => esc_html__( 'Cover', 'wpforms-lite' ),
-							],
-							'value'   => $this->form_data['settings']['themes']['backgroundSizeMode'] ?? CSSVars::ROOT_VARS['background-size'],
-						]
-					);
-
-					wpforms_panel_field(
-						'text',
-						'themes',
-						'backgroundSize',
-						$this->form_data,
-						false,
-						[
-							'parent' => 'settings',
-							'type'   => 'hidden',
-							'value'  => $this->form_data['settings']['themes']['backgroundSize'] ?? CSSVars::ROOT_VARS['background-size'],
-							'class'  => 'wpforms-hidden',
-						]
-					);
-					?>
-
-				</div>
-				<div class="wpforms-builder-themes-fields-row wpforms-builder-themes-conditional-hide">
-					<?php
-					wpforms_panel_field(
-						'text',
-						'themes',
-						'backgroundWidth',
-						$this->form_data,
-						esc_html__( 'Width', 'wpforms-lite' ),
-						[
-							'parent'      => 'settings',
-							'type'        => 'number',
-							'min'         => 0,
-							'value'       => $this->form_data['settings']['themes']['backgroundWidth'] ?? '100',
-							'input_class' => 'wpforms-builder-themes-number-input',
-							'class'       => 'wpforms-builder-themes-number-input-wrapper',
-						]
-					);
-
-					wpforms_panel_field(
-						'text',
-						'themes',
-						'backgroundHeight',
-						$this->form_data,
-						esc_html__( 'Height', 'wpforms-lite' ),
-						[
-							'parent'      => 'settings',
-							'type'        => 'number',
-							'min'         => 0,
-							'value'       => $this->form_data['settings']['themes']['backgroundHeight'] ?? '100',
-							'input_class' => 'wpforms-builder-themes-number-input',
-							'class'       => 'wpforms-builder-themes-number-input-wrapper',
-						]
-					);
-					?>
-
-				</div>
-
-				<div class="wpforms-builder-themes-background-selector wpforms-hidden">
-					<?php
-					wpforms_panel_field(
-						'text',
-						'themes',
-						'backgroundUrl',
-						$this->form_data,
-						false,
-						[
-							'parent' => 'settings',
-							'type'   => 'hidden',
-							'value'  => $this->form_data['settings']['themes']['backgroundUrl'] ?? CSSVars::ROOT_VARS['background-url'],
-							'class'  => 'wpforms-hidden',
-						]
-					);
-
-					?>
-					<button class="wpforms-builder-themes-bg-image-choose wpforms-hidden"><?php esc_html_e( 'Choose Image', 'wpforms-lite' ); ?></button>
-					<div class="wpforms-builder-themes-bg-image-preview wpforms-hidden"></div>
-					<button class="wpforms-builder-themes-bg-image-remove wpforms-hidden"><?php esc_html_e( 'Remove Image', 'wpforms-lite' ); ?></button>
-				</div>
-
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Show sidebar background styles.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @return void
-	 */
-	private function show_sidebar_other_styles(): void {
-
-		?>
-		<div class="wpforms-add-fields-group wpforms-hidden">
-			<a href="#" class="wpforms-add-fields-heading" data-group="other_styles"><span><?php esc_html_e( 'Other Styles', 'wpforms-lite' ); ?></span><i class="fa fa-angle-down"></i></a>
-			<div class="wpforms-add-fields-buttons">
-				<?php
-				wpforms_panel_field(
-					'color',
-					'themes',
-					'fieldMenuColor',
-					$this->form_data,
-					false,
-					[
-						'parent' => 'settings',
-						'value'  => $this->form_data['settings']['themes']['fieldMenuColor'] ?? CSSVars::ROOT_VARS['field-menu-color'],
-					]
-				);
-
-				wpforms_panel_field(
-					'color',
-					'themes',
-					'pageBreakColor',
-					$this->form_data,
-					false,
-					[
-						'parent' => 'settings',
-						'value'  => $this->form_data['settings']['themes']['pageBreakColor'] ?? CSSVars::ROOT_VARS['page-break-color'],
-					]
-				);
-				?>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Show sidebar background styles.
-	 *
-	 * @since 1.9.7
-	 *
-	 * @return void
-	 */
-	private function show_sidebar_advanced(): void {
-
-		if ( ! $this->is_admin ) {
-			return;
+		if ( $support->is_unstyled_lead_form( $form_data ) ) {
+			return 'lead_forms';
 		}
 
-		$custom_css = $this->form_data['settings']['themes']['customCss'] ?? '';
-		$paste_json = $this->form_data['settings']['themes']['copyPasteJsonValue'] ?? '';
+		if ( $editor->is_form_supported( $form_data ) ) {
+			return '';
+		}
 
-		wpforms_panel_field(
-			'textarea',
-			'themes',
-			'customCss',
-			$this->form_data,
-			esc_html__( 'Custom CSS', 'wpforms-lite' ),
+		if ( $support->is_conversational_form( $form_data ) ) {
+			return 'conversational_forms';
+		}
+
+		return $support->is_form_page_form( $form_data ) ? 'form_pages' : '';
+	}
+
+	/**
+	 * Render the education notice shown when the front-end editor cannot run.
+	 *
+	 * Mirrors the legacy Themes panel content, minus the demo form preview.
+	 *
+	 * @since 2.0.5
+	 */
+	private function render_unsupported_notice(): void {
+
+		$docs_url = wpforms_utm_link( 'https://wpforms.com/docs/styling-your-forms/', 'Builder Themes', 'Description Link' );
+
+		$settings_url = add_query_arg(
 			[
-				'parent' => 'settings',
-				'value'  => is_string( $custom_css ) ? $custom_css : '', // Reset corrupted CSS, as it cannot be reconstructed.
-				'after'  => sprintf( '<span class="wpforms-panel-field-after">%s</span>', __( 'Further customize the look of this form without having to edit theme files.', 'wpforms-lite' ) ),
-			]
+				'page' => 'wpforms-settings',
+				'view' => 'general',
+			],
+			admin_url( 'admin.php' )
 		);
 
-		wpforms_panel_field(
-			'textarea',
-			'themes',
-			'copyPasteJsonValue',
-			$this->form_data,
-			esc_html__( 'Copy / Paste Style Settings', 'wpforms-lite' ),
-			[
-				'parent' => 'settings',
-				'value'  => is_string( $paste_json ) ? $paste_json : (string) wp_json_encode( $paste_json ), // Re-encode corrupted JSON snapshot.
-				'after'  => sprintf( '<span class="wpforms-panel-field-after">%s</span>', __( 'If you\'ve copied style settings from another form, you can paste them here to add the same styling to this form. Any current style settings will be overwritten.', 'wpforms-lite' ) ),
-			]
+		$editor     = $this->get_editor();
+		$reason     = $editor ? $editor->get_support()->get_unsupported_reason() : '';
+		$is_fixable = $reason !== '';
+
+		if ( ! $is_fixable ) {
+			$reason = __( 'The front-end theme editor is not available on this site.', 'wpforms-lite' );
+		}
+
+		?>
+		<p class="wpforms-panel-content-section-themes-description">
+			<?php
+				echo wp_kses_post(
+					sprintf(
+						/* translators: %s - URL to the documentation. */
+						__( 'Customize the look and feel of your form with premade themes or simple style settings that allow you to use your own colors to match your brand. <a href="%s" target="_blank">Learn more about styling your forms</a>.', 'wpforms-lite' ),
+						$docs_url
+					)
+				);
+			?>
+		</p>
+
+		<div class="wpforms-alert wpforms-alert-warning wpforms-builder-themes-style-notice">
+			<h4><?php esc_html_e( 'Want to customize your form styles without editing CSS?', 'wpforms-lite' ); ?></h4>
+			<p><?php echo esc_html( $reason ); ?></p>
+			<?php if ( $is_fixable ) : // A reason Settings cannot fix would make the CTA mislead. ?>
+				<a href="<?php echo esc_url( $settings_url ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Go to Settings', 'wpforms-lite' ); ?></a>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the notice shown when Lead Form Mode owns the form styling.
+	 *
+	 * The link switches to the Lead Forms settings section in place, wired by
+	 * the inline script {@see launcher_enqueues()} registers.
+	 *
+	 * @since 2.0.5
+	 */
+	private function render_lead_forms_notice(): void {
+
+		?>
+		<div class="wpforms-alert wpforms-alert-warning wpforms-builder-themes-lf-notice">
+			<h4><?php esc_html_e( 'Form Styles are disabled because Lead Form Mode is turned on.', 'wpforms-lite' ); ?></h4>
+			<p>
+				<?php
+				echo wp_kses(
+					__( 'To change the styling for this form, edit the options in the <a href="#">Lead Forms settings</a>.', 'wpforms-lite' ),
+					[
+						'a' => [
+							'href' => [],
+						],
+					]
+				);
+				?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the notice shown when Conversational Forms owns the form styling.
+	 *
+	 * The link switches to the Conversational Forms settings section in place, wired by
+	 * the inline script {@see launcher_enqueues()} registers.
+	 *
+	 * @since 2.0.5
+	 */
+	private function render_conversational_forms_notice(): void {
+
+		?>
+		<div class="wpforms-alert wpforms-alert-warning wpforms-builder-themes-cf-notice">
+			<h4><?php esc_html_e( 'Form Styles are disabled because Conversational Forms addon is turned on.', 'wpforms-lite' ); ?></h4>
+			<p>
+				<?php
+				echo wp_kses(
+					__( 'To change the styling for this form, edit the options in the <a href="#">Conversational Forms settings</a>.', 'wpforms-lite' ),
+					[
+						'a' => [
+							'href' => [],
+						],
+					]
+				);
+				?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render the notice shown when Form Pages owns the form styling.
+	 *
+	 * The link switches to the Form Pages settings section in place, wired by
+	 * the inline script {@see launcher_enqueues()} registers.
+	 *
+	 * @since 2.0.5
+	 */
+	private function render_form_pages_notice(): void {
+
+		?>
+		<div class="wpforms-alert wpforms-alert-warning wpforms-builder-themes-fp-notice">
+			<h4><?php esc_html_e( 'Form Styles are disabled because Form Pages addon is turned on.', 'wpforms-lite' ); ?></h4>
+			<p>
+				<?php
+				echo wp_kses(
+					__( 'To change the styling for this form, edit the options in the <a href="#">Form Pages settings</a>.', 'wpforms-lite' ),
+					[
+						'a' => [
+							'href' => [],
+						],
+					]
+				);
+				?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Intercept the Themes sidebar link to launch the front-end editor.
+	 *
+	 * With Lead Form Mode or Conversational Forms on, the Themes panel opens on
+	 * its notice instead, whose link switches to that addon's settings section.
+	 *
+	 * @since 2.0.5
+	 */
+	public function launcher_enqueues(): void {
+
+		$editor  = $this->get_editor();
+		$form_id = absint( $_GET['form_id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		if ( ! $form_id || $editor === null ) {
+			return;
+		}
+
+		$cf_form_data = $this->get_form_data_with_cf_on( $form_id );
+		$fp_form_data = $this->get_form_data_with_fp_on( $form_id );
+		$lf_form_data = $this->get_form_data_with_lf_on( $form_id );
+
+		// The Lead Form Mode and Conversational Forms toggles are read on click, so a change made since the builder loaded counts.
+		$script = sprintf(
+			"document.addEventListener( 'click', function( e ) {
+				var editorUrl = %1\$s;
+				var cfThemesSupported = %2\$s;
+				var previewUrl = %3\$s;
+				var fpThemesSupported = %4\$s;
+				var lfThemesSupported = %5\$s;
+				var noticeSections = {
+					'.wpforms-builder-themes-lf-notice a': 'lead_forms',
+					'.wpforms-builder-themes-cf-notice a': 'conversational_forms',
+					'.wpforms-builder-themes-fp-notice a': 'form_pages'
+				};
+
+				if ( ! e.target.closest ) {
+					return;
+				}
+
+				for ( var noticeLink in noticeSections ) {
+					if ( e.target.closest( noticeLink ) ) {
+						e.preventDefault();
+
+						var section = document.querySelector( 'a.wpforms-panel-sidebar-section-' + noticeSections[ noticeLink ] );
+
+						if ( section ) {
+							section.click();
+						}
+
+						return;
+					}
+				}
+
+				if ( ! e.target.closest( '.wpforms-panel-sidebar-section-themes' ) ) {
+					return;
+				}
+
+				var leadFormsToggle = document.getElementById( 'wpforms-panel-field-lead_forms-enable' );
+				var cfToggle = document.getElementById( 'wpforms-panel-field-settings-conversational_forms_enable' );
+				var isLeadForm = Boolean( leadFormsToggle && leadFormsToggle.checked ) && ! lfThemesSupported;
+				var isCfForm = ! isLeadForm && Boolean( cfToggle && cfToggle.checked ) && ! cfThemesSupported;
+				var fpToggle = document.getElementById( 'wpforms-panel-field-settings-form_pages_enable' );
+				var isFpForm = ! isLeadForm && ! Boolean( cfToggle && cfToggle.checked ) && Boolean( fpToggle && fpToggle.checked ) && ! fpThemesSupported;
+				var leadFormsContent = document.querySelector( '.wpforms-builder-themes-lf-content' );
+				var cfContent = document.querySelector( '.wpforms-builder-themes-cf-content' );
+				var fpContent = document.querySelector( '.wpforms-builder-themes-fp-content' );
+				var launcherContent = document.querySelector( '.wpforms-builder-themes-launcher-content' );
+
+				if ( leadFormsContent && launcherContent ) {
+					leadFormsContent.hidden = ! isLeadForm;
+					launcherContent.hidden = isLeadForm || isCfForm || isFpForm;
+				}
+
+				if ( cfContent ) {
+					cfContent.hidden = ! isCfForm;
+				}
+
+				if ( fpContent ) {
+					fpContent.hidden = ! isFpForm;
+				}
+
+				if ( isLeadForm || isCfForm || isFpForm || ! editorUrl ) {
+					return;
+				}
+
+				e.preventDefault();
+				e.stopPropagation();
+
+				// The live toggles decide the page, as for the Preview button, and openPreview() saves a dirty form first.
+				var dropdown = window.WPForms && WPForms.Admin && WPForms.Admin.Builder && WPForms.Admin.Builder.PreviewDropdown;
+
+				if ( dropdown && dropdown.getActiveAddonPreviewUrl && dropdown.openPreview ) {
+					var addonUrl = dropdown.getActiveAddonPreviewUrl();
+
+					dropdown.openPreview( addonUrl ? addonUrl + ( addonUrl.indexOf( '?' ) === -1 ? '?' : '&' ) + 'wpforms_themes_editor=1' : previewUrl );
+
+					return;
+				}
+
+				window.open( editorUrl, '_blank' );
+			}, true );",
+			wp_json_encode( $editor->is_supported() ? $editor->get_editor_url( $form_id ) : '' ),
+			wp_json_encode( $editor->is_supported() && $editor->is_form_supported( $cf_form_data ) ),
+			wp_json_encode( add_query_arg( 'wpforms_themes_editor', '1', wpforms_get_form_preview_url( $form_id ) ) ),
+			wp_json_encode( $editor->is_supported() && $editor->is_form_supported( $fp_form_data ) ),
+			wp_json_encode( $editor->is_supported() && $editor->is_form_supported( $lf_form_data ) )
 		);
+
+		wp_add_inline_script( 'wpforms-builder', $script );
+	}
+
+	/**
+	 * The stored form with Conversational Form Mode switched on.
+	 *
+	 * The launcher reads the live toggle, so it needs to know whether a CF form
+	 * is supported before the user saves.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param int $form_id Form ID.
+	 *
+	 * @return array
+	 */
+	private function get_form_data_with_cf_on( int $form_id ): array {
+
+		$form_handler = wpforms()->obj( 'form' );
+		$form_data    = $form_handler ? (array) $form_handler->get( $form_id, [ 'content_only' => true ] ) : [];
+
+		$form_data['settings']['conversational_forms_enable'] = '1';
+
+		return $form_data;
+	}
+
+	/**
+	 * The stored form with Form Pages switched on and Conversational Forms off, as the live toggles may stand.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param int $form_id Form ID.
+	 *
+	 * @return array
+	 */
+	private function get_form_data_with_fp_on( int $form_id ): array {
+
+		$form_data = $this->get_form_data_with_cf_on( $form_id );
+
+		$form_data['settings']['form_pages_enable']           = '1';
+		$form_data['settings']['conversational_forms_enable'] = '';
+
+		return $form_data;
+	}
+
+	/**
+	 * The stored form with Lead Form Mode switched on, as the live toggle may stand.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param int $form_id Form ID.
+	 *
+	 * @return array
+	 */
+	private function get_form_data_with_lf_on( int $form_id ): array {
+
+		$form_data = $this->get_form_data_with_cf_on( $form_id );
+
+		$form_data['settings']['lead_forms']['enable']        = '1';
+		$form_data['settings']['conversational_forms_enable'] = '';
+
+		return $form_data;
 	}
 }

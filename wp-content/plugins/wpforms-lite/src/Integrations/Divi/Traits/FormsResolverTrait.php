@@ -12,16 +12,42 @@ namespace WPForms\Integrations\Divi\Traits;
 trait FormsResolverTrait {
 
 	/**
+	 * Forms the current user is entitled to view, fetched once per request.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @var array|null
+	 */
+	private $viewable_forms;
+
+	/**
 	 * Get the forms the current user is entitled to view.
 	 *
 	 * Retrieves those forms from the database ordered by descending ID.
 	 *
 	 * @since 1.9.9
+	 * @since 2.0.5 The result is cached for the request: the builder asks for it several times.
 	 *
 	 * @return array Array of WP_Post objects representing forms. Empty when the user may view no
 	 *               forms, or when the form object is unavailable.
 	 */
 	public function get_forms(): array {
+
+		if ( $this->viewable_forms === null ) {
+			$this->viewable_forms = $this->query_viewable_forms();
+		}
+
+		return $this->viewable_forms;
+	}
+
+	/**
+	 * Query the forms the current user is entitled to view.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @return array
+	 */
+	private function query_viewable_forms(): array {
 
 		// The list is built for the Divi Visual Builder, which runs on the frontend ( ?et_fb=1 ),
 		// where the Pro owner-scoping filter ( wpforms_get_multiple_forms_args ) is not registered.
@@ -46,12 +72,15 @@ trait FormsResolverTrait {
 	 * through each form and adding it to the options using add_form_in_options().
 	 *
 	 * @since 1.9.9
+	 * @since 2.0.5 Added the `$forms` parameter.
+	 *
+	 * @param array|null $forms Forms already fetched with `get_forms()`, to spare a second query.
 	 *
 	 * @return array Array of form options.
 	 */
-	public function get_form_options(): array {
+	public function get_form_options( ?array $forms = null ): array {
 
-		$forms   = $this->get_forms();
+		$forms   = $forms ?? $this->get_forms();
 		$options = [];
 
 		foreach ( $forms as $form ) {

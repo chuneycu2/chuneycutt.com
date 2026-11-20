@@ -1230,7 +1230,6 @@ class WPForms_Builder {
 			'UndoRedoInputCodeMirror'           => "undo-redo/input-codemirror$min.js",
 			'UndoRedoInputTinyMCE'              => "undo-redo/input-tinymce$min.js",
 			'UndoRedoChoicesList'               => "undo-redo/choices-list$min.js",
-			'UndoRedoFormThemes'                => "undo-redo/form-themes$min.js",
 			'UndoRedoDateTimePickers'           => "undo-redo/date-time-pickers$min.js",
 			'UndoRedoActionFieldAdd'            => "undo-redo/action-field-add$min.js",
 			'UndoRedoActionFieldDelete'         => "undo-redo/action-field-delete$min.js",

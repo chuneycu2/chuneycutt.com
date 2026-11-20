@@ -19,12 +19,19 @@ namespace WPForms {
 		 * @since 1.8.0
 		 */
 		const CLASSES = [
-			'WPForms\Pro\Admin\Entries\DefaultScreen'  => '1.8.2',
-			'WPForms\Pro\Integrations\AI\AI'           => '1.9.4',
-			'WPForms\Pro\Integrations\AI\Helpers'      => '1.9.4',
-			'WPForms_Install_Skin'                     => '1.9.5',
-			'WPForms_Install_Silent_Skin'              => '1.5.6.1',
-			'WPForms\Helpers\PluginSilentUpgraderSkin' => '1.9.5',
+			'WPForms\Pro\Admin\Entries\DefaultScreen'               => '1.8.2',
+			'WPForms\Pro\Integrations\AI\AI'                        => '1.9.4',
+			'WPForms\Pro\Integrations\AI\Helpers'                   => '1.9.4',
+			'WPForms_Install_Skin'                                  => '1.9.5',
+			'WPForms_Install_Silent_Skin'                           => '1.5.6.1',
+			'WPForms\Helpers\PluginSilentUpgraderSkin'              => '1.9.5',
+			'WPForms\Integrations\Elementor\RestApi'                => '2.0.5',
+			'WPForms\Integrations\Elementor\ThemesData'             => '2.0.5',
+			'WPForms\Integrations\Elementor\Controls\WPFormsThemes' => '2.0.5',
+			'WPForms\Lite\Integrations\Elementor\ThemesData'        => '2.0.5',
+			'WPForms\Pro\Integrations\Elementor\RestApi'            => '2.0.5',
+			'WPForms\Pro\Integrations\Elementor\StockPhotos'        => '2.0.5',
+			'WPForms\Pro\Integrations\Elementor\ThemesData'         => '2.0.5',
 		];
 
 		/**
@@ -422,4 +429,79 @@ namespace WPForms\Pro\Admin\Entries {
 	 * @deprecated 1.8.2
 	 */
 	class DefaultScreen extends \WPForms\Removed {}
+}
+
+namespace WPForms\Integrations\Elementor {
+
+	/**
+	 * Rest API for the Elementor Modern widget.
+	 * Its routes are served by "WPForms\Integrations\Elementor\LegacyThemesRoutes".
+	 *
+	 * @since 1.9.6
+	 * @deprecated 2.0.5
+	 */
+	class RestApi extends \WPForms\Removed {}
+
+	/**
+	 * Themes data for the Elementor Modern widget.
+	 * Replaced with "WPForms\Integrations\Gutenberg\ThemesData", which holds the widget's themes now.
+	 *
+	 * @since 1.9.6
+	 * @deprecated 2.0.5
+	 */
+	class ThemesData extends \WPForms\Removed {}
+}
+
+namespace WPForms\Integrations\Elementor\Controls {
+
+	/**
+	 * Themes control of the Elementor editor.
+	 * Replaced with the front-end themes editor, opened from the widget's Form Theme section.
+	 *
+	 * @since 1.9.6
+	 * @deprecated 2.0.5
+	 */
+	class WPFormsThemes extends \WPForms\Removed {}
+}
+
+namespace WPForms\Lite\Integrations\Elementor {
+
+	/**
+	 * Themes data for the Elementor widget in Lite.
+	 * Replaced with "WPForms\Lite\Integrations\Gutenberg\ThemesData".
+	 *
+	 * @since 1.9.6
+	 * @deprecated 2.0.5
+	 */
+	class ThemesData extends \WPForms\Removed {}
+}
+
+namespace WPForms\Pro\Integrations\Elementor {
+
+	/**
+	 * Rest API for the Elementor widget in Pro.
+	 * Its routes are served by "WPForms\Integrations\Elementor\LegacyThemesRoutes" and "WPForms\Pro\Integrations\Gutenberg\RestApi".
+	 *
+	 * @since 1.9.6
+	 * @deprecated 2.0.5
+	 */
+	class RestApi extends \WPForms\Removed {}
+
+	/**
+	 * Stock photos for the Elementor widget in Pro.
+	 * Replaced with "WPForms\Pro\Integrations\Gutenberg\StockPhotos".
+	 *
+	 * @since 1.9.6
+	 * @deprecated 2.0.5
+	 */
+	class StockPhotos extends \WPForms\Removed {}
+
+	/**
+	 * Themes data for the Elementor widget in Pro.
+	 * Replaced with "WPForms\Pro\Integrations\Gutenberg\ThemesData".
+	 *
+	 * @since 1.9.6
+	 * @deprecated 2.0.5
+	 */
+	class ThemesData extends \WPForms\Removed {}
 }

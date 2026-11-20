@@ -88,11 +88,7 @@ trait StringsTrait {
 			$strings['activate_prompt'] = '<p>' . esc_html( sprintf( __( 'The %s is not activated. Please contact the site administrator.', 'wpforms-lite' ), $name ) ) . '</p>';
 		}
 
-		$upgrade_utm_medium = wpforms_is_admin_page() ? 'Settings - Integration' : 'Builder - Settings';
-
-		if ( wpforms_is_block_editor() ) {
-			$upgrade_utm_medium = 'gutenberg';
-		}
+		$upgrade_utm_medium = $this->get_upgrade_utm_medium();
 
 		$strings['upgrade'] = [
 			'pro'   => $this->get_upgrade_strings( 'Pro', $name, $upgrade_utm_medium ),
@@ -160,6 +156,22 @@ trait StringsTrait {
 		 * @return array
 		 */
 		return (array) apply_filters( 'wpforms_admin_education_strings', $strings );
+	}
+
+	/**
+	 * Get the UTM medium of the upgrade links, naming the screen the modal opens on.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @return string
+	 */
+	protected function get_upgrade_utm_medium(): string {
+
+		if ( wpforms_is_block_editor() ) {
+			return 'gutenberg';
+		}
+
+		return wpforms_is_admin_page() ? 'Settings - Integration' : 'Builder - Settings';
 	}
 
 	/**

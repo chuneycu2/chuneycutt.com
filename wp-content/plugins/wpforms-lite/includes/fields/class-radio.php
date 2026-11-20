@@ -696,10 +696,10 @@ class WPForms_Field_Radio extends WPForms_Field {
 			$data['dynamic']           = 'post_type';
 			$data['dynamic_items']     = absint( $value_raw );
 			$data['dynamic_post_type'] = $field['dynamic_post_type'];
-			$post                      = get_post( $value_raw );
+			$labels                    = $this->get_submitted_dynamic_choice_labels( [ $data['dynamic_items'] ], $field, $form_data );
 
-			if ( ! empty( $post ) && ! is_wp_error( $post ) && $data['dynamic_post_type'] === $post->post_type ) {
-				$data['value'] = esc_html( wpforms_get_post_title( $post ) );
+			if ( ! empty( $labels ) ) {
+				$data['value'] = esc_html( $labels[0] );
 			}
 		} elseif ( 'taxonomy' === $dynamic && ! empty( $field['dynamic_taxonomy'] ) ) {
 
@@ -707,10 +707,10 @@ class WPForms_Field_Radio extends WPForms_Field {
 			$data['dynamic']          = 'taxonomy';
 			$data['dynamic_items']    = absint( $value_raw );
 			$data['dynamic_taxonomy'] = $field['dynamic_taxonomy'];
-			$term                     = get_term( $value_raw, $data['dynamic_taxonomy'] );
+			$labels                   = $this->get_submitted_dynamic_choice_labels( [ $data['dynamic_items'] ], $field, $form_data );
 
-			if ( ! empty( $term ) && ! is_wp_error( $term ) ) {
-				$data['value'] = esc_html( wpforms_get_term_name( $term ) );
+			if ( ! empty( $labels ) ) {
+				$data['value'] = esc_html( $labels[0] );
 			}
 		} else {
 
@@ -840,6 +840,13 @@ class WPForms_Field_Radio extends WPForms_Field {
 		}
 
 		$other_value = $this->get_other_choice_value( $field );
+
+		// The Other text is rebuilt from the raw stored value, so it must be escaped like the caller's $value.
+		// esc_html() keeps existing entities: sanitize_text_field() already stores the text after a bare `<` encoded.
+		if ( $other_value !== null ) {
+			$other_value = esc_html( $other_value );
+		}
+
 		$field_value = $other_value ?? $value ?? '';
 
 		return parent::field_html_value(

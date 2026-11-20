@@ -103,6 +103,9 @@ class Page {
 	private function hooks(): void {
 
 		add_filter( 'wpforms_admin_flyoutmenu', '__return_false' );
+
+		// Widget states query forms, and this class loads on plugins_loaded, before WordPress creates $wp_query.
+		add_action( 'admin_init', [ $this->widget_pipeline, 'init' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets' ] );
 		add_action( 'wpforms_admin_page', [ $this, 'output' ] );
 	}
@@ -198,7 +201,7 @@ class Page {
 				'name' => 'Admin\Dashboard\WidgetPipeline',
 				'id'   => 'dashboard_widget_pipeline',
 				'hook' => false,
-				'run'  => 'init',
+				'run'  => false,
 			],
 		];
 

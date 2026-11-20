@@ -818,7 +818,7 @@ function wpforms_get_payment_items( $fields = [] ) {
 			empty( $field['amount'] ) ||
 			! in_array( $field['type'], $payment_fields, true ) ||
 			empty( wpforms_sanitize_amount( $field['amount'] ) ) ||
-			( isset( $field['quantity'] ) && ! $field['quantity'] )
+			wpforms_payment_is_zero_quantity( $field )
 		) {
 			// Remove all non-payment fields as well as payment fields with no amount or empty quantity.
 			unset( $fields[ $id ] );
@@ -862,6 +862,22 @@ function wpforms_payment_has_quantity( array $field, array $form_data ): bool {
 	// Otherwise return true.
 	// It covers the Dropdown Items field (and others where the quantity will be supported).
 	return true;
+}
+
+/**
+ * Determine whether a payment field was submitted with a quantity of 0.
+ *
+ * Only payment fields with quantity enabled carry the `quantity` key, so a field without it is never a zero-quantity item.
+ *
+ * @since 2.0.5
+ *
+ * @param array $field Entry field data.
+ *
+ * @return bool
+ */
+function wpforms_payment_is_zero_quantity( array $field ): bool {
+
+	return isset( $field['quantity'] ) && ! $field['quantity'];
 }
 
 /**

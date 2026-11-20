@@ -197,14 +197,18 @@ class WPForms_WP_Emails {
 	 * Get the email from address.
 	 *
 	 * @since 1.1.3
+	 * @since 2.0.5 Smart tags are processed in the `notification-from` context, so an invalid resolved address falls back to the admin email.
 	 *
 	 * @return string The email from address.
 	 */
 	public function get_from_address() {
 
 		if ( ! empty( $this->from_address ) ) {
-			$this->from_address = $this->process_tag( $this->from_address );
-		} else {
+			$this->from_address = $this->process_tag( $this->from_address, 'notification-from' );
+		}
+
+		// A From header needs a valid address, and the `notification-from` context blanks each invalid smart tag on its own, so literal text around it can remain.
+		if ( ! wpforms_is_email( $this->from_address, false ) ) {
 			$this->from_address = get_option( 'admin_email' );
 		}
 
@@ -613,14 +617,16 @@ class WPForms_WP_Emails {
 	 *
 	 * @since 1.1.3
 	 * @since 1.6.0 Deprecated 2 params: $sanitize, $linebreaks.
+	 * @since 2.0.5 Added the `$context` parameter.
 	 *
 	 * @param string $content String that may contain tags.
+	 * @param string $context Smart tag processing context.
 	 *
 	 * @return string|mixed
 	 */
-	public function process_tag( $content = '' ) {
+	public function process_tag( $content = '', $context = 'email' ) {
 
-		return wpforms_process_smart_tags( $content, $this->form_data, $this->fields, $this->entry_id, 'email', $this->context_data );
+		return wpforms_process_smart_tags( $content, $this->form_data, $this->fields, $this->entry_id, $context, $this->context_data );
 	}
 
 	/**
@@ -714,7 +720,7 @@ class WPForms_WP_Emails {
 
 					if (
 						! apply_filters( 'wpforms_email_display_empty_fields', false ) &&
-						( ! isset( $this->fields[ $field_id ]['value'] ) || (string) $this->fields[ $field_id ]['value'] === '' )
+						( ! isset( $this->fields[ $field_id ]['value'] ) || (string) $this->fields[ $field_id ]['value'] === '' || wpforms_payment_is_zero_quantity( $this->fields[ $field_id ] ) )
 					) {
 						/** This filter is documented in wpforms/includes/emails/class-emails.php */
 						$message .= apply_filters( 'wpforms_wp_emails_html_field_value_message_html', '' , $field, $this->form_data );
@@ -813,7 +819,7 @@ class WPForms_WP_Emails {
 
 				if (
 					! apply_filters( 'wpforms_email_display_empty_fields', false ) &&
-					( ! isset( $field['value'] ) || (string) $field['value'] === '' )
+					( ! isset( $field['value'] ) || (string) $field['value'] === '' || wpforms_payment_is_zero_quantity( $field ) )
 				) {
 					continue;
 				}

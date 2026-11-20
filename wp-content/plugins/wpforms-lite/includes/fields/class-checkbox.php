@@ -1070,15 +1070,7 @@ class WPForms_Field_Checkbox extends WPForms_Field {
 			$data['dynamic']           = 'post_type';
 			$data['dynamic_items']     = $value_raw;
 			$data['dynamic_post_type'] = $field['dynamic_post_type'];
-			$posts                     = [];
-
-			foreach ( $field_submit as $id ) {
-				$post = get_post( $id );
-
-				if ( ! is_wp_error( $post ) && ! empty( $post ) && $data['dynamic_post_type'] === $post->post_type ) {
-					$posts[] = esc_html( wpforms_get_post_title( $post ) );
-				}
-			}
+			$posts                     = array_map( 'esc_html', $this->get_submitted_dynamic_choice_labels( $field_submit, $field, $form_data ) );
 
 			$data['value'] = ! empty( $posts ) ? wpforms_sanitize_array_combine( $posts ) : '';
 
@@ -1091,15 +1083,7 @@ class WPForms_Field_Checkbox extends WPForms_Field {
 			$data['dynamic']          = 'taxonomy';
 			$data['dynamic_items']    = $value_raw;
 			$data['dynamic_taxonomy'] = $field['dynamic_taxonomy'];
-			$terms                    = [];
-
-			foreach ( $field_submit as $id ) {
-				$term = get_term( $id, $field['dynamic_taxonomy'] );
-
-				if ( ! is_wp_error( $term ) && ! empty( $term ) ) {
-					$terms[] = esc_html( wpforms_get_term_name( $term ) );
-				}
-			}
+			$terms                    = array_map( 'esc_html', $this->get_submitted_dynamic_choice_labels( $field_submit, $field, $form_data ) );
 
 			$data['value'] = ! empty( $terms ) ? wpforms_sanitize_array_combine( $terms ) : '';
 

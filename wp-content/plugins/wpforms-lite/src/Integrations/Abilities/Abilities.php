@@ -24,7 +24,7 @@ abstract class Abilities implements IntegrationInterface {
 	 *
 	 * @var string
 	 */
-	protected const ABILITY_NAMESPACE = 'wpforms';
+	public const ABILITY_NAMESPACE = 'wpforms';
 
 	/**
 	 * Category slug for WPForms abilities.

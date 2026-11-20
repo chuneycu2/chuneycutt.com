@@ -522,7 +522,8 @@ function wpforms_esc_unselected_choices( $formatted_field ) {
  */
 function wpforms_esc_entry_field_value( $value, bool $is_iframe_allowed = false ): string {
 
-	$allowed_html = wp_kses_allowed_html( 'post' );
+	// Stored values must not carry `data-*` attributes: admin scripts read them, e.g. tooltipster's `data-tooltip-content`.
+	$allowed_html = wpforms_strip_data_attributes_from_allowed_html( wp_kses_allowed_html( 'post' ) );
 
 	if ( ! $is_iframe_allowed ) {
 		return wp_kses( (string) $value, $allowed_html );
@@ -669,23 +670,15 @@ function wpforms_get_allowed_html_tags_for_entry_field_value( $tags, string $con
 }
 
 /**
- * Get the HTML allowed in a field value that a smart tag prints into front-end markup.
+ * Remove every `data-*` attribute from a kses allowlist.
  *
- * The `post` allowlist without form controls and `data-*` attributes. Front-end scripts act on both:
- * jQuery Validation validates any control inside the form and renders its `data-msg` attribute as HTML.
+ * @since 2.0.5
  *
- * @since 2.0.3.1
- *
- * @param bool $is_iframe_allowed Whether the iframe tag is allowed in the value.
+ * @param array $tags Allowed HTML tags and attributes.
  *
  * @return array
  */
-function wpforms_get_allowed_html_tags_for_smart_tag_value( bool $is_iframe_allowed = false ): array {
-
-	$tags = array_diff_key(
-		wp_kses_allowed_html( 'post' ),
-		array_flip( [ 'button', 'fieldset', 'form', 'input', 'label', 'legend', 'optgroup', 'option', 'select', 'textarea' ] )
-	);
+function wpforms_strip_data_attributes_from_allowed_html( array $tags ): array {
 
 	foreach ( $tags as $tag => $attributes ) {
 		if ( ! is_array( $attributes ) ) {
@@ -701,6 +694,30 @@ function wpforms_get_allowed_html_tags_for_smart_tag_value( bool $is_iframe_allo
 			ARRAY_FILTER_USE_KEY
 		);
 	}
+
+	return $tags;
+}
+
+/**
+ * Get the HTML allowed in a field value that a smart tag prints into front-end markup.
+ *
+ * The `post` allowlist without form controls and `data-*` attributes. Front-end scripts act on both:
+ * jQuery Validation validates any control inside the form and renders its `data-msg` attribute as HTML.
+ *
+ * @since 2.0.3.1
+ *
+ * @param bool $is_iframe_allowed Whether the iframe tag is allowed in the value.
+ *
+ * @return array
+ */
+function wpforms_get_allowed_html_tags_for_smart_tag_value( bool $is_iframe_allowed = false ): array {
+
+	$tags = wpforms_strip_data_attributes_from_allowed_html(
+		array_diff_key(
+			wp_kses_allowed_html( 'post' ),
+			array_flip( [ 'button', 'fieldset', 'form', 'input', 'label', 'legend', 'optgroup', 'option', 'select', 'textarea' ] )
+		)
+	);
 
 	// Added after the `data-*` removal: the iframe needs `data-src`, which the caller URL-validates.
 	if ( $is_iframe_allowed ) {

@@ -93,6 +93,37 @@ abstract class UpgradeBase {
 	}
 
 	/**
+	 * Run the callback on init, or right away when init has already fired.
+	 *
+	 * Migrations run on wpforms_loaded inside plugins_loaded, before WordPress creates
+	 * the $wp_query global, so work that runs a WP_Query (e.g. get_posts(), which fires
+	 * pre_get_posts) waits for init.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @param callable $callback Callback to run.
+	 */
+	protected function defer_to_init( callable $callback ): void { // phpcs:ignore WPForms.PHP.HooksMethod.InvalidPlaceForAddingHooks
+
+		if ( did_action( 'init' ) ) {
+			$callback();
+
+			return;
+		}
+
+		// Run after the form post types register on init at the default priority. The closure drops
+		// the empty argument init passes, which would break a callback with typed parameters.
+		add_action(
+			'init',
+			static function () use ( $callback ) {
+
+				$callback();
+			},
+			PHP_INT_MAX
+		);
+	}
+
+	/**
 	 * Determine if the async AS task is completed.
 	 *
 	 * @since 1.9.5

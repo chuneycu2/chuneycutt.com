@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									<td align="<?php echo is_rtl() ? 'right' : 'left'; ?>" valign="top" class="footer">
 										<?php
 										printf(
-											wp_kses( /* translators: %1$s - site name linked to the site URL, %2$s - link to Settings → Misc to manage weekly emails. */
+											wp_kses( /* translators: %1$s - site name linked to the site URL, %2$s - link to Settings → Email to manage weekly emails. */
 												__( 'This email was auto-generated and sent from %1$s. <a href="%2$s">Manage Email Summaries</a>', 'wpforms-lite' ),
 												[
 													'a' => [
@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 												]
 											),
 											'<a href="' . esc_url( home_url() ) . '">' . esc_html( wp_specialchars_decode( get_bloginfo( 'name' ) ) ) . '</a>',
-											esc_url( admin_url( 'admin.php?page=wpforms-settings&view=misc' ) )
+											esc_url( admin_url( 'admin.php?page=wpforms-settings&view=email' ) )
 										);
 										?>
 									</td>

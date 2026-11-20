@@ -210,6 +210,7 @@ class TemplatesLoader {
 
 		// Layer 2: Try to load prepared templates from the cache.
 		$this->load_prepared_templates_from_cache( $cache_obj );
+		$this->apply_current_favorites();
 
 		// Get filtered templates.
 		$filtered = $this->get_filtered_templates(
@@ -282,6 +283,32 @@ class TemplatesLoader {
 	}
 
 	/**
+	 * Set each prepared template's favorite flag from the saved favorites.
+	 *
+	 * A batch request that started before a favorite was saved can rebuild the prepared
+	 * templates cache with the old flags after the save cleared it, so the cached flags
+	 * cannot be trusted.
+	 *
+	 * @since 2.0.5
+	 */
+	private function apply_current_favorites(): void {
+
+		$builder_templates = wpforms()->obj( 'builder_templates' );
+
+		if ( ! $builder_templates ) {
+			return;
+		}
+
+		foreach ( $this->prepared_templates as $id => $template_data ) {
+			if ( ! isset( $template_data['template']['slug'] ) ) {
+				continue;
+			}
+
+			$this->prepared_templates[ $id ]['template']['favorite'] = $builder_templates->is_favorite( $template_data['template']['slug'] );
+		}
+	}
+
+	/**
 	 * Build a unique cache key for the batch request.
 	 *
 	 * @since 2.0.0
@@ -291,6 +318,13 @@ class TemplatesLoader {
 	 * @return string Cache key.
 	 */
 	private function build_batch_cache_key( array $params ): string {
+
+		$builder_templates = wpforms()->obj( 'builder_templates' );
+
+		// The rendered batch shows the favorite flags, so a change to the favorites needs a new key.
+		$favorites = $builder_templates ? array_keys( $builder_templates->get_favorites_list() ) : [];
+
+		sort( $favorites );
 
 		return wp_json_encode(
 			[
@@ -302,6 +336,7 @@ class TemplatesLoader {
 				'favorite'    => $params['favorite'],
 				'version'     => WPFORMS_VERSION,
 				'user'        => get_current_user_id(),
+				'favorites'   => $favorites,
 			]
 		);
 	}

@@ -152,21 +152,38 @@ class RestApi extends BaseRestApi {
 	 *
 	 * @return true|WP_Error
 	 */
-	private function install_pro( string $package_url ) {
+	private function install_pro( string $package_url ) { // phpcs:ignore WPForms.PHP.HooksMethod.InvalidPlaceForAddingHooks
 
 		$generic_error = esc_html__( 'There was an error while installing WPForms Pro. Please download it from wpforms.com and install it manually.', 'wpforms-lite' );
 
-		// Download and install only when Pro is not already on disk.
-		if ( ! $this->is_pro_installed() ) {
+		// A Pro from before the v2 transport would relaunch on the legacy one, token in the browser, so it is replaced.
+		$is_installed = $this->is_pro_installed();
+
+		if ( ! $is_installed || ! $this->is_pro_transport_ready() ) {
 			$plugin = wpforms()->obj( 'plugin' );
 
 			if ( $plugin === null ) {
 				return new WP_Error( 'wpforms_setup_wizard_license_installer', $generic_error, [ 'status' => 500 ] );
 			}
 
-			$installed = $plugin->install_from_url( self::PRO_PLUGIN, $package_url );
+			$is_touched = false;
+			$track      = static function ( $removed ) use ( &$is_touched ) {
 
-			if ( is_wp_error( $installed ) ) {
+				$is_touched = true;
+
+				return $removed;
+			};
+
+			add_filter( 'upgrader_clear_destination', $track );
+
+			try {
+				$installed = $plugin->install_from_url( self::PRO_PLUGIN, $package_url, $is_installed );
+			} finally {
+				remove_filter( 'upgrader_clear_destination', $track );
+			}
+
+			// An older Pro the failed overwrite never reached still beats no Pro; one it started clearing may be half gone.
+			if ( is_wp_error( $installed ) && ( ! $is_installed || $is_touched ) ) {
 				return new WP_Error( 'wpforms_setup_wizard_license_install_failed', $generic_error, [ 'status' => 500 ] );
 			}
 		}
@@ -227,5 +244,17 @@ class RestApi extends BaseRestApi {
 	private function is_pro_installed(): bool {
 
 		return file_exists( trailingslashit( WP_PLUGIN_DIR ) . self::PRO_PLUGIN );
+	}
+
+	/**
+	 * Whether the Pro on disk speaks the v2 transport, judged by the file that implements it.
+	 *
+	 * @since 2.0.5.1
+	 *
+	 * @return bool
+	 */
+	private function is_pro_transport_ready(): bool {
+
+		return file_exists( trailingslashit( WP_PLUGIN_DIR ) . dirname( self::PRO_PLUGIN ) . '/src/SetupWizard/Transport/Cipher.php' );
 	}
 }

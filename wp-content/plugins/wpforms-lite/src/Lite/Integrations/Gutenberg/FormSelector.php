@@ -101,7 +101,7 @@ class FormSelector extends FormSelectorBase {
 			wp_enqueue_script(
 				'wpforms-gutenberg-form-selector',
 				WPFORMS_PLUGIN_URL . "assets/lite/js/integrations/gutenberg/formselector.es5{$min}.js",
-				[ 'wp-blocks', 'wp-i18n', 'wp-element', 'jquery', 'wpforms-admin-education-core', 'wpforms-generic-utils' ],
+				[ 'wp-blocks', 'wp-i18n', 'wp-element', 'wp-data', 'wp-url', 'jquery', 'wpforms-generic-utils' ],
 				WPFORMS_VERSION,
 				true
 			);

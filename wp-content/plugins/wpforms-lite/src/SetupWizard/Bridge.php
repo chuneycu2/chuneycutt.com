@@ -2,21 +2,22 @@
 
 namespace WPForms\SetupWizard;
 
+use WP_Error;
+use WPForms\SetupWizard\Transport\Cipher;
+
 /**
- * POST bridge that hands off to the wizard SPA.
+ * Hands off to the hosted wizard.
  *
- * Renders a tiny auto-submitting HTML form that POSTs `token`, `rest_url`,
- * `exit_url`, and `restart_url` to the SPA's `startSession` endpoint. The POST
- * keeps the token out of browser history and out of `Referer`/`X-Forwarded-*`
- * headers, satisfies the CORS preflight rules expected by the SPA, and hides
- * the payload from password managers and browser extensions that scan URLs.
+ * The per-launch key goes to the wizard server to server and comes back as a
+ * single-use ticket; the browser carries only the ticket, so the key never
+ * reaches the page, its history or a browser extension.
  *
  * @since 2.0.0
  */
 class Bridge {
 
 	/**
-	 * Auth service used to issue the per-launch token.
+	 * Auth service used to mint the per-launch key.
 	 *
 	 * @since 2.0.0
 	 *
@@ -37,29 +38,26 @@ class Bridge {
 	}
 
 	/**
-	 * Render the auto-submit POST form.
+	 * Render the auto-submit POST form that carries the ticket to the wizard.
 	 *
-	 * Called from the orchestrator after `maybe_launch()` decides the wizard
-	 * should run for the current request. Sends the user's browser to the SPA
-	 * with the wizard handshake payload. The caller is responsible for
-	 * `exit`-ing after this method returns.
+	 * The caller is responsible for `exit`-ing after this method returns.
 	 *
 	 * @since 2.0.0
+	 * @since 2.0.5.1 Takes the ticket. A payload array is deprecated and read for its `ticket` key.
 	 *
-	 * @param array $payload Handshake payload sent to the SPA. Keys:
-	 *                       `token`, `rest_url`, `exit_url`, `restart_url`.
+	 * @param string|array $ticket Ticket from `request_session()`, or a payload carrying it.
+	 *
+	 * @noinspection PhpMissingParamTypeInspection
 	 */
-	public function render( array $payload ): void {
+	public function render( $ticket ): void {
 
-		$inputs = '';
+		if ( is_array( $ticket ) ) {
+			_deprecated_argument( __METHOD__, '2.0.5.1 of the WPForms plugin', 'Pass the ticket from request_session().' );
 
-		foreach ( $payload as $name => $value ) {
-			$inputs .= sprintf(
-				'<input type="hidden" name="%s" value="%s" />',
-				esc_attr( (string) $name ),
-				esc_attr( (string) $value )
-			);
+			$ticket = $ticket['ticket'] ?? '';
 		}
+
+		$ticket = (string) $ticket;
 
 		$action   = esc_url( $this->get_handoff_url() );
 		$charset  = esc_attr( get_bloginfo( 'charset' ) );
@@ -79,7 +77,7 @@ class Bridge {
 			. '<style>' . $style . '</style>'
 			. '</head><body>'
 			. '<form id="wpforms-setup-wizard-bridge" method="POST" action="' . $action . '">'
-			. $inputs
+			. '<input type="hidden" name="ticket" value="' . esc_attr( $ticket ) . '" />'
 			. '<noscript><button type="submit">' . $cta . '</button></noscript>'
 			. '</form>'
 			. '<script>document.getElementById("wpforms-setup-wizard-bridge").submit();</script>'
@@ -105,128 +103,248 @@ class Bridge {
 	}
 
 	/**
-	 * Build the handshake payload for the current user.
+	 * Trade a freshly minted key for a ticket with the hosted wizard.
 	 *
-	 * @since 2.0.0
+	 * The wizard proves this site holds the key with a sealed call back before it
+	 * answers, so a failure here also covers an unreachable wizard or site.
+	 *
+	 * @since 2.0.5.1
 	 *
 	 * @param string $exit_url    Where to send the user on close.
 	 * @param string $restart_url Where to send the user on restart.
 	 *
-	 * @return array
+	 * @return string|WP_Error The ticket, or why the hosted wizard cannot be used.
 	 */
-	public function build_payload( string $exit_url, string $restart_url ): array {
+	public function request_session( string $exit_url, string $restart_url ) {
 
-		$payload = [
-			'token'       => $this->auth->generate_token(),
-			'rest_url'    => $this->get_rest_url(),
-			'exit_url'    => $exit_url,
-			'restart_url' => $restart_url,
-		];
+		$refusal = $this->get_launch_refusal();
+
+		if ( $refusal !== null ) {
+			return $refusal;
+		}
+
+		$key = $this->auth->mint();
+
+		if ( $key === '' ) {
+			return new WP_Error( 'wpforms_setup_wizard_no_user' );
+		}
 
 		/**
-		 * Filter the bridge handshake payload.
+		 * Filter the session request the plugin sends to the hosted wizard.
 		 *
-		 * Used by the Stripe OAuth flow to inject `current_step=payments`
-		 * so the SPA resumes at /steps/payments instead of /welcome after
-		 * a wp-admin re-entry.
+		 * Used by the Stripe OAuth flow to inject `current_step=payments`. The values
+		 * travel server to server, never through the browser.
+		 *
+		 * @since 2.0.0
+		 * @since 2.0.5.1 The values go to the wizard's `/session`, not the browser form.
+		 *
+		 * @param array $payload Session request fields.
+		 */
+		$payload = (array) apply_filters(
+			'wpforms_setup_wizard_bridge_payload',
+			[
+				'exit_url'    => $exit_url,
+				'restart_url' => $restart_url,
+			]
+		);
+
+		$response = wp_remote_post(
+			$this->get_session_url(),
+			[
+				// The wizard needs up to 8 seconds to reach this site and back.
+				'timeout'     => 12,
+				'sslverify'   => true,
+				// A redirect would carry the key to wherever it points.
+				'redirection' => 0,
+				'body'        => array_merge(
+					$payload,
+					[
+						'protocol' => 2,
+						'key'      => $key,
+						'rest_url' => $this->get_rest_url(),
+					]
+				),
+			]
+		);
+
+		if ( is_wp_error( $response ) ) {
+			// The fresh key already retired any live session; it must not outlive this failed launch.
+			$this->auth->revoke_key( $key );
+
+			return $response;
+		}
+
+		$body   = json_decode( wp_remote_retrieve_body( $response ), true );
+		$ticket = is_array( $body ) ? (string) ( $body['ticket'] ?? '' ) : '';
+
+		$status = wp_remote_retrieve_response_code( $response );
+
+		if ( $status !== 200 || ! preg_match( '/^[0-9a-f]{64}$/', $ticket ) ) {
+			$code = is_array( $body ) && is_string( $body['error_code'] ?? null ) ? sanitize_text_field( $body['error_code'] ) : '';
+
+			$this->auth->revoke_key( $key );
+
+			// WP_Error drops an empty code, which would leave the log entry blank.
+			return new WP_Error( $code !== '' ? $code : 'wpforms_setup_wizard_session_failed', '', [ 'status' => $status ] );
+		}
+
+		/**
+		 * Fires once the hosted wizard has started a session for the payload.
+		 *
+		 * @since 2.0.5.1
+		 *
+		 * @param array $payload Session request fields.
+		 */
+		do_action( 'wpforms_setup_wizard_bridge_request_session', $payload );
+
+		return $ticket;
+	}
+
+	/**
+	 * Get why the hosted wizard must not be launched, checked before any key is minted.
+	 *
+	 * @since 2.0.5.1
+	 *
+	 * @return WP_Error|null The refusal, or null when the launch may proceed.
+	 */
+	private function get_launch_refusal(): ?WP_Error {
+
+		/**
+		 * Filter whether the hosted wizard is reachable.
+		 *
+		 * Return false to skip the hosted wizard and use the local one.
 		 *
 		 * @since 2.0.0
 		 *
-		 * @param array $payload Handshake payload.
+		 * @param bool $reachable Whether to try the hosted wizard.
 		 */
-		return (array) apply_filters( 'wpforms_setup_wizard_bridge_payload', $payload );
+		if ( apply_filters( 'wpforms_setup_wizard_bridge_spa_reachable', true ) === false ) {
+			return new WP_Error( 'wpforms_setup_wizard_forced_unreachable' );
+		}
+
+		$handoff_url = $this->get_handoff_url();
+
+		if ( ! $this->is_secure_handoff_url( $handoff_url ) ) {
+			return new WP_Error( 'wpforms_setup_wizard_insecure_handoff' );
+		}
+
+		if ( ! Cipher::is_supported() ) {
+			return new WP_Error( 'wpforms_setup_wizard_no_cipher' );
+		}
+
+		return null;
+	}
+
+	/**
+	 * Build the handshake payload for the current user.
+	 *
+	 * @since 2.0.0
+	 * @deprecated 2.0.5.1
+	 *
+	 * @param string $exit_url    Where to send the user on close.
+	 * @param string $restart_url Where to send the user on restart.
+	 *
+	 * @return array The `ticket` for `render()`, or an empty array when the hosted wizard cannot be used.
+	 */
+	public function build_payload( string $exit_url, string $restart_url ): array {
+
+		_deprecated_function( __METHOD__, '2.0.5.1 of the WPForms plugin', __CLASS__ . '::request_session()' );
+
+		$ticket = $this->request_session( $exit_url, $restart_url );
+
+		return is_wp_error( $ticket ) ? [] : [ 'ticket' => $ticket ];
 	}
 
 	/**
 	 * Get the handoff form data for a client-side submit.
 	 *
-	 * The Lite Welcome screen POSTs the handshake from JS after its AJAX
-	 * round-trip, so it needs the form action and payload rather than a
-	 * rendered document.
+	 * The Lite Welcome screen POSTs the handoff from JS after its AJAX round-trip,
+	 * so it needs the form action and the ticket rather than a rendered document.
 	 *
 	 * @since 2.0.1
+	 * @deprecated 2.0.5.1
 	 *
 	 * @param string $exit_url    Where to send the user on close.
 	 * @param string $restart_url Where to send the user on restart.
 	 *
-	 * @return array{action: string, payload: array}
+	 * @return array `action` and a `payload` carrying the ticket, or an empty array when the hosted wizard cannot be used.
 	 */
 	public function get_handoff_data( string $exit_url, string $restart_url ): array {
 
+		_deprecated_function( __METHOD__, '2.0.5.1 of the WPForms plugin', __CLASS__ . '::request_handoff_data()' );
+
+		$handoff = $this->request_handoff_data( $exit_url, $restart_url );
+
+		return is_wp_error( $handoff ) ? [] : $handoff;
+	}
+
+	/**
+	 * Start a hosted wizard session and get its handoff form data for a client-side submit.
+	 *
+	 * @since 2.0.5.1
+	 *
+	 * @param string $exit_url    Where to send the user on close.
+	 * @param string $restart_url Where to send the user on restart.
+	 *
+	 * @return array|WP_Error `action` and `payload`, or why the hosted wizard cannot be used.
+	 */
+	public function request_handoff_data( string $exit_url, string $restart_url ) {
+
+		$ticket = $this->request_session( $exit_url, $restart_url );
+
+		if ( is_wp_error( $ticket ) ) {
+			return $ticket;
+		}
+
 		return [
 			'action'  => $this->get_handoff_url(),
-			'payload' => $this->build_payload( $exit_url, $restart_url ),
+			'payload' => [ 'ticket' => $ticket ],
 		];
 	}
 
 	/**
-	 * Whether the wizard SPA is reachable and healthy, and can reach this site.
-	 *
-	 * Server-side preflight run before the handoff: a top-level form POST
-	 * abandons the bridge page, so a client-side timeout cannot recover once the
-	 * browser has navigated to a broken SPA. Probing the co-located health route
-	 * here lets the orchestrator fall back to the Welcome page instead. The probe
-	 * runs on every launch (which is infrequent) and is intentionally not cached,
-	 * so a changed handoff URL or a down SPA is reflected immediately.
+	 * Whether the hosted wizard may be launched.
 	 *
 	 * @since 2.0.0
+	 * @deprecated 2.0.5.1
 	 *
 	 * @return bool
 	 */
 	public function is_spa_reachable(): bool {
 
-		/**
-		 * Short-circuit the SPA health probe.
-		 *
-		 * Return a boolean to force the result (e.g. true in local development
-		 * against a sail-hosted Product API, or false to exercise the fallback).
-		 *
-		 * @since 2.0.0
-		 *
-		 * @param bool|null $reachable Forced result, or null to run the probe.
-		 */
-		$forced = apply_filters( 'wpforms_setup_wizard_bridge_spa_reachable', null );
+		_deprecated_function( __METHOD__, '2.0.5.1 of the WPForms plugin', __CLASS__ . '::request_session()' );
 
-		if ( is_bool( $forced ) ) {
-			return $forced;
-		}
-
-		$health_url = $this->get_health_url();
-
-		if ( $health_url === '' ) {
-			return false;
-		}
-
-		$response = wp_remote_get(
-			$health_url,
-			[
-				'timeout'   => 5,
-				'sslverify' => true,
-			]
-		);
-
-		return ! is_wp_error( $response ) && wp_remote_retrieve_response_code( $response ) === 200;
+		return $this->get_launch_refusal() === null;
 	}
 
 	/**
-	 * Get the SPA health probe URL, co-located with the handoff endpoint.
+	 * Whether the key may be sent to a handoff URL: https, or plain http only on a local or development site.
 	 *
-	 * The URL carries this site's wizard REST base, so the product API also
-	 * verifies that it can connect back to the site. Every SPA call is proxied
-	 * over that path, and a site the product API cannot reach would otherwise
-	 * pass the probe, hand off, and fail on the SPA's first request.
+	 * @since 2.0.5.1
 	 *
-	 * @since 2.0.0
+	 * @param string $url Handoff URL.
+	 *
+	 * @return bool
+	 */
+	private function is_secure_handoff_url( string $url ): bool {
+
+		if ( strtolower( (string) wp_parse_url( $url, PHP_URL_SCHEME ) ) === 'https' ) {
+			return true;
+		}
+
+		return in_array( wp_get_environment_type(), [ 'local', 'development' ], true );
+	}
+
+	/**
+	 * Get the wizard's session endpoint, next to the handoff endpoint.
+	 *
+	 * @since 2.0.5.1
 	 *
 	 * @return string
 	 */
-	private function get_health_url(): string {
+	private function get_session_url(): string {
 
-		$url = trailingslashit( $this->get_handoff_url() ) . 'health';
-
-		// add_query_arg() appends the value as given, and on a plain-permalink
-		// site the REST base carries a `?rest_route=` query of its own.
-		return add_query_arg( 'rest_url', rawurlencode( $this->get_rest_url() ), $url );
+		return trailingslashit( $this->get_handoff_url() ) . 'session';
 	}
 
 	/**
@@ -245,7 +363,7 @@ class Bridge {
 	 * Get the SPA endpoint that consumes the handshake POST.
 	 *
 	 * The `WPFORMS_SETUP_WIZARD_URL` constant overrides the default for local
-	 * development against a sail-hosted Product API.
+	 * development against a locally hosted wizard.
 	 *
 	 * @since 2.0.0
 	 *
@@ -253,10 +371,18 @@ class Bridge {
 	 */
 	private function get_handoff_url(): string {
 
-		if ( defined( 'WPFORMS_SETUP_WIZARD_URL' ) ) {
-			return (string) WPFORMS_SETUP_WIZARD_URL;
-		}
+		return $this->get_handoff_url_override() ?? 'https://sw.wpformsapi.com/setupwizard/v1';
+	}
 
-		return 'https://wpformsapi.com/setupwizard/v1';
+	/**
+	 * Get the handoff URL the `WPFORMS_SETUP_WIZARD_URL` constant sets, if any.
+	 *
+	 * @since 2.0.5
+	 *
+	 * @return string|null
+	 */
+	protected function get_handoff_url_override(): ?string {
+
+		return defined( 'WPFORMS_SETUP_WIZARD_URL' ) ? (string) WPFORMS_SETUP_WIZARD_URL : null;
 	}
 }

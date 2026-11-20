@@ -212,13 +212,16 @@ class Mailer {
 	 * Get the email from the address.
 	 *
 	 * @since 1.5.4
+	 * @since 2.0.5 An invalid resolved address falls back to the admin email, not only an empty one.
 	 *
 	 * @return string
 	 */
 	public function get_from_address() {
 
 		$from_address = $this->sanitize( $this->from_address, 'notification-from' );
-		$from_address = $from_address ? $from_address : get_option( 'admin_email' );
+
+		// A From header needs a valid address, and the `notification-from` context blanks each invalid smart tag on its own, so literal text around it can remain.
+		$from_address = wpforms_is_email( $from_address, false ) ? $from_address : get_option( 'admin_email' );
 
 		// phpcs:ignore WPForms.Comments.PHPDocHooks.RequiredHookDocumentation
 		return apply_filters( 'wpforms_emails_mailer_get_from_address', $from_address, $this );

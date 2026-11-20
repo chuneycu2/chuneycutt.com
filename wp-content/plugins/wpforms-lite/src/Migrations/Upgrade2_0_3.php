@@ -28,7 +28,13 @@ class Upgrade2_0_3 extends UpgradeBase {
 	public function run() {
 
 		// The weekly summary must not celebrate milestones the site reached before this release.
-		( new Milestones() )->maybe_baseline();
+		// Migrations run on plugins_loaded, before $wp_query exists and the form post types register, so the form query waits for init.
+		$this->defer_to_init(
+			static function () {
+
+				( new Milestones() )->maybe_baseline();
+			}
+		);
 
 		$this->encrypt_stripe_connect_tokens();
 		$this->record_legacy_form_currency();

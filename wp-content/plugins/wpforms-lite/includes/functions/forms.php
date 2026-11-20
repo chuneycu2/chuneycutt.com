@@ -416,6 +416,7 @@ function wpforms_get_conditional_logic_form_fields_supported() {
 	$fields_supported = [
 		'checkbox',
 		'email',
+		'file-upload',
 		'hidden',
 		'net_promoter_score',
 		'number',

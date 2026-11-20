@@ -555,10 +555,15 @@ function wpforms_is_form_template( $form ): bool {
  * Checks if the current screen is using the block editor.
  *
  * @since 1.8.8
+ * @since 2.0.5 Returns false on the front end, where WordPress does not load the screen API.
  *
  * @return bool True if the current screen is using the block editor, false otherwise.
  */
 function wpforms_is_block_editor(): bool {
+
+	if ( ! function_exists( 'get_current_screen' ) ) {
+		return false;
+	}
 
 	$screen = get_current_screen();
 

@@ -1304,15 +1304,15 @@ class WPForms_About {
 				'lite'     => [
 					'status' => 'partial',
 					'text'   => [
-						'<strong>' . esc_html__( 'Limited Marketing Integration', 'wpforms-lite' ) . '</strong>',
-						esc_html__( 'Constant Contact only', 'wpforms-lite' ),
+						'<strong>' . esc_html__( 'Limited Marketing Integrations', 'wpforms-lite' ) . '</strong>',
+						esc_html__( 'Constant Contact and Drip only', 'wpforms-lite' ),
 					],
 				],
 				'basic'    => [
 					'status' => 'partial',
 					'text'   => [
-						'<strong>' . esc_html__( 'Limited Marketing Integration', 'wpforms-lite' ) . '</strong>',
-						esc_html__( 'Constant Contact only', 'wpforms-lite' ),
+						'<strong>' . esc_html__( 'Limited Marketing Integrations', 'wpforms-lite' ) . '</strong>',
+						esc_html__( 'Constant Contact and Drip only', 'wpforms-lite' ),
 					],
 				],
 				'plus'     => [

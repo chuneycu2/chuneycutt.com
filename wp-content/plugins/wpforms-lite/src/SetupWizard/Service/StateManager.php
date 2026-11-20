@@ -332,7 +332,7 @@ class StateManager {
 
 		// Clean up the one-shot first-run signal. The state transient is left to
 		// expire on its own TTL, so the REST `complete` response can still read
-		// `wizard_settings`; the session token is revoked by the REST layer.
+		// `wizard_settings`; the session key is revoked by the REST layer.
 		delete_transient( SetupWizard::TRANSIENT_FIRST_RUN );
 
 		/**

@@ -16,16 +16,18 @@ class FlyoutMenu {
 	 */
 	public function __construct() {
 
-		if ( ! \wpforms_is_admin_page() || \wpforms_is_admin_page( 'builder' ) ) {
+		if ( ! wpforms_is_admin_page() || wpforms_is_admin_page( 'builder' ) ) {
 			return;
 		}
 
-		if ( ! \apply_filters( 'wpforms_admin_flyoutmenu', true ) ) {
-			return;
-		}
-
-		// Check if WPForms Challenge can be displayed.
-		if ( wpforms()->obj( 'challenge' )->challenge_can_start() ) {
+		/**
+		 * Allow disabling the Flyout Menu.
+		 *
+		 * @since 1.5.7
+		 *
+		 * @param bool $enable Whether to enable the Flyout Menu. Default true.
+		 */
+		if ( ! (bool) apply_filters( 'wpforms_admin_flyoutmenu', true ) ) { // phpcs:ignore WPForms.PHP.ValidateHooks.InvalidHookName
 			return;
 		}
 
@@ -48,6 +50,11 @@ class FlyoutMenu {
 	 * @since 1.5.7
 	 */
 	public function output() {
+
+		// Checked here, not in the constructor: the check queries forms, and the constructor runs on plugins_loaded, before WordPress creates $wp_query.
+		if ( wpforms()->obj( 'challenge' )->challenge_can_start() ) {
+			return;
+		}
 
 		printf(
 			'<div id="wpforms-flyout">

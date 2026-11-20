@@ -97,13 +97,18 @@ class Screen extends BaseScreen {
 		}
 
 		// Every launch path honors the kill switch; the AJAX twin must too, or a site
-		// with the wizard switched off still writes settings, mints a wizard token and
+		// with the wizard switched off still writes settings, mints a wizard key and
 		// hands the browser off to the SPA.
 		if ( SetupWizard::is_disabled() ) {
 			wp_send_json_error( [ 'message' => __( 'The Setup Wizard is disabled on this site.', 'wpforms-lite' ) ], 403 );
 		}
 
-		if ( ! $this->bridge->is_spa_reachable() ) {
+		// Started before the settings write, so an unavailable wizard leaves the run untouched.
+		$handoff = $this->bridge->request_handoff_data( $this->get_exit_url(), $this->get_restart_url() );
+
+		if ( is_wp_error( $handoff ) ) {
+			$this->log_session_failure( $handoff );
+
 			wp_send_json_error( [ 'message' => __( 'The Setup Wizard is temporarily unavailable. Please try again in a few minutes.', 'wpforms-lite' ) ], 503 );
 		}
 
@@ -127,7 +132,7 @@ class Screen extends BaseScreen {
 
 		wp_send_json_success(
 			[
-				'handoff' => $this->bridge->get_handoff_data( $this->get_exit_url(), $this->get_restart_url() ),
+				'handoff' => $handoff,
 			]
 		);
 	}
@@ -137,7 +142,7 @@ class Screen extends BaseScreen {
 	 *
 	 * Distinguishes a real mid-wizard re-entry from a stale StripeConnect
 	 * force-step transient: that transient is site-wide, lives for an hour and is
-	 * only consumed inside the bridge payload filter, so an abandoned OAuth return
+	 * cleared only once a hosted wizard session starts, so an abandoned OAuth return
 	 * leaves it armed for every administrator on the site.
 	 *
 	 * @since 2.0.1
